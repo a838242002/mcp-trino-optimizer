@@ -23,7 +23,7 @@ Turn opaque Trino query performance problems into actionable, evidence-backed op
 #### Table Stakes (Platform)
 
 - [ ] MCP server skeleton with Python 3.11+, packaged via `uv` + `pyproject.toml`, installable via `pip`/`uvx`
-- [ ] Both `stdio` and `HTTP/SSE` MCP transports from day one
+- [ ] Both `stdio` and Streamable HTTP MCP transports from day one (not legacy HTTP+SSE — deprecated in MCP spec 2025-03-26)
 - [ ] Docker image for containerized deploy, with docker-compose for local development
 - [ ] Read-only safety mode by default — no destructive SQL ever issued
 - [ ] Structured query logging for every executed Trino statement
