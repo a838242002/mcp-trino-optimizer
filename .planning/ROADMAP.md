@@ -20,7 +20,7 @@ Requirements cluster naturally into 9 functional areas that map one-to-one onto 
 
 ## Phases
 
-- [ ] **Phase 1: Skeleton & Safety Foundation** - Server boots on stdio and Streamable HTTP, answers `initialize`, exposes `mcp_selftest`, ships via uv/uvx/pip/Docker; all critical safety foundations (stdio discipline, redaction, untrusted envelope, strict schemas) in place
+- [x] **Phase 1: Skeleton & Safety Foundation** - Server boots on stdio and Streamable HTTP, answers `initialize`, exposes `mcp_selftest`, ships via uv/uvx/pip/Docker; all critical safety foundations (stdio discipline, redaction, untrusted envelope, strict schemas) in place
 - [ ] **Phase 2: Trino Adapter & Read-Only Gate** - Live Trino client with AST-based read-only classifier, cancel/timeout propagation, async wrapper, version + capability probes, offline plan source; no plan parsing yet
 - [ ] **Phase 3: Plan Parser & Normalizer** - Typed `EstimatedPlan` / `ExecutedPlan` from `EXPLAIN (FORMAT JSON)` and `EXPLAIN ANALYZE`, tolerant-tree with `raw` bags, multi-version Trino fixture corpus parses clean
 - [ ] **Phase 4: Rule Engine & 13 Deterministic Rules** - Plugin registry, prefetch + isolated-failure engine, all table-stakes rules (R1-R9 + I1/I3/I6/I8 + D11) producing `RuleFinding` with evidence

@@ -1,5 +1,5 @@
 ---
-status: partial
+status: complete
 phase: 01-skeleton-safety-foundation
 source: [01-VERIFICATION.md]
 started: 2026-04-12T00:00:00Z
@@ -21,7 +21,11 @@ expected: |
   frames to stdout. The verifier already confirmed the Dockerfile is structurally
   correct (uv pip install path, non-root mcp user uid 1000, stdio default
   entrypoint, GIT_SHA build-arg bake) but cannot drive Docker in this environment.
-result: [pending]
+result: pass
+note: |
+  Required Dockerfile fix: UV_PROJECT_ENVIRONMENT env var doesn't apply to
+  `uv pip install` — changed to `uv pip install --python /opt/venv/bin/python`.
+  Build and stdio round-trip confirmed.
 
 ### 2. PLAT-13 — GitHub Actions 9-cell matrix run
 expected: |
@@ -32,14 +36,17 @@ expected: |
   both PLAT-01 install paths (uv pip install -e .[dev] AND uv tool install .).
   The workflow file is structurally complete and parsed as valid YAML locally,
   but the verifier cannot drive GitHub Actions from this environment.
-result: [pending]
+result: pass
+note: |
+  Fixed setup-uv v4→v5 and removed explicit `uv venv` (auto-created by v5).
+  All 9 matrix cells green.
 
 ## Summary
 
 total: 2
-passed: 0
+passed: 2
 issues: 0
-pending: 2
+pending: 0
 skipped: 0
 blocked: 0
 
