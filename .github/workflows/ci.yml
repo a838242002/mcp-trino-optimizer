@@ -61,9 +61,7 @@ jobs:
           python-version: ${{ matrix.python }}
 
       - name: Install package (pip install -e path — PLAT-01)
-        run: |
-          uv venv
-          uv pip install -e ".[dev]"
+        run: uv pip install -e ".[dev]"
         shell: bash
 
       - name: Run unit tests (not integration)
