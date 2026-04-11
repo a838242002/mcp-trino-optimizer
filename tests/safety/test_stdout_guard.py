@@ -59,7 +59,7 @@ def test_whitespace_only_write_is_silent(capsys: pytest.CaptureFixture[str]) -> 
 
 def test_fileno_raises_oserror() -> None:
     writer = SentinelWriter()
-    with pytest.raises(OSError):
+    with pytest.raises(OSError, match="no file descriptor"):
         writer.fileno()
 
 

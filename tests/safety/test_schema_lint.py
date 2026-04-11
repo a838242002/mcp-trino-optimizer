@@ -12,6 +12,7 @@ Landed by plan 01-02 (schema_lint) + 01-04 (build_app).
 from __future__ import annotations
 
 import pytest
+from pydantic import BaseModel, Field
 
 try:
     from mcp_trino_optimizer.safety import schema_lint as lint  # landed in plan 01-02
@@ -23,12 +24,27 @@ try:
 except ImportError:
     app_mod = None  # type: ignore[assignment]
 
+
+# Module-level BaseModel so Python 3.12+ (PEP 563 lazy annotations) and
+# FastMCP's eval_str=True signature inspection can resolve the type hint
+# when LooseInput is used as a tool parameter annotation. Defining it
+# inside the test function breaks inspect.signature(eval_str=True).
+class LooseInput(BaseModel):
+    # No model_config with extra='forbid' → additionalProperties not false
+    name: str = Field(max_length=100)
+
+# Module-level guard only gates on schema_lint — the negative-case tests
+# construct a throwaway FastMCP inline and don't need app.build_app().
 pytestmark = pytest.mark.skipif(
-    lint is None or app_mod is None,
-    reason="mcp_trino_optimizer.safety.schema_lint or .app not yet implemented",
+    lint is None,
+    reason="mcp_trino_optimizer.safety.schema_lint not yet implemented",
 )
 
 
+@pytest.mark.skipif(
+    app_mod is None,
+    reason="mcp_trino_optimizer.app not yet implemented (lands in plan 01-04)",
+)
 def test_all_tools_are_schema_compliant() -> None:
     mcp = app_mod.build_app()
     # Should not raise — build_app() already calls assert_tools_compliant,
@@ -68,11 +84,6 @@ def test_schema_lint_rejects_missing_additional_properties_false() -> None:
     """A BaseModel input without `model_config = ConfigDict(extra='forbid')`
     must trigger an additionalProperties violation."""
     from mcp.server.fastmcp import FastMCP
-    from pydantic import BaseModel, Field
-
-    class LooseInput(BaseModel):
-        # No model_config with extra='forbid' → additionalProperties not false
-        name: str = Field(max_length=100)
 
     mcp = FastMCP(name="test")
 

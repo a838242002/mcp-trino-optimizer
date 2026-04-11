@@ -53,7 +53,7 @@ class SentinelWriter:
                 bytes_len=len(data),
                 preview=data[:200],
             )
-        except Exception:  # noqa: BLE001 — fallback must not raise
+        except Exception:  # fallback must not raise — every failure path writes to stderr
             # Fallback: raw JSON line to stderr so the event is never lost.
             import json
 
