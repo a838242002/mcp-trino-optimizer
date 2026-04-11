@@ -1,0 +1,35 @@
+# Build artifacts
+.venv/
+dist/
+build/
+*.egg-info/
+
+# Cache
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+
+# Tests — not needed in runtime image
+tests/
+.planning/
+
+# Git + editor
+.git/
+.gitignore
+.gitattributes
+.github/
+.vscode/
+.idea/
+.DS_Store
+
+# Secrets (never copy into image)
+.env
+*.pem
+*.key
+
+# Docs not needed in runtime
+CONTRIBUTING.md
+CLAUDE.md
