@@ -207,17 +207,118 @@ Explicitly excluded. Documented to prevent scope creep and to prevent someone as
 
 ## Traceability
 
-(Empty — populated by the roadmapper.)
+Populated by the roadmapper on 2026-04-11. Every v1 REQ-ID maps to exactly one phase in `.planning/ROADMAP.md`.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| — | — | — |
+| PLAT-01 | Phase 1 | Pending |
+| PLAT-02 | Phase 1 | Pending |
+| PLAT-03 | Phase 1 | Pending |
+| PLAT-04 | Phase 1 | Pending |
+| PLAT-05 | Phase 1 | Pending |
+| PLAT-06 | Phase 1 | Pending |
+| PLAT-07 | Phase 1 | Pending |
+| PLAT-08 | Phase 1 | Pending |
+| PLAT-09 | Phase 1 | Pending |
+| PLAT-10 | Phase 1 | Pending |
+| PLAT-11 | Phase 1 | Pending |
+| PLAT-12 | Phase 1 | Pending |
+| PLAT-13 | Phase 1 | Pending |
+| TRN-01 | Phase 2 | Pending |
+| TRN-02 | Phase 2 | Pending |
+| TRN-03 | Phase 2 | Pending |
+| TRN-04 | Phase 2 | Pending |
+| TRN-05 | Phase 2 | Pending |
+| TRN-06 | Phase 2 | Pending |
+| TRN-07 | Phase 2 | Pending |
+| TRN-08 | Phase 2 | Pending |
+| TRN-09 | Phase 2 | Pending |
+| TRN-10 | Phase 2 | Pending |
+| TRN-11 | Phase 2 | Pending |
+| TRN-12 | Phase 2 | Pending |
+| TRN-13 | Phase 2 | Pending |
+| TRN-14 | Phase 2 | Pending |
+| TRN-15 | Phase 2 | Pending |
+| PLN-01 | Phase 3 | Pending |
+| PLN-02 | Phase 3 | Pending |
+| PLN-03 | Phase 3 | Pending |
+| PLN-04 | Phase 3 | Pending |
+| PLN-05 | Phase 3 | Pending |
+| PLN-06 | Phase 3 | Pending |
+| PLN-07 | Phase 3 | Pending |
+| RUL-01 | Phase 4 | Pending |
+| RUL-02 | Phase 4 | Pending |
+| RUL-03 | Phase 4 | Pending |
+| RUL-04 | Phase 4 | Pending |
+| RUL-05 | Phase 4 | Pending |
+| RUL-06 | Phase 4 | Pending |
+| RUL-07 | Phase 4 | Pending |
+| RUL-08 | Phase 4 | Pending |
+| RUL-09 | Phase 4 | Pending |
+| RUL-10 | Phase 4 | Pending |
+| RUL-11 | Phase 4 | Pending |
+| RUL-12 | Phase 4 | Pending |
+| RUL-13 | Phase 4 | Pending |
+| RUL-14 | Phase 4 | Pending |
+| RUL-15 | Phase 4 | Pending |
+| RUL-16 | Phase 4 | Pending |
+| RUL-17 | Phase 4 | Pending |
+| RUL-18 | Phase 4 | Pending |
+| RUL-19 | Phase 4 | Pending |
+| RUL-20 | Phase 4 | Pending |
+| RUL-21 | Phase 4 | Pending |
+| REC-01 | Phase 5 | Pending |
+| REC-02 | Phase 5 | Pending |
+| REC-03 | Phase 5 | Pending |
+| REC-04 | Phase 5 | Pending |
+| REC-05 | Phase 5 | Pending |
+| REC-06 | Phase 5 | Pending |
+| REC-07 | Phase 5 | Pending |
+| RWR-01 | Phase 6 | Pending |
+| RWR-02 | Phase 6 | Pending |
+| RWR-03 | Phase 6 | Pending |
+| RWR-04 | Phase 6 | Pending |
+| RWR-05 | Phase 6 | Pending |
+| RWR-06 | Phase 6 | Pending |
+| RWR-07 | Phase 6 | Pending |
+| CMP-01 | Phase 7 | Pending |
+| CMP-02 | Phase 7 | Pending |
+| CMP-03 | Phase 7 | Pending |
+| CMP-04 | Phase 7 | Pending |
+| CMP-05 | Phase 7 | Pending |
+| CMP-06 | Phase 7 | Pending |
+| MCP-01 | Phase 8 | Pending |
+| MCP-02 | Phase 8 | Pending |
+| MCP-03 | Phase 8 | Pending |
+| MCP-04 | Phase 8 | Pending |
+| MCP-05 | Phase 8 | Pending |
+| MCP-06 | Phase 8 | Pending |
+| MCP-07 | Phase 8 | Pending |
+| MCP-08 | Phase 8 | Pending |
+| MCP-09 | Phase 8 | Pending |
+| MCP-10 | Phase 8 | Pending |
+| MCP-11 | Phase 8 | Pending |
+| MCP-12 | Phase 8 | Pending |
+| MCP-13 | Phase 8 | Pending |
+| MCP-14 | Phase 8 | Pending |
+| MCP-15 | Phase 8 | Pending |
+| MCP-16 | Phase 8 | Pending |
+| MCP-17 | Phase 8 | Pending |
+| MCP-18 | Phase 8 | Pending |
+| TST-01 | Phase 9 | Pending |
+| TST-02 | Phase 9 | Pending |
+| TST-03 | Phase 9 | Pending |
+| TST-04 | Phase 9 | Pending |
+| TST-05 | Phase 9 | Pending |
+| TST-06 | Phase 9 | Pending |
+| TST-07 | Phase 9 | Pending |
+| TST-08 | Phase 9 | Pending |
 
 **Coverage:**
 - v1 requirements: 102 total (PLAT 13, TRN 15, PLN 7, RUL 21, REC 7, RWR 7, CMP 6, MCP 18, TST 8)
-- Mapped to phases: 0
-- Unmapped: 102 ⚠️ (roadmapper will map)
+- Mapped to phases: 102
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-04-11*
-*Last updated: 2026-04-11 after initialization*
+*Last updated: 2026-04-11 — traceability populated by roadmapper*
