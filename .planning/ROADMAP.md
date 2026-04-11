@@ -48,7 +48,7 @@ Requirements cluster naturally into 9 functional areas that map one-to-one onto 
   - [x] 01-03-settings-logging-runtime-PLAN.md — Wave 1: Settings + logging_setup + _runtime + _context
   - [x] 01-04-app-tools-transports-cli-PLAN.md — Wave 2: app + selftest tool + transports + CLI
   - [x] 01-05-docker-docs-PLAN.md — Wave 3: Dockerfile + README + CONTRIBUTING.md + .env.example + LICENSE
-  - [ ] 01-06-ci-precommit-PLAN.md — Wave 3: GitHub Actions CI 9-cell matrix + pre-commit hooks
+  - [x] 01-06-ci-precommit-PLAN.md — Wave 3: GitHub Actions CI 9-cell matrix + pre-commit hooks
 **UI hint**: no
 **Needs research**: no
 
