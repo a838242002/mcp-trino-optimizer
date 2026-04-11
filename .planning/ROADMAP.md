@@ -46,7 +46,7 @@ Requirements cluster naturally into 9 functional areas that map one-to-one onto 
   - [x] 01-01-test-harness-scaffold-PLAN.md — Wave 0: pyproject.toml, package shells, Wave 0 stub tests
   - [x] 01-02-safety-primitives-PLAN.md — Wave 1: envelope + stdout_guard + schema_lint
   - [x] 01-03-settings-logging-runtime-PLAN.md — Wave 1: Settings + logging_setup + _runtime + _context
-  - [ ] 01-04-app-tools-transports-cli-PLAN.md — Wave 2: app + selftest tool + transports + CLI
+  - [x] 01-04-app-tools-transports-cli-PLAN.md — Wave 2: app + selftest tool + transports + CLI
   - [ ] 01-05-docker-docs-PLAN.md — Wave 3: Dockerfile + README + CONTRIBUTING.md + .env.example + LICENSE
   - [ ] 01-06-ci-precommit-PLAN.md — Wave 3: GitHub Actions CI 9-cell matrix + pre-commit hooks
 **UI hint**: no
