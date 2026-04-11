@@ -43,7 +43,7 @@ Requirements cluster naturally into 9 functional areas that map one-to-one onto 
   4. Every MCP tool registered at startup has a JSON Schema with `additionalProperties: false`, bounded string `maxLength` (SQL ≤ 100KB), identifier `pattern`, and bounded arrays; a schema-lint test fails if any tool is missing any of these. Every tool response that embeds a user-origin string wraps it in an `{ "source": "untrusted", "content": "..." }` envelope, enforced by a shared `wrap_untrusted()` helper that tool tests exercise from day one. (PLAT-10, PLAT-11 — §6.1 safety items 2 and 4)
   5. The CI install-matrix confirms successful install and `initialize` round-trip on Python 3.11, 3.12, and 3.13 across macOS, Linux, and Windows runners; the README contains copy-pasteable Claude Code `mcpServers` JSON for stdio, Streamable HTTP, and Docker install paths, and a CLAUDE.md defining coding rules, DoD, validation workflow, and safe-execution boundaries. (PLAT-12, PLAT-13)
 **Plans**: 6 plans across 4 waves
-  - [ ] 01-01-test-harness-scaffold-PLAN.md — Wave 0: pyproject.toml, package shells, Wave 0 stub tests
+  - [x] 01-01-test-harness-scaffold-PLAN.md — Wave 0: pyproject.toml, package shells, Wave 0 stub tests
   - [ ] 01-02-safety-primitives-PLAN.md — Wave 1: envelope + stdout_guard + schema_lint
   - [ ] 01-03-settings-logging-runtime-PLAN.md — Wave 1: Settings + logging_setup + _runtime + _context
   - [ ] 01-04-app-tools-transports-cli-PLAN.md — Wave 2: app + selftest tool + transports + CLI
