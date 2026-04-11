@@ -15,7 +15,7 @@ COPY src/ ./src/
 # Install into a dedicated venv
 ENV UV_LINK_MODE=copy UV_COMPILE_BYTECODE=1
 RUN uv venv /opt/venv
-RUN UV_PROJECT_ENVIRONMENT=/opt/venv uv pip install --no-cache .
+RUN uv pip install --no-cache --python /opt/venv/bin/python .
 
 # Bake git SHA if provided as build arg
 ARG GIT_SHA=unknown
