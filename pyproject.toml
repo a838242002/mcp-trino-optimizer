@@ -1,0 +1,122 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mcp-trino-optimizer"
+dynamic = ["version"]
+description = "MCP server for Trino + Iceberg query optimization"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+authors = [{ name = "Allen Li" }]
+keywords = ["mcp", "trino", "iceberg", "sql", "optimization"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Topic :: Database",
+]
+
+dependencies = [
+    "mcp[cli]>=1.27.0,<2",
+    "pydantic>=2.9,<3",
+    "pydantic-settings>=2.13.1",
+    "structlog>=25.5.0",
+    "orjson>=3.10",
+    "anyio>=4.4",
+    "typer>=0.12",
+    "uvicorn>=0.30",
+    "httpx>=0.28.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=1.3.0",
+    "syrupy>=5.1.0",
+    "mypy>=1.11",
+    "ruff>=0.15.10",
+    "pre-commit>=3.8",
+]
+
+[project.scripts]
+mcp-trino-optimizer = "mcp_trino_optimizer.cli:app"
+
+[project.urls]
+Homepage = "https://github.com/allenli/mcp-trino-optimizer"
+Repository = "https://github.com/allenli/mcp-trino-optimizer"
+
+# ── Hatch version strategy ─────────────────────────────────────────────
+# Use a version file (NOT git) so wheels install-clean outside a git checkout.
+# Phase 9 may switch to hatch-vcs; Phase 1 uses the simplest path.
+[tool.hatch.version]
+path = "src/mcp_trino_optimizer/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcp_trino_optimizer"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/mcp_trino_optimizer",
+    "README.md",
+    "CONTRIBUTING.md",
+    "CLAUDE.md",
+    "LICENSE",
+]
+
+# ── Ruff ───────────────────────────────────────────────────────────────
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E", "F",      # pycodestyle + pyflakes
+    "I",           # isort
+    "N",           # pep8-naming
+    "B",           # bugbear
+    "UP",          # pyupgrade
+    "SIM",         # simplify
+    "RUF",         # ruff-specific
+    "ASYNC",       # asyncio correctness
+    "PT",          # pytest style
+    "T20",         # NO print()  ← load-bearing for stdout hygiene
+]
+ignore = ["E501"]  # line length enforced by formatter
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["T20"]  # tests may print during debug
+"src/mcp_trino_optimizer/safety/stdout_guard.py" = ["T20"]  # may touch sys.stdout
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+# ── Mypy ───────────────────────────────────────────────────────────────
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unreachable = true
+warn_unused_configs = true
+disallow_any_generics = true
+
+[[tool.mypy.overrides]]
+module = "mcp.*"
+ignore_missing_imports = false  # mcp ships type stubs
+
+# ── Pytest ─────────────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+markers = [
+    "integration: opt-in tests requiring docker-compose stack (Phase 2+)",
+    "slow: long-running tests",
+]
