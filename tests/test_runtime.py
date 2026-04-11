@@ -20,9 +20,7 @@ def test_resolve_git_sha_env_var(monkeypatch: pytest.MonkeyPatch) -> None:
     assert _resolve_git_sha() == "deadbeefcafe"
 
 
-def test_resolve_git_sha_fallback_when_everything_fails(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: object
-) -> None:
+def test_resolve_git_sha_fallback_when_everything_fails(monkeypatch: pytest.MonkeyPatch, tmp_path: object) -> None:
     monkeypatch.delenv("MCPTO_GIT_SHA", raising=False)
     monkeypatch.setenv("PATH", "")  # hide git binary
     # In a dir without .git, subprocess returns non-zero

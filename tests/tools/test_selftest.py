@@ -15,9 +15,7 @@ try:
 except ImportError:
     app_mod = None  # type: ignore[assignment]
 
-pytestmark = pytest.mark.skipif(
-    app_mod is None, reason="mcp_trino_optimizer.app not yet implemented"
-)
+pytestmark = pytest.mark.skipif(app_mod is None, reason="mcp_trino_optimizer.app not yet implemented")
 
 
 async def _invoke_selftest(mcp: object, echo: str = "hello") -> dict:
@@ -58,10 +56,7 @@ async def test_selftest_binds_request_id_and_tool_name(
             continue
         if data.get("tool_name") == "mcp_selftest" and "request_id" in data:
             return
-    raise AssertionError(
-        "No log line bound request_id + tool_name=mcp_selftest; "
-        f"stderr: {captured.err}"
-    )
+    raise AssertionError(f"No log line bound request_id + tool_name=mcp_selftest; stderr: {captured.err}")
 
 
 async def test_selftest_capabilities_is_list() -> None:

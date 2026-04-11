@@ -14,9 +14,7 @@ try:
 except ImportError:
     cfg = None  # type: ignore[assignment]
 
-pytestmark = pytest.mark.skipif(
-    cfg is None, reason="mcp_trino_optimizer.logging_setup not yet implemented"
-)
+pytestmark = pytest.mark.skipif(cfg is None, reason="mcp_trino_optimizer.logging_setup not yet implemented")
 
 
 def test_log_line_contains_mandatory_fields(capsys: pytest.CaptureFixture[str]) -> None:

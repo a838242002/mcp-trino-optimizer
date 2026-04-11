@@ -15,9 +15,7 @@ try:
 except ImportError:
     env = None  # type: ignore[assignment]
 
-pytestmark = pytest.mark.skipif(
-    env is None, reason="mcp_trino_optimizer.safety.envelope not yet implemented"
-)
+pytestmark = pytest.mark.skipif(env is None, reason="mcp_trino_optimizer.safety.envelope not yet implemented")
 
 
 def test_shape_is_exact() -> None:

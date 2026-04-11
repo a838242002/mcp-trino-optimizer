@@ -33,6 +33,7 @@ class LooseInput(BaseModel):
     # No model_config with extra='forbid' → additionalProperties not false
     name: str = Field(max_length=100)
 
+
 # Module-level guard only gates on schema_lint — the negative-case tests
 # construct a throwaway FastMCP inline and don't need app.build_app().
 pytestmark = pytest.mark.skipif(

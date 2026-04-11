@@ -50,10 +50,7 @@ def serve(
     bearer_token: Optional[str] = typer.Option(  # noqa: UP045
         None,
         "--bearer-token",
-        help=(
-            "Override MCPTO_HTTP_BEARER_TOKEN. "
-            "Required for --transport http."
-        ),
+        help=("Override MCPTO_HTTP_BEARER_TOKEN. Required for --transport http."),
         envvar=None,  # pydantic-settings reads env; Typer does not
     ),
 ) -> None:

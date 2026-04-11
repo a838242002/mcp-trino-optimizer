@@ -14,9 +14,7 @@ try:
 except ImportError:
     settings_mod = None  # type: ignore[assignment]
 
-pytestmark = pytest.mark.skipif(
-    settings_mod is None, reason="mcp_trino_optimizer.settings not yet implemented"
-)
+pytestmark = pytest.mark.skipif(settings_mod is None, reason="mcp_trino_optimizer.settings not yet implemented")
 
 
 def test_default_transport_is_stdio(clean_env: pytest.MonkeyPatch) -> None:

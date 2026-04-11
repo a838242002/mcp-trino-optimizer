@@ -64,13 +64,7 @@ def _redact_processor(
             return {
                 k: (
                     "[REDACTED]"
-                    if (
-                        isinstance(k, str)
-                        and (
-                            k.lower() in REDACTION_DENYLIST
-                            or _CREDENTIAL_PATTERN.match(k)
-                        )
-                    )
+                    if (isinstance(k, str) and (k.lower() in REDACTION_DENYLIST or _CREDENTIAL_PATTERN.match(k)))
                     else _walk(v)
                 )
                 for k, v in obj.items()

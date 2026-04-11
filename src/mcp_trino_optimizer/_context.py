@@ -12,9 +12,7 @@ import uuid
 
 import structlog
 
-_request_id: contextvars.ContextVar[str] = contextvars.ContextVar(
-    "request_id", default=""
-)
+_request_id: contextvars.ContextVar[str] = contextvars.ContextVar("request_id", default="")
 
 
 def new_request_id() -> str:

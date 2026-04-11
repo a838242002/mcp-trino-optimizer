@@ -81,9 +81,7 @@ def _wait_for_port(host: str, port: int, timeout: float = 5.0) -> bool:
     return False
 
 
-def test_http_transport_rejects_missing_authorization_header(
-    spawn_server, bearer_token: str
-) -> None:
+def test_http_transport_rejects_missing_authorization_header(spawn_server, bearer_token: str) -> None:
     """Requests without an Authorization header must get 401."""
     import httpx
 

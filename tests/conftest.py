@@ -28,9 +28,7 @@ def _configure_structlog_for_tests() -> None:
     try:
         from mcp_trino_optimizer.logging_setup import configure_logging
 
-        configure_logging(
-            "INFO", package_version="0.1.0-test", git_sha="testsha00000"
-        )
+        configure_logging("INFO", package_version="0.1.0-test", git_sha="testsha00000")
     except ImportError:
         # logging_setup isn't installed yet in very-early Wave 0 test runs.
         pass

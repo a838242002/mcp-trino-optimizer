@@ -50,8 +50,7 @@ def assert_tools_compliant(mcp: FastMCP) -> None:
         )
     if violations:
         raise SchemaLintError(
-            f"Schema lint failed for {len(violations)} violation(s):\n  - "
-            + "\n  - ".join(violations)
+            f"Schema lint failed for {len(violations)} violation(s):\n  - " + "\n  - ".join(violations)
         )
 
 
@@ -75,13 +74,9 @@ def _check_schema(
         # still recurse into properties and $defs, which is where our tool-
         # defined models live.
         if path != "" and schema.get("additionalProperties") is not False:
-            violations.append(
-                f"{tool_name}{path}: object must set additionalProperties: false"
-            )
+            violations.append(f"{tool_name}{path}: object must set additionalProperties: false")
         for name, sub in (schema.get("properties") or {}).items():
-            _check_schema(
-                tool_name, sub, path=f"{path}.{name}", violations=violations
-            )
+            _check_schema(tool_name, sub, path=f"{path}.{name}", violations=violations)
 
     # --- String ---------------------------------------------------------
     elif t == "string":
@@ -89,9 +84,7 @@ def _check_schema(
         if max_len is None:
             violations.append(f"{tool_name}{path}: string must set maxLength")
         elif max_len > MAX_STRING_LEN:
-            violations.append(
-                f"{tool_name}{path}: string maxLength {max_len} > {MAX_STRING_LEN}"
-            )
+            violations.append(f"{tool_name}{path}: string maxLength {max_len} > {MAX_STRING_LEN}")
         # Prose fields without a pattern must have a reasonable prose cap
         if (
             "pattern" not in schema
@@ -100,8 +93,7 @@ def _check_schema(
             and not schema.get("x-mcpto-sql", False)
         ):
             violations.append(
-                f"{tool_name}{path}: prose string maxLength {max_len} > "
-                f"{MAX_PROSE_LEN} without x-mcpto-sql"
+                f"{tool_name}{path}: prose string maxLength {max_len} > {MAX_PROSE_LEN} without x-mcpto-sql"
             )
 
     # --- Array ----------------------------------------------------------
@@ -109,14 +101,10 @@ def _check_schema(
         if "maxItems" not in schema:
             violations.append(f"{tool_name}{path}: array must set maxItems")
         elif schema["maxItems"] > MAX_ARRAY_LEN:
-            violations.append(
-                f"{tool_name}{path}: array maxItems {schema['maxItems']} > {MAX_ARRAY_LEN}"
-            )
+            violations.append(f"{tool_name}{path}: array maxItems {schema['maxItems']} > {MAX_ARRAY_LEN}")
         items = schema.get("items")
         if isinstance(items, dict):
-            _check_schema(
-                tool_name, items, path=f"{path}[]", violations=violations
-            )
+            _check_schema(tool_name, items, path=f"{path}[]", violations=violations)
 
     # --- $defs / definitions (pydantic nested models) ------------------
     for defs_key in ("$defs", "definitions"):
@@ -131,9 +119,7 @@ def _check_schema(
     # --- anyOf / oneOf / allOf -----------------------------------------
     for key in ("anyOf", "oneOf", "allOf"):
         for i, sub in enumerate(schema.get(key) or []):
-            _check_schema(
-                tool_name, sub, path=f"{path}[{key}:{i}]", violations=violations
-            )
+            _check_schema(tool_name, sub, path=f"{path}[{key}:{i}]", violations=violations)
 
 
 __all__ = [
