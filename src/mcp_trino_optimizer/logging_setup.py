@@ -108,6 +108,22 @@ def _orjson_renderer(
     return orjson.dumps(dict(event_dict)).decode("utf-8")
 
 
+class _LazyStderrLoggerFactory:
+    """Factory that returns a PrintLogger bound to the CURRENT ``sys.stderr``.
+
+    structlog.PrintLoggerFactory captures ``sys.stderr`` at construction time
+    and passes that stale reference to every PrintLogger it builds. Pytest's
+    ``capsys`` fixture swaps ``sys.stderr`` between fixtures and test calls,
+    so a stale reference means log output never lands in ``capsys.readouterr()``.
+    This factory resolves ``sys.stderr`` at every logger creation, which —
+    combined with ``cache_logger_on_first_use=False`` — guarantees pytest
+    capture fidelity in tests and has effectively zero cost in production.
+    """
+
+    def __call__(self, *args: Any) -> structlog.PrintLogger:
+        return structlog.PrintLogger(sys.stderr)
+
+
 def configure_logging(
     level: str = "INFO",
     *,
@@ -150,8 +166,8 @@ def configure_logging(
             # Final JSON render via orjson.
             _orjson_renderer,
         ],
-        logger_factory=structlog.PrintLoggerFactory(file=sys.stderr),
-        cache_logger_on_first_use=True,
+        logger_factory=_LazyStderrLoggerFactory(),
+        cache_logger_on_first_use=False,
     )
 
 

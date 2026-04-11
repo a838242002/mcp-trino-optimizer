@@ -16,6 +16,26 @@ from collections.abc import Iterator
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def _configure_structlog_for_tests() -> None:
+    """Auto-configure structlog once per test so log lines land on stderr.
+
+    Without this, ``structlog.get_logger`` defaults to PrintLogger(stdout)
+    and capsys.readouterr().err is empty — breaking every test that asserts
+    on structured log content. Idempotent; cheap; no side effects beyond
+    structlog's module-level configure() call.
+    """
+    try:
+        from mcp_trino_optimizer.logging_setup import configure_logging
+
+        configure_logging(
+            "INFO", package_version="0.1.0-test", git_sha="testsha00000"
+        )
+    except ImportError:
+        # logging_setup isn't installed yet in very-early Wave 0 test runs.
+        pass
+
+
 @pytest.fixture
 def bearer_token() -> str:
     return "a" * 32

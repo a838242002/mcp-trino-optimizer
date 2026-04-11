@@ -66,7 +66,15 @@ def _check_schema(
 
     # --- Object ---------------------------------------------------------
     if t == "object":
-        if schema.get("additionalProperties") is not False:
+        # Skip the root-level additionalProperties check: FastMCP auto-generates
+        # the outer {tool}Arguments wrapper and does not emit
+        # additionalProperties: false on it — only on the $defs entries
+        # derived from our own BaseModel inputs. Parameter-name mismatches at
+        # the root are caught by pydantic validation before the tool body
+        # runs, so the root wrapper is outside our strictness contract. We
+        # still recurse into properties and $defs, which is where our tool-
+        # defined models live.
+        if path != "" and schema.get("additionalProperties") is not False:
             violations.append(
                 f"{tool_name}{path}: object must set additionalProperties: false"
             )

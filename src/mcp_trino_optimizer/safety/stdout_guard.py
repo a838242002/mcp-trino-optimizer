@@ -44,9 +44,7 @@ class SentinelWriter:
             return len(data) if data else 0
         # Lazy import — logging_setup is plan 01-03 and may race with us.
         try:
-            from mcp_trino_optimizer.logging_setup import (  # type: ignore[import-not-found]
-                get_logger,
-            )
+            from mcp_trino_optimizer.logging_setup import get_logger
 
             get_logger(__name__).error(
                 "stdout_violation",
