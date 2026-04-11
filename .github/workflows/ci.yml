@@ -1,0 +1,108 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ────────────────────────────────────────────────────────────────
+  # lint-types — one cell
+  # ────────────────────────────────────────────────────────────────
+  lint-types:
+    name: Lint + Types (Linux / Python 3.12)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          python-version: "3.12"
+
+      - name: Install dev deps
+        run: uv sync --all-extras
+        shell: bash
+
+      - name: Ruff format check
+        run: uv run ruff format --check .
+        shell: bash
+
+      - name: Ruff lint
+        run: uv run ruff check .
+        shell: bash
+
+      - name: Mypy strict
+        run: uv run mypy src
+        shell: bash
+
+  # ────────────────────────────────────────────────────────────────
+  # unit-smoke — 9-cell matrix (PLAT-13)
+  # ────────────────────────────────────────────────────────────────
+  unit-smoke:
+    name: Unit + Smoke (${{ matrix.os }} / Python ${{ matrix.python }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ["3.11", "3.12", "3.13"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install package (pip install -e path — PLAT-01)
+        run: |
+          uv venv
+          uv pip install -e ".[dev]"
+        shell: bash
+
+      - name: Run unit tests (not integration)
+        run: uv run pytest -m "not integration" -x
+        shell: bash
+        env:
+          MCPTO_GIT_SHA: ${{ github.sha }}
+          PYTHONUNBUFFERED: "1"
+
+      - name: Stdio cleanliness smoke test (PLAT-05)
+        run: uv run pytest tests/smoke/test_stdio_initialize.py -v
+        shell: bash
+        env:
+          MCPTO_GIT_SHA: ${{ github.sha }}
+          PYTHONUNBUFFERED: "1"
+
+      - name: HTTP bearer smoke test (PLAT-03)
+        run: uv run pytest tests/smoke/test_http_bearer.py -v
+        shell: bash
+        env:
+          MCPTO_GIT_SHA: ${{ github.sha }}
+          PYTHONUNBUFFERED: "1"
+
+      - name: Verify CLI entry point exists
+        run: uv run mcp-trino-optimizer --help
+        shell: bash
+
+      - name: Verify `uv tool install .` path (PLAT-01 — second install variant)
+        run: |
+          uv tool install .
+          uv tool run mcp-trino-optimizer --help
+        shell: bash
+
+  # ────────────────────────────────────────────────────────────────
+  # integration — reserved for Phase 2+ (docker-compose stack)
+  # ────────────────────────────────────────────────────────────────
+  integration:
+    name: Integration (Phase 2+ — docker-compose stack)
+    if: false  # Phase 2+ flips this to run the testcontainers-based suite
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Integration job placeholder — populated in Phase 2+"
