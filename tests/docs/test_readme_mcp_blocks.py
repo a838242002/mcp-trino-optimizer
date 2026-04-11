@@ -2,8 +2,8 @@
 Streamable HTTP, and Docker. CLAUDE.md and CONTRIBUTING.md exist at repo root.
 
 `test_claude_md_exists` is a REGRESSION GUARD: CLAUDE.md exists today and
-must keep existing. Every other test in this file is individually xfailed
-until plan 01-05 expands the README and lands CONTRIBUTING.md.
+must keep existing. After plan 01-05 shipped the full README, every test
+in this file is a real regression guard (xfail markers removed).
 """
 
 from __future__ import annotations
@@ -11,8 +11,6 @@ from __future__ import annotations
 import json
 import pathlib
 import re
-
-import pytest
 
 ROOT = pathlib.Path(__file__).parents[2]
 
@@ -22,8 +20,8 @@ def test_claude_md_exists() -> None:
     assert (ROOT / "CLAUDE.md").exists()
 
 
-@pytest.mark.xfail(reason="CONTRIBUTING.md lands in plan 01-05", strict=False)
 def test_contributing_md_exists() -> None:
+    """Regression guard — CONTRIBUTING.md shipped in plan 01-05."""
     assert (ROOT / "CONTRIBUTING.md").exists()
 
 
@@ -48,7 +46,6 @@ def _find_code_blocks(markdown: str, lang: str | None = None) -> list[str]:
     return [m.group(1) for m in re.finditer(pattern, markdown, flags=re.DOTALL)]
 
 
-@pytest.mark.xfail(reason="README expanded in plan 01-05", strict=False)
 def test_readme_contains_stdio_mcp_servers_block() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     blocks = _find_json_code_blocks(readme)
@@ -68,16 +65,22 @@ def test_readme_contains_stdio_mcp_servers_block() -> None:
     assert found, "no stdio mcpServers block found in README"
 
 
-@pytest.mark.xfail(reason="README expanded in plan 01-05", strict=False)
 def test_readme_contains_streamable_http_block() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     blocks = _find_json_code_blocks(readme)
+    # Look for any mcpServers block whose server entry either declares
+    # transport=http OR carries an explicit url with the /mcp suffix.
+    # The current README documents HTTP via url+headers (not args), so
+    # the args-based check used by earlier plans is no longer adequate.
     found = False
     for block in blocks:
         servers = block.get("mcpServers") or {}
         for entry in servers.values():
-            args = " ".join(map(str, entry.get("args", [])))
-            if "http" in args:
+            if entry.get("transport") == "http":
+                found = True
+                break
+            url = entry.get("url", "")
+            if "/mcp" in url and url.startswith("http"):
                 found = True
                 break
         if found:
@@ -85,7 +88,6 @@ def test_readme_contains_streamable_http_block() -> None:
     assert found, "no Streamable HTTP mcpServers block found in README"
 
 
-@pytest.mark.xfail(reason="README expanded in plan 01-05", strict=False)
 def test_readme_contains_docker_block() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     # Look for a `docker run` command block (bash or plain)

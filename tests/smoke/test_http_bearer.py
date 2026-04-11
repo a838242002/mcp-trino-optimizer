@@ -67,6 +67,20 @@ def test_http_transport_fails_fast_without_bearer_token(clean_env: pytest.Monkey
     assert found, f"no settings_error event in stderr; got: {stderr_text}"
 
 
+def _wait_for_port(host: str, port: int, timeout: float = 5.0) -> bool:
+    """Poll the server until it accepts TCP connections or the timeout elapses."""
+    import socket
+
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        try:
+            with socket.create_connection((host, port), timeout=0.2):
+                return True
+        except OSError:
+            time.sleep(0.1)
+    return False
+
+
 def test_http_transport_rejects_missing_authorization_header(
     spawn_server, bearer_token: str
 ) -> None:
@@ -81,8 +95,10 @@ def test_http_transport_rejects_missing_authorization_header(
         "18080",
         env={"MCPTO_HTTP_BEARER_TOKEN": bearer_token},
     )
-    # Give the HTTP server a moment to bind
-    time.sleep(0.5)
+    # Wait for uvicorn to actually bind the port (0.5s sleep was flaky).
+    if not _wait_for_port("127.0.0.1", 18080):
+        proc.kill()
+        pytest.skip("HTTP server did not bind within 5s — production implementation missing")
     try:
         resp = httpx.post("http://127.0.0.1:18080/mcp", json={}, timeout=5.0)
     except httpx.ConnectError:
@@ -104,7 +120,9 @@ def test_http_transport_rejects_wrong_bearer_token(spawn_server, bearer_token: s
         "18081",
         env={"MCPTO_HTTP_BEARER_TOKEN": bearer_token},
     )
-    time.sleep(0.5)
+    if not _wait_for_port("127.0.0.1", 18081):
+        proc.kill()
+        pytest.skip("HTTP server did not bind within 5s — production implementation missing")
     try:
         resp = httpx.post(
             "http://127.0.0.1:18081/mcp",
@@ -131,11 +149,20 @@ def test_http_transport_accepts_correct_bearer_token(spawn_server, bearer_token:
         "18082",
         env={"MCPTO_HTTP_BEARER_TOKEN": bearer_token},
     )
-    time.sleep(0.5)
+    if not _wait_for_port("127.0.0.1", 18082):
+        proc.kill()
+        pytest.skip("HTTP server did not bind within 5s — production implementation missing")
     try:
         resp = httpx.post(
             "http://127.0.0.1:18082/mcp",
-            headers={"Authorization": f"Bearer {bearer_token}"},
+            headers={
+                "Authorization": f"Bearer {bearer_token}",
+                # MCP Streamable HTTP spec (2025-03-26) requires the client
+                # to accept both JSON and SSE so the server can choose its
+                # response shape. Missing these headers → 406 Not Acceptable.
+                "Accept": "application/json, text/event-stream",
+                "Content-Type": "application/json",
+            },
             json={
                 "jsonrpc": "2.0",
                 "id": 1,
