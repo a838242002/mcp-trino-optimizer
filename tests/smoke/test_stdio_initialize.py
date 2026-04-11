@@ -2,7 +2,7 @@
 
 Covers PLAT-02 (stdio transport answers initialize) and PLAT-05 (stdout
 discipline — only JSON-RPC frames). Runs on all 9 CI matrix cells
-(Linux/macOS/Windows × 3.11/3.12/3.13).
+(Linux/macOS/Windows x 3.11/3.12/3.13).
 
 Must use bytes mode (text=False) to avoid Windows encoding surprises.
 

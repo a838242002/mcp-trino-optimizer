@@ -48,9 +48,8 @@ def test_http_transport_fails_fast_without_bearer_token(clean_env: pytest.Monkey
         _, err_bytes = proc.communicate()
         raise AssertionError("HTTP transport did not fail fast within 5s") from None
 
-    assert proc.returncode is not None and proc.returncode != 0, (
-        f"expected non-zero exit; got {proc.returncode}"
-    )
+    assert proc.returncode is not None, "process did not exit"
+    assert proc.returncode != 0, f"expected non-zero exit; got {proc.returncode}"
     # Parse last line of stderr as structured JSON
     stderr_text = err_bytes.decode("utf-8", errors="replace").strip()
     lines = [line for line in stderr_text.splitlines() if line.strip()]
