@@ -4,6 +4,7 @@
 **Core Value:** Turn opaque Trino query performance problems into actionable, evidence-backed optimization reports that a user (or an LLM agent) can trust and apply safely.
 
 **Source documents:**
+
 - `.planning/PROJECT.md` (project context)
 - `.planning/research/SUMMARY.md` (synthesized research; canonical for categorization)
 - `.planning/research/STACK.md`, `FEATURES.md`, `ARCHITECTURE.md`, `PITFALLS.md` (depth)
@@ -16,47 +17,47 @@ Requirements for the initial v1 release. Each maps to exactly one roadmap phase.
 
 ### Platform (PLAT) — Skeleton, Safety Foundation, Packaging
 
-- [ ] **PLAT-01**: Developer can install the server via `uv tool install mcp-trino-optimizer`, `uvx mcp-trino-optimizer`, and `pip install mcp-trino-optimizer` on macOS, Linux, and Windows
-- [ ] **PLAT-02**: Developer can start the server on the `stdio` transport (default) and have Claude Code discover and connect to it via a documented `mcpServers` config
-- [ ] **PLAT-03**: Developer can start the server on the Streamable HTTP transport (`/mcp` endpoint) bound to `127.0.0.1` by default with a static bearer token
-- [ ] **PLAT-04**: Developer can run the server from the published Docker image (`python:3.12-slim-bookworm` base) with stdio by default and Streamable HTTP via a flag
-- [ ] **PLAT-05**: Every log line is written to stderr only, never stdout, so the stdio JSON-RPC channel is never corrupted (enforced by startup guard + CI test that asserts stdout contains only valid JSON-RPC after `initialize`)
-- [ ] **PLAT-06**: Every log line is structured JSON (via `structlog`) with `request_id`, `tool_name`, `git_sha`, `package_version`, and ISO8601 UTC timestamp
-- [ ] **PLAT-07**: Any dict containing `Authorization`, `X-Trino-Extra-Credentials`, `credential.*`, or configured secret keys is hard-redacted to `[REDACTED]` before being logged (unit-tested)
-- [ ] **PLAT-08**: Developer can configure the server via environment variables, a config file, and per-tool-call overrides (env > file > default) using `pydantic-settings`, with secrets held as `SecretStr`
-- [ ] **PLAT-09**: The server exposes an `mcp_selftest` tool that returns server version, transport, enabled capabilities, and a round-trip payload echo — usable as a protocol health probe from Claude Code
-- [ ] **PLAT-10**: Every MCP tool has a strict JSON Schema: `additionalProperties: false`, bounded string `maxLength` (SQL ≤ 100KB), identifier `pattern`, bounded arrays
-- [ ] **PLAT-11**: Every tool output that contains a user-origin string (SQL, pasted EXPLAIN, Trino error message) wraps that string in an `untrusted_content` envelope (`{ "source": "untrusted", "content": "..." }`) so LLM callers cannot be indirectly prompt-injected via tool results
-- [ ] **PLAT-12**: README includes copy-pasteable Claude Code `mcpServers` JSON for each install path and a "CLAUDE.md" defining coding rules, DoD, validation workflow, and safe-execution boundaries
-- [ ] **PLAT-13**: The CI install-matrix verifies successful install and `initialize` round-trip on Python 3.11, 3.12, 3.13 × macOS, Linux, Windows
+- [x] **PLAT-01**: Developer can install the server via `uv tool install mcp-trino-optimizer`, `uvx mcp-trino-optimizer`, and `pip install mcp-trino-optimizer` on macOS, Linux, and Windows
+- [x] **PLAT-02**: Developer can start the server on the `stdio` transport (default) and have Claude Code discover and connect to it via a documented `mcpServers` config
+- [x] **PLAT-03**: Developer can start the server on the Streamable HTTP transport (`/mcp` endpoint) bound to `127.0.0.1` by default with a static bearer token
+- [x] **PLAT-04**: Developer can run the server from the published Docker image (`python:3.12-slim-bookworm` base) with stdio by default and Streamable HTTP via a flag
+- [x] **PLAT-05**: Every log line is written to stderr only, never stdout, so the stdio JSON-RPC channel is never corrupted (enforced by startup guard + CI test that asserts stdout contains only valid JSON-RPC after `initialize`)
+- [x] **PLAT-06**: Every log line is structured JSON (via `structlog`) with `request_id`, `tool_name`, `git_sha`, `package_version`, and ISO8601 UTC timestamp
+- [x] **PLAT-07**: Any dict containing `Authorization`, `X-Trino-Extra-Credentials`, `credential.*`, or configured secret keys is hard-redacted to `[REDACTED]` before being logged (unit-tested)
+- [x] **PLAT-08**: Developer can configure the server via environment variables, a config file, and per-tool-call overrides (env > file > default) using `pydantic-settings`, with secrets held as `SecretStr`
+- [x] **PLAT-09**: The server exposes an `mcp_selftest` tool that returns server version, transport, enabled capabilities, and a round-trip payload echo — usable as a protocol health probe from Claude Code
+- [x] **PLAT-10**: Every MCP tool has a strict JSON Schema: `additionalProperties: false`, bounded string `maxLength` (SQL ≤ 100KB), identifier `pattern`, bounded arrays
+- [x] **PLAT-11**: Every tool output that contains a user-origin string (SQL, pasted EXPLAIN, Trino error message) wraps that string in an `untrusted_content` envelope (`{ "source": "untrusted", "content": "..." }`) so LLM callers cannot be indirectly prompt-injected via tool results
+- [x] **PLAT-12**: README includes copy-pasteable Claude Code `mcpServers` JSON for each install path and a "CLAUDE.md" defining coding rules, DoD, validation workflow, and safe-execution boundaries
+- [x] **PLAT-13**: The CI install-matrix verifies successful install and `initialize` round-trip on Python 3.11, 3.12, 3.13 × macOS, Linux, Windows
 
 ### Trino Adapter (TRN) — HTTP REST, Auth, Safety Gate, Dual Mode
 
-- [ ] **TRN-01**: The server talks to Trino via HTTP REST using `trino-python-client` (no JDBC, no JVM dependency)
-- [ ] **TRN-02**: Every Trino call runs through `asyncio.to_thread` with a bounded thread pool (default 4, configurable) so the MCP event loop never blocks
-- [ ] **TRN-03**: The server supports no-auth, Basic auth, and JWT bearer auth, with the JWT token read per-request (never cached in logs)
-- [ ] **TRN-04**: Every SQL statement sent to Trino passes through a single `SqlClassifier` gate (at the adapter boundary) that uses `sqlglot` AST inspection; any statement not on the allowlist of `SELECT` / `EXPLAIN` / `EXPLAIN ANALYZE` / `SHOW` / `DESCRIBE` / Iceberg metadata queries is rejected before any network call. Multi-statement is rejected. `EXPLAIN ANALYZE <inner>` recursively validates the inner statement.
-- [ ] **TRN-05**: The classifier invariant is enforced by an architectural unit test that asserts every public method of the Trino client calls `assert_read_only(sql)` as its first line
-- [ ] **TRN-06**: Every Trino request has a wall-clock budget; on timeout or cancel, the adapter sends `DELETE /v1/query/{queryId}` to Trino and awaits confirmation, leaving no orphaned query on the cluster
-- [ ] **TRN-07**: On adapter init, the server probes the Trino version (`SELECT node_version FROM system.runtime.nodes`) and builds a capability matrix; rules that require a newer Trino report "skipped — requires Trino ≥ Y" as a structured finding, never an exception
-- [ ] **TRN-08**: On adapter init, the server probes the Iceberg catalog type, Iceberg format version, and metadata-table availability; results are recorded in the capability matrix
-- [ ] **TRN-09**: The adapter can fetch `EXPLAIN (FORMAT JSON)`, `EXPLAIN ANALYZE (FORMAT JSON)`, and `EXPLAIN (TYPE DISTRIBUTED)` for a user-supplied query
-- [ ] **TRN-10**: The adapter can read from `system.runtime.*`, `system.metadata.*`, and Iceberg metadata tables (`$snapshots`, `$files`, `$manifests`, `$partitions`, `$history`, `$refs`) for a user-supplied table
-- [ ] **TRN-11**: Every executed statement is logged with `request_id`, statement hash, duration, caller identity, and Trino `X-Trino-Source` + `X-Trino-Client-Tags` propagation
-- [ ] **TRN-12**: The analysis pipeline supports **offline mode** — an `OfflinePlanSource` accepts pasted `EXPLAIN (FORMAT JSON)` text as tool input and produces the same typed plan used by live mode, with no network call
-- [ ] **TRN-13**: Live mode and offline mode share one pipeline via `PlanSource` / `StatsSource` / `CatalogSource` ports — adding a new mode does not touch rules, recommenders, or rewrites
-- [ ] **TRN-14**: Minimum supported Trino version is **429**; the server refuses to initialize against older clusters with a structured error
-- [ ] **TRN-15**: The max-concurrent-queries semaphore is enforced per MCP process (default 4)
+- [x] **TRN-01**: The server talks to Trino via HTTP REST using `trino-python-client` (no JDBC, no JVM dependency)
+- [x] **TRN-02**: Every Trino call runs through `asyncio.to_thread` with a bounded thread pool (default 4, configurable) so the MCP event loop never blocks
+- [x] **TRN-03**: The server supports no-auth, Basic auth, and JWT bearer auth, with the JWT token read per-request (never cached in logs)
+- [x] **TRN-04**: Every SQL statement sent to Trino passes through a single `SqlClassifier` gate (at the adapter boundary) that uses `sqlglot` AST inspection; any statement not on the allowlist of `SELECT` / `EXPLAIN` / `EXPLAIN ANALYZE` / `SHOW` / `DESCRIBE` / Iceberg metadata queries is rejected before any network call. Multi-statement is rejected. `EXPLAIN ANALYZE <inner>` recursively validates the inner statement.
+- [x] **TRN-05**: The classifier invariant is enforced by an architectural unit test that asserts every public method of the Trino client calls `assert_read_only(sql)` as its first line
+- [x] **TRN-06**: Every Trino request has a wall-clock budget; on timeout or cancel, the adapter sends `DELETE /v1/query/{queryId}` to Trino and awaits confirmation, leaving no orphaned query on the cluster
+- [x] **TRN-07**: On adapter init, the server probes the Trino version (`SELECT node_version FROM system.runtime.nodes`) and builds a capability matrix; rules that require a newer Trino report "skipped — requires Trino ≥ Y" as a structured finding, never an exception
+- [x] **TRN-08**: On adapter init, the server probes the Iceberg catalog type, Iceberg format version, and metadata-table availability; results are recorded in the capability matrix
+- [x] **TRN-09**: The adapter can fetch `EXPLAIN (FORMAT JSON)`, `EXPLAIN ANALYZE (FORMAT JSON)`, and `EXPLAIN (TYPE DISTRIBUTED)` for a user-supplied query
+- [x] **TRN-10**: The adapter can read from `system.runtime.*`, `system.metadata.*`, and Iceberg metadata tables (`$snapshots`, `$files`, `$manifests`, `$partitions`, `$history`, `$refs`) for a user-supplied table
+- [x] **TRN-11**: Every executed statement is logged with `request_id`, statement hash, duration, caller identity, and Trino `X-Trino-Source` + `X-Trino-Client-Tags` propagation
+- [x] **TRN-12**: The analysis pipeline supports **offline mode** — an `OfflinePlanSource` accepts pasted `EXPLAIN (FORMAT JSON)` text as tool input and produces the same typed plan used by live mode, with no network call
+- [x] **TRN-13**: Live mode and offline mode share one pipeline via `PlanSource` / `StatsSource` / `CatalogSource` ports — adding a new mode does not touch rules, recommenders, or rewrites
+- [x] **TRN-14**: Minimum supported Trino version is **429**; the server refuses to initialize against older clusters with a structured error
+- [x] **TRN-15**: The max-concurrent-queries semaphore is enforced per MCP process (default 4)
 
 ### Plan Parser (PLN) — Typed Tolerant Tree
 
-- [ ] **PLN-01**: The parser produces two distinct typed plan classes: `EstimatedPlan` (from `EXPLAIN (FORMAT JSON)`) and `ExecutedPlan` (from `EXPLAIN ANALYZE`); rules declare which they support and the engine filters by availability
-- [ ] **PLN-02**: Every parsed node preserves a `raw: dict[str, Any]` bag alongside typed fields so unknown or renamed Trino-version fields survive without a parse error
-- [ ] **PLN-03**: The parser extracts per-operator CPU time, wall time, input/output rows, input/output bytes, peak memory, and exchange metadata
-- [ ] **PLN-04**: The parser recognizes Iceberg-specific operators (`IcebergTableScan`, split info, manifest reads) and exposes their split count, file count, and partition spec identifier
-- [ ] **PLN-05**: The parser normalizes plan shape before rules see it — collapses `ScanFilterProject` into `TableScan + filter + projection` and walks transparently through `Project` nodes when searching for scans
-- [ ] **PLN-06**: A multi-version fixture corpus from at least 3 Trino versions (Trino 429, a middle LTS, and 480+) is captured from the docker-compose stack; every fixture must parse without error and produces a syrupy snapshot that is gated in CI
-- [ ] **PLN-07**: When the parser encounters an unknown node type or schema drift, it records a structured `schema_drift_warning` in the plan result rather than raising
+- [x] **PLN-01**: The parser produces two distinct typed plan classes: `EstimatedPlan` (from `EXPLAIN (FORMAT JSON)`) and `ExecutedPlan` (from `EXPLAIN ANALYZE`); rules declare which they support and the engine filters by availability
+- [x] **PLN-02**: Every parsed node preserves a `raw: dict[str, Any]` bag alongside typed fields so unknown or renamed Trino-version fields survive without a parse error
+- [x] **PLN-03**: The parser extracts per-operator CPU time, wall time, input/output rows, input/output bytes, peak memory, and exchange metadata
+- [x] **PLN-04**: The parser recognizes Iceberg-specific operators (`IcebergTableScan`, split info, manifest reads) and exposes their split count, file count, and partition spec identifier
+- [x] **PLN-05**: The parser normalizes plan shape before rules see it — collapses `ScanFilterProject` into `TableScan + filter + projection` and walks transparently through `Project` nodes when searching for scans
+- [x] **PLN-06**: A multi-version fixture corpus from at least 3 Trino versions (Trino 429, a middle LTS, and 480+) is captured from the docker-compose stack; every fixture must parse without error and produces a syrupy snapshot that is gated in CI
+- [x] **PLN-07**: When the parser encounters an unknown node type or schema drift, it records a structured `schema_drift_warning` in the plan result rather than raising
 
 ### Rule Engine (RUL) — Deterministic Core
 
@@ -211,41 +212,41 @@ Populated by the roadmapper on 2026-04-11. Every v1 REQ-ID maps to exactly one p
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PLAT-01 | Phase 1 | Pending |
-| PLAT-02 | Phase 1 | Pending |
-| PLAT-03 | Phase 1 | Pending |
-| PLAT-04 | Phase 1 | Pending |
-| PLAT-05 | Phase 1 | Pending |
-| PLAT-06 | Phase 1 | Pending |
-| PLAT-07 | Phase 1 | Pending |
-| PLAT-08 | Phase 1 | Pending |
-| PLAT-09 | Phase 1 | Pending |
-| PLAT-10 | Phase 1 | Pending |
-| PLAT-11 | Phase 1 | Pending |
-| PLAT-12 | Phase 1 | Pending |
-| PLAT-13 | Phase 1 | Pending |
-| TRN-01 | Phase 2 | Pending |
-| TRN-02 | Phase 2 | Pending |
-| TRN-03 | Phase 2 | Pending |
-| TRN-04 | Phase 2 | Pending |
-| TRN-05 | Phase 2 | Pending |
-| TRN-06 | Phase 2 | Pending |
-| TRN-07 | Phase 2 | Pending |
-| TRN-08 | Phase 2 | Pending |
-| TRN-09 | Phase 2 | Pending |
-| TRN-10 | Phase 2 | Pending |
-| TRN-11 | Phase 2 | Pending |
-| TRN-12 | Phase 2 | Pending |
-| TRN-13 | Phase 2 | Pending |
-| TRN-14 | Phase 2 | Pending |
-| TRN-15 | Phase 2 | Pending |
-| PLN-01 | Phase 3 | Pending |
-| PLN-02 | Phase 3 | Pending |
-| PLN-03 | Phase 3 | Pending |
-| PLN-04 | Phase 3 | Pending |
-| PLN-05 | Phase 3 | Pending |
-| PLN-06 | Phase 3 | Pending |
-| PLN-07 | Phase 3 | Pending |
+| PLAT-01 | Phase 1 | Complete |
+| PLAT-02 | Phase 1 | Complete |
+| PLAT-03 | Phase 1 | Complete |
+| PLAT-04 | Phase 1 | Complete |
+| PLAT-05 | Phase 1 | Complete |
+| PLAT-06 | Phase 1 | Complete |
+| PLAT-07 | Phase 1 | Complete |
+| PLAT-08 | Phase 1 | Complete |
+| PLAT-09 | Phase 1 | Complete |
+| PLAT-10 | Phase 1 | Complete |
+| PLAT-11 | Phase 1 | Complete |
+| PLAT-12 | Phase 1 | Complete |
+| PLAT-13 | Phase 1 | Complete |
+| TRN-01 | Phase 2 | Complete |
+| TRN-02 | Phase 2 | Complete |
+| TRN-03 | Phase 2 | Complete |
+| TRN-04 | Phase 2 | Complete |
+| TRN-05 | Phase 2 | Complete |
+| TRN-06 | Phase 2 | Complete |
+| TRN-07 | Phase 2 | Complete |
+| TRN-08 | Phase 2 | Complete |
+| TRN-09 | Phase 2 | Complete |
+| TRN-10 | Phase 2 | Complete |
+| TRN-11 | Phase 2 | Complete |
+| TRN-12 | Phase 2 | Complete |
+| TRN-13 | Phase 2 | Complete |
+| TRN-14 | Phase 2 | Complete |
+| TRN-15 | Phase 2 | Complete |
+| PLN-01 | Phase 3 | Complete |
+| PLN-02 | Phase 3 | Complete |
+| PLN-03 | Phase 3 | Complete |
+| PLN-04 | Phase 3 | Complete |
+| PLN-05 | Phase 3 | Complete |
+| PLN-06 | Phase 3 | Complete |
+| PLN-07 | Phase 3 | Complete |
 | RUL-01 | Phase 4 | Pending |
 | RUL-02 | Phase 4 | Pending |
 | RUL-03 | Phase 4 | Pending |
@@ -315,10 +316,11 @@ Populated by the roadmapper on 2026-04-11. Every v1 REQ-ID maps to exactly one p
 | TST-08 | Phase 9 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 102 total (PLAT 13, TRN 15, PLN 7, RUL 21, REC 7, RWR 7, CMP 6, MCP 18, TST 8)
 - Mapped to phases: 102
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-04-11*
-*Last updated: 2026-04-11 — traceability populated by roadmapper*
+*Last updated: 2026-04-12 — PLAT-01..13, TRN-01..15, PLN-01..07 marked complete (Phases 1–3 shipped)*

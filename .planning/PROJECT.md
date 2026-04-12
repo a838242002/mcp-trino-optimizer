@@ -14,43 +14,41 @@ Turn opaque Trino query performance problems into actionable, evidence-backed op
 
 <!-- Shipped and confirmed valuable. -->
 
-(None yet — ship to validate)
+#### Table Stakes (Platform) — Phase 1 ✅ (2026-04-12)
+
+- [x] MCP server skeleton with Python 3.11+, packaged via `uv` + `pyproject.toml`, installable via `pip`/`uvx`
+- [x] Both `stdio` and Streamable HTTP MCP transports from day one (not legacy HTTP+SSE — deprecated in MCP spec 2025-03-26)
+- [x] Docker image for containerized deploy, with docker-compose for local development
+- [x] Read-only safety mode by default — no destructive SQL ever issued
+- [x] Structured query logging for every executed Trino statement
+- [x] Configuration via environment variables and a config file (Trino URL, catalog, schema, auth)
+- [x] `$INSTRUCTION_FILE` (CLAUDE.md) describing coding rules, DoD, validation workflow, and safe-execution boundaries
+- [x] README with quickstart, tool reference, and Claude Code integration instructions
+
+#### Trino Adapter — Phase 2 ✅ (2026-04-12)
+
+- [x] HTTP REST client against Trino (no JDBC/JVM dependency)
+- [x] Auth: no-auth, basic auth, and JWT bearer tokens
+- [x] Support `EXPLAIN (FORMAT JSON)`, `EXPLAIN ANALYZE`, `EXPLAIN (TYPE DISTRIBUTED)`
+- [x] Query system tables (`system.runtime.*`, `system.metadata.*`)
+- [x] Query Iceberg metadata tables (`$snapshots`, `$files`, `$partitions`, `$manifests`)
+- [x] Cancel/timeout protection on every request
+
+#### Dual Execution Modes — Phase 2 ✅ (2026-04-12)
+
+- [x] **Live mode** — connects to a configured Trino cluster and runs read-only EXPLAIN/ANALYZE
+- [x] **Offline mode** — accepts pasted EXPLAIN JSON + optional stats as tool input; no cluster needed
+
+#### Plan Parser — Phase 3 ✅ (2026-04-12)
+
+- [x] Parse Trino `EXPLAIN (FORMAT JSON)` output into a typed stage/operator tree
+- [x] Extract per-operator CPU time, wall time, input/output rows, peak memory, exchange patterns
+- [x] Normalize differences between EXPLAIN and EXPLAIN ANALYZE shapes
+- [x] Handle Iceberg-specific operators (IcebergTableScan, split info, manifest reads)
 
 ### Active
 
 <!-- Current scope. Building toward these. -->
-
-#### Table Stakes (Platform)
-
-- [ ] MCP server skeleton with Python 3.11+, packaged via `uv` + `pyproject.toml`, installable via `pip`/`uvx`
-- [ ] Both `stdio` and Streamable HTTP MCP transports from day one (not legacy HTTP+SSE — deprecated in MCP spec 2025-03-26)
-- [ ] Docker image for containerized deploy, with docker-compose for local development
-- [ ] Read-only safety mode by default — no destructive SQL ever issued
-- [ ] Structured query logging for every executed Trino statement
-- [ ] Configuration via environment variables and a config file (Trino URL, catalog, schema, auth)
-- [ ] `$INSTRUCTION_FILE` (CLAUDE.md) describing coding rules, DoD, validation workflow, and safe-execution boundaries
-- [ ] README with quickstart, tool reference, and Claude Code integration instructions
-
-#### Trino Adapter
-
-- [ ] HTTP REST client against Trino (no JDBC/JVM dependency)
-- [ ] Auth: no-auth, basic auth, and JWT bearer tokens
-- [ ] Support `EXPLAIN (FORMAT JSON)`, `EXPLAIN ANALYZE`, `EXPLAIN (TYPE DISTRIBUTED)`
-- [ ] Query system tables (`system.runtime.*`, `system.metadata.*`)
-- [ ] Query Iceberg metadata tables (`$snapshots`, `$files`, `$partitions`, `$manifests`)
-- [ ] Cancel/timeout protection on every request
-
-#### Dual Execution Modes
-
-- [ ] **Live mode** — connects to a configured Trino cluster and runs read-only EXPLAIN/ANALYZE
-- [ ] **Offline mode** — accepts pasted EXPLAIN JSON + optional stats as tool input; no cluster needed
-
-#### Plan Parser
-
-- [ ] Parse Trino `EXPLAIN (FORMAT JSON)` output into a typed stage/operator tree
-- [ ] Extract per-operator CPU time, wall time, input/output rows, peak memory, exchange patterns
-- [ ] Normalize differences between EXPLAIN and EXPLAIN ANALYZE shapes
-- [ ] Handle Iceberg-specific operators (IcebergTableScan, split info, manifest reads)
 
 #### Rule Engine (minimum 10 rules)
 
@@ -149,7 +147,7 @@ Turn opaque Trino query performance problems into actionable, evidence-backed op
 ## Constraints
 
 - **Tech stack**: Python 3.11+ with `uv` package manager, `pyproject.toml`, official `mcp` Python SDK, HTTP REST Trino client. No JVM dependency — Why: single-language simplicity, fast cold start, rich data tooling, and the strongest Python MCP ecosystem for this problem domain.
-- **MCP transports**: Both `stdio` (for Claude Code / Desktop) and `HTTP/SSE` (for remote / hosted deployments) must work from day one — Why: user explicitly needs both local and remote workflows.
+- **MCP transports**: Both `stdio` (for Claude Code / Desktop) and Streamable HTTP (for remote / hosted deployments) must work from day one — Why: user explicitly needs both local and remote workflows. (Note: legacy HTTP+SSE was deprecated in MCP spec 2025-03-26; Streamable HTTP is the correct implementation.)
 - **Trino client**: HTTP REST only — Why: avoids JVM, keeps the server pure Python, works across all Trino versions.
 - **Auth scope**: Basic + JWT bearer only — Why: covers open-source Trino and managed offerings without pulling in Kerberos/cert complexity.
 - **Safety**: Read-only by default, no destructive SQL allowed, all executed queries logged — Why: the server is designed to be handed to an LLM agent; any hole becomes an exploit.
@@ -164,17 +162,19 @@ Turn opaque Trino query performance problems into actionable, evidence-backed op
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Python 3.11+ as the implementation language | Official MCP Python SDK maturity, mature `trino-python-client`, strong data tooling, avoids JVM | — Pending |
-| HTTP REST Trino client (no JDBC) | Keeps the server pure Python, no JVM, works across Trino versions | — Pending |
-| Dual execution mode: live + offline | Live gives grounded EXPLAIN evidence; offline lets users/LLMs analyze pasted plans without a cluster | — Pending |
-| Basic + JWT auth only for v1 | Covers OSS Trino and major managed offerings without Kerberos/cert complexity | — Pending |
-| `uv` + `pyproject.toml` + Docker packaging | Reproducible dev, easy install via `pip`/`uvx`, containerized deploy path | — Pending |
-| Both `stdio` and `HTTP/SSE` MCP transports | User needs local (Claude Code) and remote/hosted use cases from day one | — Pending |
-| Hive + REST Iceberg catalogs first | Covers the dominant deployments; Glue/Nessie deferred | — Pending |
-| Local docker-compose (Trino + Iceberg + MinIO) for integration tests | Real coverage in CI without external dependencies | — Pending |
-| Deterministic rule engine as source of truth; LLM prompts shape narrative only | Prevents hallucination; rules are auditable and testable | — Pending |
-| Safe-only SQL rewrites; never change semantics | Correctness is non-negotiable; an unsafe rewrite destroys trust | — Pending |
-| Read-only by construction — no DDL/DML ever issued | Server will be invoked by LLM agents; blast radius must be bounded | — Pending |
+| Python 3.11+ as the implementation language | Official MCP Python SDK maturity, mature `trino-python-client`, strong data tooling, avoids JVM | ✅ Confirmed — Python 3.12 used for Docker image; 3.11 is the floor |
+| HTTP REST Trino client (no JDBC) | Keeps the server pure Python, no JVM, works across Trino versions | ✅ Confirmed — `trino-python-client` with async wrapper via `anyio.to_thread` |
+| Dual execution mode: live + offline | Live gives grounded EXPLAIN evidence; offline lets users/LLMs analyze pasted plans without a cluster | ✅ Confirmed — `OfflinePlanSource` shares `PlanSource` port with live adapters |
+| Basic + JWT auth only for v1 | Covers OSS Trino and major managed offerings without Kerberos/cert complexity | ✅ Confirmed — `BasicAuthentication` + `JWTAuthentication` in `SqlClassifier` auth builder |
+| `uv` + `pyproject.toml` + Docker packaging | Reproducible dev, easy install via `pip`/`uvx`, containerized deploy path | ✅ Confirmed — `hatchling` build backend, multi-stage Dockerfile on `python:3.12-slim-bookworm` |
+| Both `stdio` and Streamable HTTP MCP transports (not legacy HTTP+SSE) | User needs local (Claude Code) and remote/hosted use cases from day one | ✅ Confirmed — legacy SSE deprecated 2025-03-26; Streamable HTTP (`/mcp` endpoint) implemented |
+| Hive + REST Iceberg catalogs first; Lakekeeper as the default REST catalog | Covers the dominant deployments; Glue/Nessie deferred | ✅ Confirmed — Lakekeeper chosen over Nessie/Polaris for simplest docker-compose story |
+| Local docker-compose (Trino + Iceberg + MinIO) for integration tests | Real coverage in CI without external dependencies | ✅ Confirmed — Trino 480 + Lakekeeper + PostgreSQL + MinIO stack |
+| Deterministic rule engine as source of truth; LLM prompts shape narrative only | Prevents hallucination; rules are auditable and testable | ✅ Confirmed — architecture locked in Phase 2 ports design |
+| Safe-only SQL rewrites; never change semantics | Correctness is non-negotiable; an unsafe rewrite destroys trust | ✅ Confirmed — `dangerous_rewrites: false` default; whitelist-only transforms |
+| Read-only by construction — no DDL/DML ever issued | Server will be invoked by LLM agents; blast radius must be bounded | ✅ Confirmed — `SqlClassifier` AST gate enforced at adapter boundary; invariant test in Phase 2 |
+| Minimum supported Trino version: **429** | Balances feature availability vs. installed base | ✅ Confirmed — version probe on init; structured refusal below 429 |
+| EXPLAIN ANALYZE is text-only (Trino issue #5786) — dual-path parser | Real Trino does not support `EXPLAIN ANALYZE (FORMAT JSON)`; text parsing required | ✅ Confirmed — discovered in Phase 3; dual-path parser architecture implemented |
 
 ## Evolution
 
@@ -194,4 +194,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-11 after initialization*
+*Last updated: 2026-04-12 — Phases 1–3 complete; requirements moved to Validated; Key Decisions confirmed*
