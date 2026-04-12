@@ -34,7 +34,6 @@ from mcp_trino_optimizer._context import (
     bind_trino_query_id,
     current_request_id,
 )
-from mcp_trino_optimizer.adapters.trino._explain_plan import ExplainPlan
 from mcp_trino_optimizer.adapters.trino.auth import build_authentication
 from mcp_trino_optimizer.adapters.trino.classifier import SqlClassifier
 from mcp_trino_optimizer.adapters.trino.errors import TrinoAuthError, TrinoClassifierRejected
@@ -45,6 +44,8 @@ from mcp_trino_optimizer.adapters.trino.handle import (
 )
 from mcp_trino_optimizer.adapters.trino.pool import TrinoThreadPool
 from mcp_trino_optimizer.logging_setup import get_logger
+from mcp_trino_optimizer.parser import parse_estimated_plan, parse_executed_plan
+from mcp_trino_optimizer.parser.models import EstimatedPlan, ExecutedPlan, PlanNode
 from mcp_trino_optimizer.settings import Settings
 
 __all__ = ["TrinoClient"]
@@ -103,30 +104,27 @@ class TrinoClient:
         sql: str,
         *,
         timeout: float | None = None,
-    ) -> ExplainPlan | TimeoutResult[ExplainPlan]:
+    ) -> EstimatedPlan | TimeoutResult[EstimatedPlan]:
         self._classifier.assert_read_only(sql)
-        explain_sql = f"EXPLAIN (FORMAT JSON) {sql}"
-        return await self._execute_explain(explain_sql, "estimated", timeout=timeout)
+        return await self._fetch_estimated(f"EXPLAIN (FORMAT JSON) {sql}", timeout=timeout)
 
     async def fetch_analyze_plan(
         self,
         sql: str,
         *,
         timeout: float | None = None,
-    ) -> ExplainPlan | TimeoutResult[ExplainPlan]:
+    ) -> ExecutedPlan | TimeoutResult[ExecutedPlan]:
         self._classifier.assert_read_only(sql)
-        explain_sql = f"EXPLAIN ANALYZE {sql}"
-        return await self._execute_explain(explain_sql, "executed", timeout=timeout)
+        return await self._fetch_executed(f"EXPLAIN ANALYZE {sql}", timeout=timeout)
 
     async def fetch_distributed_plan(
         self,
         sql: str,
         *,
         timeout: float | None = None,
-    ) -> ExplainPlan | TimeoutResult[ExplainPlan]:
+    ) -> EstimatedPlan | TimeoutResult[EstimatedPlan]:
         self._classifier.assert_read_only(sql)
-        explain_sql = f"EXPLAIN (TYPE DISTRIBUTED) {sql}"
-        return await self._execute_explain(explain_sql, "distributed", timeout=timeout)
+        return await self._fetch_estimated(f"EXPLAIN (TYPE DISTRIBUTED) {sql}", timeout=timeout)
 
     async def fetch_stats(
         self,
@@ -327,48 +325,38 @@ class TrinoClient:
         )
         return result
 
-    async def _execute_explain(
+    async def _fetch_estimated(
         self,
         explain_sql: str,
-        plan_type: str,
         *,
         timeout: float | None = None,
-    ) -> ExplainPlan | TimeoutResult[ExplainPlan]:
-        """Execute an EXPLAIN query and parse the JSON plan."""
-        import json as _json
-
+    ) -> EstimatedPlan | TimeoutResult[EstimatedPlan]:
+        """Execute an EXPLAIN (FORMAT JSON) query and return a typed EstimatedPlan."""
         raw = await self._execute_query(explain_sql, timeout=timeout)
         if isinstance(raw, TimeoutResult):
-            empty_plan = ExplainPlan(
-                plan_json={},
-                plan_type=plan_type,  # type: ignore[arg-type]
-                raw_text="",
-            )
             return TimeoutResult(
-                partial=empty_plan,
+                partial=EstimatedPlan(root=PlanNode(id="0", name="Unknown")),
                 timed_out=raw.timed_out,
                 elapsed_ms=raw.elapsed_ms,
                 query_id=raw.query_id,
             )
+        plan_text = str(next(iter(raw[0].values()), "")) if raw else ""
+        return parse_estimated_plan(plan_text)
 
-        # EXPLAIN returns one row with one column containing the JSON string
-        plan_text = ""
-        if raw:
-            row = raw[0]
-            # row is dict[str, Any] — get the single column value
-            plan_text = str(next(iter(row.values()), ""))
-
-        # EXPLAIN ANALYZE returns plain text, not JSON — skip JSON parsing for executed plans
-        if plan_type == "executed":
-            plan_json: dict[str, Any] = {}
-        else:
-            try:
-                plan_json = _json.loads(plan_text) if plan_text else {}
-            except _json.JSONDecodeError:
-                plan_json = {"raw": plan_text}
-
-        return ExplainPlan(
-            plan_json=plan_json,
-            plan_type=plan_type,  # type: ignore[arg-type]
-            raw_text=plan_text,
-        )
+    async def _fetch_executed(
+        self,
+        explain_sql: str,
+        *,
+        timeout: float | None = None,
+    ) -> ExecutedPlan | TimeoutResult[ExecutedPlan]:
+        """Execute an EXPLAIN ANALYZE query and return a typed ExecutedPlan."""
+        raw = await self._execute_query(explain_sql, timeout=timeout)
+        if isinstance(raw, TimeoutResult):
+            return TimeoutResult(
+                partial=ExecutedPlan(root=PlanNode(id="0", name="Unknown")),
+                timed_out=raw.timed_out,
+                elapsed_ms=raw.elapsed_ms,
+                query_id=raw.query_id,
+            )
+        plan_text = str(next(iter(raw[0].values()), "")) if raw else ""
+        return parse_executed_plan(plan_text)
