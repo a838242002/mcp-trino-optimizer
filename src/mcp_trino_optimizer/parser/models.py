@@ -163,7 +163,7 @@ class BasePlan(BaseModel):
         """
         stack = [self.root]
         while stack:
-            node = stack.pop()
+            node = stack.pop()  # WR-01 fix: pop() from right end is O(1); pop(0) was O(n)
             yield node
             stack.extend(reversed(node.children))
 
