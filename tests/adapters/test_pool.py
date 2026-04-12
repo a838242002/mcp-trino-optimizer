@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import threading
 import time
 
 import pytest
 
 from mcp_trino_optimizer.adapters.trino.errors import TrinoPoolBusyError
-from mcp_trino_optimizer.adapters.trino.handle import QueryIdCell, QueryHandle, TimeoutResult
+from mcp_trino_optimizer.adapters.trino.handle import QueryIdCell, TimeoutResult
 from mcp_trino_optimizer.adapters.trino.pool import TrinoThreadPool
-
 
 # ---------------------------------------------------------------------------
 # TrinoThreadPool tests
@@ -81,10 +81,8 @@ async def test_pool_rejects_when_full() -> None:
     finally:
         release_slot.set()
         task.cancel()
-        try:
+        with contextlib.suppress(asyncio.CancelledError, Exception):
             await task
-        except (asyncio.CancelledError, Exception):
-            pass
         pool.shutdown(wait=False)
 
 
@@ -126,7 +124,6 @@ def test_query_id_cell_set_once_is_idempotent() -> None:
 def test_query_id_cell_wait_for_returns_value_after_set() -> None:
     """wait_for returns the value after set_once is called from another thread."""
     cell = QueryIdCell()
-    result: list[str | None] = []
 
     def setter() -> None:
         time.sleep(0.05)

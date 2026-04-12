@@ -15,7 +15,6 @@ from pydantic import SecretStr, ValidationError
 from mcp_trino_optimizer.adapters.trino.auth import PerCallJWTAuthentication, build_authentication
 from mcp_trino_optimizer.settings import Settings
 
-
 # ---------------------------------------------------------------------------
 # Settings validation
 # ---------------------------------------------------------------------------

@@ -68,6 +68,7 @@ def test_ports_package_has_no_adapter_imports() -> None:
 def test_plan_source_protocol_methods_are_async() -> None:
     """PlanSource Protocol methods must be async (coroutine functions)."""
     import inspect
+
     from mcp_trino_optimizer.ports import PlanSource
 
     for method_name in ("fetch_plan", "fetch_analyze_plan", "fetch_distributed_plan"):
@@ -80,6 +81,7 @@ def test_plan_source_protocol_methods_are_async() -> None:
 def test_stats_source_protocol_methods_are_async() -> None:
     """StatsSource Protocol methods must be async (coroutine functions)."""
     import inspect
+
     from mcp_trino_optimizer.ports import StatsSource
 
     for method_name in ("fetch_table_stats", "fetch_system_runtime"):
@@ -92,6 +94,7 @@ def test_stats_source_protocol_methods_are_async() -> None:
 def test_catalog_source_protocol_methods_are_async() -> None:
     """CatalogSource Protocol methods must be async (coroutine functions)."""
     import inspect
+
     from mcp_trino_optimizer.ports import CatalogSource
 
     for method_name in ("fetch_iceberg_metadata", "fetch_catalogs", "fetch_schemas"):

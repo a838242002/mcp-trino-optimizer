@@ -14,7 +14,8 @@ do not install all dev extras) do not fail at collection time.
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING, Generator
+from collections.abc import Generator
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -32,7 +33,7 @@ def _get_testing_dir() -> str:
 
 
 @pytest.fixture(scope="session")
-def compose_stack() -> Generator["DockerCompose", None, None]:
+def compose_stack() -> Generator[DockerCompose, None, None]:
     """Boot docker-compose stack, wait for Trino healthcheck, yield, teardown."""
     try:
         from testcontainers.compose import DockerCompose
@@ -52,7 +53,7 @@ def compose_stack() -> Generator["DockerCompose", None, None]:
 
 
 @pytest.fixture(scope="session")
-def trino_host(compose_stack: "DockerCompose") -> tuple[str, int]:
+def trino_host(compose_stack: DockerCompose) -> tuple[str, int]:
     """Return (host, port) for the Trino service in the compose stack."""
     host = compose_stack.get_service_host("trino", 8080)
     port = compose_stack.get_service_port("trino", 8080)
@@ -60,13 +61,13 @@ def trino_host(compose_stack: "DockerCompose") -> tuple[str, int]:
 
 
 @pytest.fixture(scope="session")
-def seeded_stack(trino_host: tuple[str, int]) -> Generator[tuple[str, int], None, None]:
+def seeded_stack(trino_host: tuple[str, int]) -> tuple[str, int]:
     """Seed the Iceberg table once for the whole session; yield trino_host."""
     from tests.integration.fixtures import seed_iceberg_table
 
     host, port = trino_host
     seed_iceberg_table(host=host, port=port)
-    yield host, port
+    return host, port
 
 
 @pytest.fixture

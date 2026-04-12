@@ -9,6 +9,7 @@ Verifies:
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import io
 import json
@@ -22,7 +23,6 @@ import structlog
 from mcp_trino_optimizer.adapters.trino.client import TrinoClient
 from mcp_trino_optimizer.adapters.trino.pool import TrinoThreadPool
 from mcp_trino_optimizer.settings import Settings
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -47,10 +47,8 @@ def _capture_log_lines(output: io.StringIO) -> list[dict[str, Any]]:
         line = line.strip()
         if not line:
             continue
-        try:
+        with contextlib.suppress(json.JSONDecodeError):
             lines.append(json.loads(line))
-        except json.JSONDecodeError:
-            pass
     return lines
 
 
@@ -59,7 +57,7 @@ def _capture_log_lines(output: io.StringIO) -> list[dict[str, Any]]:
 # ---------------------------------------------------------------------------
 
 
-@pytest.fixture()
+@pytest.fixture
 def log_capture() -> Iterator[io.StringIO]:
     """Redirect structlog output to a StringIO buffer for test inspection."""
     buf = io.StringIO()
@@ -86,7 +84,7 @@ def log_capture() -> Iterator[io.StringIO]:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def pool() -> Iterator[TrinoThreadPool]:
     p = TrinoThreadPool(max_workers=2)
     yield p
@@ -114,7 +112,7 @@ async def test_trino_query_executed_event_emitted(
     mock_run = MagicMock(return_value=fake_rows)
 
     with patch.object(client, "_run_in_thread", mock_run):
-        result = await client.fetch_system_runtime(sql)
+        await client.fetch_system_runtime(sql)
 
     lines = _capture_log_lines(log_capture)
     exec_events = [ln for ln in lines if ln.get("event") == "trino_query_executed"]

@@ -48,6 +48,7 @@ dev = [
     "pre-commit>=3.8",
     "testcontainers[trino,minio]>=4.14.2",
     "types-requests>=2.33.0",
+    "pytest-timeout>=2.3.1",
 ]
 
 [project.scripts]
@@ -99,6 +100,8 @@ ignore = ["E501"]  # line length enforced by formatter
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["T20"]  # tests may print during debug
 "src/mcp_trino_optimizer/safety/stdout_guard.py" = ["T20"]  # may touch sys.stdout
+"src/mcp_trino_optimizer/adapters/trino/client.py" = ["ASYNC109"]  # timeout param is domain-level budget, not asyncio.timeout pattern
+"src/mcp_trino_optimizer/adapters/trino/errors.py" = ["N818"]  # established public API names; renaming breaks tests
 
 [tool.ruff.format]
 quote-style = "double"

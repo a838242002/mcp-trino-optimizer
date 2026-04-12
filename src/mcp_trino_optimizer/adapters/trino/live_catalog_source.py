@@ -33,7 +33,7 @@ class LiveCatalogSource:
         client: Configured ``TrinoClient`` instance.
     """
 
-    def __init__(self, client: "TrinoClient") -> None:
+    def __init__(self, client: TrinoClient) -> None:
         self._client = client
 
     async def fetch_iceberg_metadata(
@@ -80,10 +80,7 @@ class LiveCatalogSource:
             A list of catalog name strings.  Empty list on timeout.
         """
         result = await self._client.fetch_system_runtime("SHOW CATALOGS")
-        if isinstance(result, TimeoutResult):
-            rows = result.partial
-        else:
-            rows = result
+        rows = result.partial if isinstance(result, TimeoutResult) else result
         return [str(r.get("Catalog", r.get("catalog", ""))) for r in rows if isinstance(r, dict)]
 
     async def fetch_schemas(self, catalog: str) -> list[str]:
@@ -99,8 +96,5 @@ class LiveCatalogSource:
             A list of schema name strings.  Empty list on timeout.
         """
         result = await self._client.fetch_system_runtime(f'SHOW SCHEMAS IN "{catalog}"')
-        if isinstance(result, TimeoutResult):
-            rows = result.partial
-        else:
-            rows = result
+        rows = result.partial if isinstance(result, TimeoutResult) else result
         return [str(r.get("Schema", r.get("schema", ""))) for r in rows if isinstance(r, dict)]

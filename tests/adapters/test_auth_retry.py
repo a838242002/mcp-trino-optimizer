@@ -10,11 +10,12 @@ Verifies:
 
 from __future__ import annotations
 
+import contextlib
 import io
 import json
 from collections.abc import Iterator
 from typing import Any
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 import structlog
@@ -24,7 +25,6 @@ from mcp_trino_optimizer.adapters.trino.client import TrinoClient
 from mcp_trino_optimizer.adapters.trino.errors import TrinoAuthError
 from mcp_trino_optimizer.adapters.trino.pool import TrinoThreadPool
 from mcp_trino_optimizer.settings import Settings
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -47,10 +47,8 @@ def _parse_log_lines(buf: io.StringIO) -> list[dict[str, Any]]:
         line = line.strip()
         if not line:
             continue
-        try:
+        with contextlib.suppress(json.JSONDecodeError):
             lines.append(json.loads(line))
-        except json.JSONDecodeError:
-            pass
     return lines
 
 
@@ -85,7 +83,7 @@ def _make_500_error() -> trino.exceptions.TrinoExternalError:
 # ---------------------------------------------------------------------------
 
 
-@pytest.fixture()
+@pytest.fixture
 def log_capture() -> Iterator[io.StringIO]:
     buf = io.StringIO()
     structlog.configure(
@@ -107,7 +105,7 @@ def log_capture() -> Iterator[io.StringIO]:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def pool() -> Iterator[TrinoThreadPool]:
     p = TrinoThreadPool(max_workers=2)
     yield p
@@ -148,9 +146,8 @@ async def test_double_401_raises_trino_auth_error(pool: TrinoThreadPool) -> None
     side_effects = [_make_401_error(), _make_401_error()]
     mock_run = MagicMock(side_effect=side_effects)
 
-    with patch.object(client, "_run_in_thread", mock_run):
-        with pytest.raises(TrinoAuthError):
-            await client.fetch_system_runtime("SELECT 1")
+    with patch.object(client, "_run_in_thread", mock_run), pytest.raises(TrinoAuthError):
+        await client.fetch_system_runtime("SELECT 1")
 
     assert mock_run.call_count == 2, (
         f"Expected exactly 2 calls, got {mock_run.call_count}"
@@ -202,11 +199,8 @@ async def test_auth_retry_log_has_no_secret(
     side_effects = [_make_401_error(), []]
     mock_run = MagicMock(side_effect=side_effects)
 
-    with patch.object(client, "_run_in_thread", mock_run):
-        try:
-            await client.fetch_system_runtime("SELECT 1")
-        except Exception:
-            pass
+    with patch.object(client, "_run_in_thread", mock_run), contextlib.suppress(Exception):
+        await client.fetch_system_runtime("SELECT 1")
 
     os.environ.pop("MCPTO_TRINO_JWT", None)
 
@@ -225,9 +219,8 @@ async def test_non_401_error_not_retried(pool: TrinoThreadPool) -> None:
     err_500 = _make_500_error()
     mock_run = MagicMock(side_effect=[err_500])
 
-    with patch.object(client, "_run_in_thread", mock_run):
-        with pytest.raises(trino.exceptions.TrinoExternalError):
-            await client.fetch_system_runtime("SELECT 1")
+    with patch.object(client, "_run_in_thread", mock_run), pytest.raises(trino.exceptions.TrinoExternalError):
+        await client.fetch_system_runtime("SELECT 1")
 
     assert mock_run.call_count == 1, (
         f"Non-401 error should not trigger retry, got {mock_run.call_count} calls"
@@ -244,11 +237,8 @@ async def test_no_auth_retry_log_for_non_401(
 
     mock_run = MagicMock(side_effect=[_make_500_error()])
 
-    with patch.object(client, "_run_in_thread", mock_run):
-        try:
-            await client.fetch_system_runtime("SELECT 1")
-        except Exception:
-            pass
+    with patch.object(client, "_run_in_thread", mock_run), contextlib.suppress(Exception):
+        await client.fetch_system_runtime("SELECT 1")
 
     lines = _parse_log_lines(log_capture)
     retry_events = [ln for ln in lines if ln.get("event") == "trino_auth_retry"]

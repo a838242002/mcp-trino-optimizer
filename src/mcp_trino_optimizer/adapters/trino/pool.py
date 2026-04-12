@@ -70,11 +70,11 @@ class TrinoThreadPool:
                 asyncio.shield(self._semaphore.acquire()),
                 timeout=_ACQUIRE_TIMEOUT,
             )
-        except asyncio.TimeoutError:
+        except TimeoutError as err:
             raise TrinoPoolBusyError(
                 f"All {self._max_workers} Trino query slots are occupied. "
                 "Try again later or increase max_concurrent_queries."
-            )
+            ) from err
 
         loop = asyncio.get_running_loop()
         try:

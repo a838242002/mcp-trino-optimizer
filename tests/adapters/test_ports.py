@@ -6,15 +6,14 @@ shape and that no adapter coupling exists in the ports package.
 from __future__ import annotations
 
 import ast
-import inspect
 from pathlib import Path
-from typing import Any
 
 
 def test_plan_source_is_protocol() -> None:
     """PlanSource must be a runtime_checkable Protocol."""
+    from typing import Protocol
+
     from mcp_trino_optimizer.ports import PlanSource
-    from typing import Protocol, runtime_checkable
 
     # It's a Protocol
     assert issubclass(PlanSource, Protocol)
@@ -31,8 +30,9 @@ def test_plan_source_has_required_methods() -> None:
 
 def test_stats_source_is_protocol() -> None:
     """StatsSource must be a runtime_checkable Protocol."""
-    from mcp_trino_optimizer.ports import StatsSource
     from typing import Protocol
+
+    from mcp_trino_optimizer.ports import StatsSource
 
     assert issubclass(StatsSource, Protocol)
 
@@ -47,8 +47,9 @@ def test_stats_source_has_required_methods() -> None:
 
 def test_catalog_source_is_protocol() -> None:
     """CatalogSource must be a runtime_checkable Protocol."""
-    from mcp_trino_optimizer.ports import CatalogSource
     from typing import Protocol
+
+    from mcp_trino_optimizer.ports import CatalogSource
 
     assert issubclass(CatalogSource, Protocol)
 
@@ -64,8 +65,9 @@ def test_catalog_source_has_required_methods() -> None:
 
 def test_explain_plan_has_required_fields() -> None:
     """ExplainPlan must have plan_json, plan_type, source_trino_version fields."""
-    from mcp_trino_optimizer.ports import ExplainPlan
     import dataclasses
+
+    from mcp_trino_optimizer.ports import ExplainPlan
 
     fields = {f.name for f in dataclasses.fields(ExplainPlan)}
     assert "plan_json" in fields

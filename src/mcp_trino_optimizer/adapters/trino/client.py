@@ -21,7 +21,7 @@ Logging contract (D-28, T-02-10, T-02-11):
 
 from __future__ import annotations
 
-import asyncio
+import contextlib
 import hashlib
 import time
 from datetime import UTC, datetime
@@ -62,7 +62,7 @@ def _get_version() -> str:
         from importlib.metadata import version
 
         return version("mcp-trino-optimizer")
-    except Exception:  # noqa: BLE001
+    except Exception:
         return "dev"
 
 
@@ -245,17 +245,13 @@ class TrinoClient:
             description = cursor.description or []
             if description:
                 col_names = [col[0] for col in description]
-                return [dict(zip(col_names, row)) for row in rows]
+                return [dict(zip(col_names, row, strict=False)) for row in rows]
             return list(rows) if rows else []
         finally:
-            try:
+            with contextlib.suppress(Exception):
                 cursor.close()
-            except Exception:  # noqa: BLE001
-                pass
-            try:
+            with contextlib.suppress(Exception):
                 conn.close()
-            except Exception:  # noqa: BLE001
-                pass
 
     async def _execute_query(
         self,
@@ -309,7 +305,7 @@ class TrinoClient:
                         query_id=handle.query_id or "",
                     ) from exc2
                 raise
-        except asyncio.TimeoutError:
+        except TimeoutError:
             elapsed = int((time.monotonic() - start_ms) * 1000)
             http_scheme = "https" if self._settings.trino_verify_ssl else "http"
             ssl_verify: bool | str = (

@@ -23,7 +23,7 @@ class LiveStatsSource:
         client: Configured ``TrinoClient`` instance.
     """
 
-    def __init__(self, client: "TrinoClient") -> None:
+    def __init__(self, client: TrinoClient) -> None:
         self._client = client
 
     async def fetch_table_stats(
@@ -45,10 +45,7 @@ class LiveStatsSource:
         """
         result = await self._client.fetch_stats(catalog, schema, table)
         rows: list[dict[str, Any]]
-        if isinstance(result, TimeoutResult):
-            rows = result.partial
-        else:
-            rows = result
+        rows = result.partial if isinstance(result, TimeoutResult) else result
         return _parse_show_stats(rows)
 
     async def fetch_system_runtime(self, query: str) -> list[dict[str, Any]]:

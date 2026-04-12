@@ -21,7 +21,6 @@ class TestCapabilities:
 
     async def test_probe_capabilities_trino_480(self, trino_client: TrinoClient) -> None:
         """probe_capabilities detects Trino 480 and the iceberg catalog."""
-        from mcp_trino_optimizer.settings import Settings
 
         settings = trino_client._settings
         matrix = await probe_capabilities(trino_client, settings)

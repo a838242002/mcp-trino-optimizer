@@ -14,7 +14,6 @@ from mcp_trino_optimizer.adapters.trino.capabilities import (
 )
 from mcp_trino_optimizer.adapters.trino.errors import TrinoVersionUnsupported
 
-
 # ---------------------------------------------------------------------------
 # parse_trino_version
 # ---------------------------------------------------------------------------

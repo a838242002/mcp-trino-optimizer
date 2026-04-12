@@ -83,7 +83,7 @@ class SqlClassifier:
 
         try:
             statements = sqlglot.parse(stripped, dialect="trino")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             raise TrinoClassifierRejected(
                 f"SQL could not be parsed: {exc}. Only valid read-only statements are allowed."
             ) from exc
@@ -159,7 +159,7 @@ class SqlClassifier:
         # Re-parse the inner SQL and recursively classify.
         try:
             inner_statements = sqlglot.parse(inner_sql, dialect="trino")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             raise TrinoClassifierRejected(
                 f"EXPLAIN inner SQL could not be parsed: {exc}"
             ) from exc

@@ -98,9 +98,7 @@ def _is_assert_read_only_call(stmt: ast.stmt | None) -> bool:
     if len(call.args) != 1:
         return False
     arg = call.args[0]
-    if not isinstance(arg, ast.Name) or arg.id != "sql":
-        return False
-    return True
+    return not (not isinstance(arg, ast.Name) or arg.id != "sql")
 
 
 # ---------------------------------------------------------------------------

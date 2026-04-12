@@ -28,7 +28,7 @@ class LivePlanSource:
         client: Configured ``TrinoClient`` instance.
     """
 
-    def __init__(self, client: "TrinoClient") -> None:
+    def __init__(self, client: TrinoClient) -> None:
         self._client = client
 
     async def fetch_plan(self, sql: str) -> ExplainPlan:

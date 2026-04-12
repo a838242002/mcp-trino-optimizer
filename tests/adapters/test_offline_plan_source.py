@@ -6,8 +6,8 @@ plan type detection, and classifier-exempt behavior.
 from __future__ import annotations
 
 import json
-import pytest
 
+import pytest
 
 VALID_ESTIMATED_PLAN = json.dumps(
     {
@@ -109,7 +109,7 @@ class TestFetchPlan:
         from mcp_trino_optimizer.adapters.offline.json_plan_source import OfflinePlanSource
 
         source = OfflinePlanSource()
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="empty"):
             await source.fetch_plan("")
 
     async def test_plan_exceeding_1mb_raises_value_error(self) -> None:
@@ -127,8 +127,8 @@ class TestFetchPlan:
     async def test_plan_exactly_at_1mb_is_accepted(self) -> None:
         """fetch_plan() accepts plan JSON exactly at the 1MB boundary."""
         from mcp_trino_optimizer.adapters.offline.json_plan_source import (
-            OfflinePlanSource,
             MAX_PLAN_BYTES,
+            OfflinePlanSource,
         )
 
         source = OfflinePlanSource()
@@ -200,7 +200,6 @@ class TestClassifierExempt:
 
     def test_offline_plan_source_does_not_import_classifier(self) -> None:
         """OfflinePlanSource module must not contain any reference to SqlClassifier."""
-        import ast
         from pathlib import Path
 
         module_path = (

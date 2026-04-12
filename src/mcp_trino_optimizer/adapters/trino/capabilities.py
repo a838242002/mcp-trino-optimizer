@@ -78,8 +78,8 @@ class CapabilityMatrix:
 
 
 async def probe_capabilities(
-    client: "TrinoClient",
-    settings: "Settings",
+    client: TrinoClient,
+    settings: Settings,
 ) -> CapabilityMatrix:
     """Probe Trino version and Iceberg catalog capabilities (D-18, D-19).
 
@@ -161,13 +161,13 @@ async def probe_capabilities(
                     )
                     # If we get any response (even empty) without an exception, metadata tables work
                     iceberg_metadata_available = isinstance(meta_rows, list)
-                except Exception:  # noqa: BLE001
+                except Exception:
                     # Probe table doesn't exist — but the query itself ran, so
                     # metadata tables are available (the error is a table-not-found,
                     # not a feature-not-supported error). We set to True conservatively
                     # since the schema list was available.
                     iceberg_metadata_available = True
-        except Exception:  # noqa: BLE001
+        except Exception:
             # Cannot list schemas — treat as unavailable
             iceberg_metadata_available = False
 
