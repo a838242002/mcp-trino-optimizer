@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-04-12T22:11:00.000Z"
+last_updated: "2026-04-12T23:59:00.000Z"
 progress:
   total_phases: 9
   completed_phases: 3
-  total_plans: 15
-  completed_plans: 13
+  total_plans: 16
+  completed_plans: 14
   percent: 33
 ---
 
@@ -42,7 +42,7 @@ Plan: N/A
 | Metric | Value |
 |--------|-------|
 | Phases complete | 3 / 9 |
-| Plans complete | 13 / 13 (Phases 1–3) |
+| Plans complete | 14 / 14 (Phases 1–3) |
 | Requirements delivered | ~35 / 102 (PLAT-01–13, TRN-01–15, PLN-01–07) |
 | Rule-engine rules shipped | 0 / 13 (target in Phase 4) |
 | MCP tools shipped | 1 / 8 (mcp_selftest) |
@@ -90,8 +90,8 @@ None.
 ### Last session
 
 - **Date:** 2026-04-12
-- **Actions:** `/gsd-plan-phase 3` + `/gsd-execute-phase 3` → typed plan parser, normalizer, multi-version fixture corpus, syrupy snapshot tests complete. 357 tests passing. Phase 3 COMPLETE.
-- **Key findings:** Real Trino EXPLAIN JSON uses fragment-keyed format `{"0": root, "1": ...}` — added `_unwrap_fragment_map()` to parser. EXPLAIN ANALYZE is text-only (Trino issue #5786) — dual-path parser architecture.
+- **Actions:** `/gsd-plan-phase 3` + `/gsd-execute-phase 3` → typed plan parser, normalizer, multi-version fixture corpus, syrupy snapshot tests complete. Gap closure plan 03-03 fixed `iceberg_split_count` always-None bug. 363 tests passing. Phase 3 COMPLETE.
+- **Key findings:** Real Trino EXPLAIN JSON uses fragment-keyed format `{"0": root, "1": ...}` — added `_unwrap_fragment_map()` to parser. EXPLAIN ANALYZE is text-only (Trino issue #5786) — dual-path parser architecture. Trino 480+ emits `Splits: N` (not `N splits`) on the Input summary line; column-assignment lines (`:=`) must be excluded from operator detection.
 
 ### Next session
 

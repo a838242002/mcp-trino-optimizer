@@ -81,9 +81,10 @@ Requirements cluster naturally into 9 functional areas that map one-to-one onto 
   3. For an `IcebergTableScan` node, the parsed output exposes split count, file count, and partition spec identifier as first-class typed fields, sourced from the operator's raw detail string and cross-checked against the multi-version fixture snapshots. (PLN-04)
   4. A plan shape containing `ScanFilterProject` is normalized by the parser into the equivalent `TableScan + filter + projection` structure before any consumer sees it; a test fixture with a `Project` wrapper around a scan can be found by a "find scan under this subtree" walk without special-casing. (PLN-05)
   5. The multi-version fixture corpus (at least one `EXPLAIN` + one `EXPLAIN ANALYZE` per version × three versions) is stored in the repo, is gated by a `syrupy` snapshot test in CI, and every fixture parses without error; when a future Trino version adds a field, the snapshot test surfaces it as a diff rather than a crash. (PLN-06)
-**Plans**: 2 plans across 2 waves
+**Plans**: 3 plans across 2 waves + 1 gap closure
   - [x] 03-01-parser-models-normalizer-PLAN.md — Wave 1: PlanNode models, dual-path parser (JSON + text), normalizer, port/adapter migration
   - [x] 03-02-fixture-corpus-snapshots-PLAN.md — Wave 2: Multi-version fixture capture script + corpus, syrupy snapshot tests
+  - [x] 03-03-iceberg-split-count-fix-PLAN.md — Gap closure: fix `iceberg_split_count` always-None (Trino 480 `Splits: N` format + `:=` operator detection fix)
 **UI hint**: no
 **Needs research**: done — see 03-RESEARCH.md
 
