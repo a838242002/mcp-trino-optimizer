@@ -1,0 +1,213 @@
+{
+  "0": {
+    "id": "12",
+    "name": "Output",
+    "descriptor": {
+      "columnNames": "[id, name, status]"
+    },
+    "outputs": [
+      {
+        "type": "bigint",
+        "name": "id_0"
+      },
+      {
+        "type": "varchar",
+        "name": "name"
+      },
+      {
+        "type": "varchar",
+        "name": "status_4"
+      }
+    ],
+    "details": [
+      "id := id_0",
+      "status := status_4"
+    ],
+    "estimates": [
+      {
+        "outputRowCount": 16.053395240858972,
+        "outputSizeInBytes": 1777.913522925131,
+        "cpuCost": 0.0,
+        "memoryCost": 0.0,
+        "networkCost": 0.0
+      }
+    ],
+    "children": [
+      {
+        "id": "319",
+        "name": "InnerJoin",
+        "descriptor": {
+          "criteria": "(id_0 = id)",
+          "distribution": "REPLICATED"
+        },
+        "outputs": [
+          {
+            "type": "bigint",
+            "name": "id_0"
+          },
+          {
+            "type": "varchar",
+            "name": "status_4"
+          },
+          {
+            "type": "varchar",
+            "name": "name"
+          }
+        ],
+        "details": [
+          "Distribution: REPLICATED",
+          "dynamicFilterAssignments = {id -> #df_388}"
+        ],
+        "estimates": [
+          {
+            "outputRowCount": 16.053395240858972,
+            "outputSizeInBytes": 1777.913522925131,
+            "cpuCost": 3937.1038885664543,
+            "memoryCost": 959.1903656413234,
+            "networkCost": 0.0
+          }
+        ],
+        "children": [
+          {
+            "id": "389",
+            "name": "ScanFilter",
+            "descriptor": {
+              "table": "iceberg:test_fixtures.orders$data@7192078785404198795",
+              "filterPredicate": "",
+              "dynamicFilters": "{id_0 = #df_388}"
+            },
+            "outputs": [
+              {
+                "type": "bigint",
+                "name": "id_0"
+              },
+              {
+                "type": "varchar",
+                "name": "status_4"
+              }
+            ],
+            "details": [
+              "id_0 := 1:id:bigint",
+              "status_4 := 5:status:varchar"
+            ],
+            "estimates": [
+              {
+                "outputRowCount": 20.0,
+                "outputSizeInBytes": 1200.0,
+                "cpuCost": 1200.0,
+                "memoryCost": 0.0,
+                "networkCost": 0.0
+              },
+              {
+                "outputRowCount": 20.0,
+                "outputSizeInBytes": 1200.0,
+                "cpuCost": 1200.0,
+                "memoryCost": 0.0,
+                "networkCost": 0.0
+              }
+            ],
+            "children": []
+          },
+          {
+            "id": "430",
+            "name": "LocalExchange",
+            "descriptor": {
+              "partitioning": "SINGLE",
+              "isReplicateNullsAndAny": "",
+              "arguments": "[]"
+            },
+            "outputs": [
+              {
+                "type": "bigint",
+                "name": "id"
+              },
+              {
+                "type": "varchar",
+                "name": "name"
+              }
+            ],
+            "details": [],
+            "estimates": [
+              {
+                "outputRowCount": 16.05339524085897,
+                "outputSizeInBytes": 959.1903656413234,
+                "cpuCost": 0.0,
+                "memoryCost": 0.0,
+                "networkCost": 0.0
+              }
+            ],
+            "children": [
+              {
+                "id": "362",
+                "name": "RemoteSource",
+                "descriptor": {
+                  "sourceFragmentIds": "[1]"
+                },
+                "outputs": [
+                  {
+                    "type": "bigint",
+                    "name": "id"
+                  },
+                  {
+                    "type": "varchar",
+                    "name": "name"
+                  }
+                ],
+                "details": [],
+                "estimates": [],
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "1": {
+    "id": "189",
+    "name": "ScanFilterProject",
+    "descriptor": {
+      "table": "iceberg:test_fixtures.orders$data@7192078785404198795",
+      "filterPredicate": "(amount > decimal(10,2) '100.00')"
+    },
+    "outputs": [
+      {
+        "type": "bigint",
+        "name": "id"
+      },
+      {
+        "type": "varchar",
+        "name": "name"
+      }
+    ],
+    "details": [
+      "id := 1:id:bigint",
+      "name := 2:name:varchar",
+      "amount := 3:amount:decimal(10,2)"
+    ],
+    "estimates": [
+      {
+        "outputRowCount": 20.0,
+        "outputSizeInBytes": 1195.0,
+        "cpuCost": 1375.0,
+        "memoryCost": 0.0,
+        "networkCost": 0.0
+      },
+      {
+        "outputRowCount": 16.05339524085897,
+        "outputSizeInBytes": 959.1903656413234,
+        "cpuCost": 1375.0,
+        "memoryCost": 0.0,
+        "networkCost": 0.0
+      },
+      {
+        "outputRowCount": 16.05339524085897,
+        "outputSizeInBytes": 959.1903656413234,
+        "cpuCost": 959.1903656413234,
+        "memoryCost": 0.0,
+        "networkCost": 0.0
+      }
+    ],
+    "children": []
+  }
+}

@@ -1,0 +1,3772 @@
+# serializer version: 1
+# name: test_fixture_snapshot[429-aggregate-aggregate.json-estimated]
+  dict({
+    'plan_type': 'estimated',
+    'root': dict({
+      'blocked_time_ms': None,
+      'children': list([
+        dict({
+          'blocked_time_ms': None,
+          'children': list([
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+                dict({
+                  'blocked_time_ms': None,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': None,
+                  'descriptor': dict({
+                    'sourceFragmentIds': '[1]',
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '189',
+                  'input_bytes': None,
+                  'input_rows': None,
+                  'name': 'RemoteSource',
+                  'output_bytes': None,
+                  'output_rows': None,
+                  'outputs': list([
+                    dict({
+                      'symbol': 'status',
+                      'type': 'varchar',
+                    }),
+                    dict({
+                      'symbol': 'sum_1',
+                      'type': 'varbinary',
+                    }),
+                    dict({
+                      'symbol': 'count_0',
+                      'type': 'bigint',
+                    }),
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': None,
+                }),
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+                'arguments': '["status"]',
+                'hashColumn': '[]',
+                'isReplicateNullsAndAny': '',
+                'partitioning': 'HASH',
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+                dict({
+                  'cpu_cost': 2300.0,
+                  'memory_cost': 0.0,
+                  'network_cost': 0.0,
+                  'output_row_count': 20.0,
+                  'output_size_in_bytes': 2300.0,
+                }),
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '183',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'LocalExchange',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+                dict({
+                  'symbol': 'status',
+                  'type': 'varchar',
+                }),
+                dict({
+                  'symbol': 'sum_1',
+                  'type': 'varbinary',
+                }),
+                dict({
+                  'symbol': 'count_0',
+                  'type': 'bigint',
+                }),
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+          ]),
+          'cpu_time_ms': None,
+          'descriptor': dict({
+            'hash': '[]',
+            'keys': '[status]',
+            'type': 'FINAL',
+          }),
+          'details': list([
+            'count := count("count_0")',
+            'sum := sum("sum_1")',
+          ]),
+          'estimates': list([
+            dict({
+              'cpu_cost': 2300.0,
+              'memory_cost': 231.0,
+              'network_cost': 0.0,
+              'output_row_count': 3.0,
+              'output_size_in_bytes': 231.0,
+            }),
+          ]),
+          'iceberg_file_count': None,
+          'iceberg_partition_spec_id': None,
+          'iceberg_split_count': None,
+          'id': '4',
+          'input_bytes': None,
+          'input_rows': None,
+          'name': 'Aggregate',
+          'output_bytes': None,
+          'output_rows': None,
+          'outputs': list([
+            dict({
+              'symbol': 'status',
+              'type': 'varchar',
+            }),
+            dict({
+              'symbol': 'count',
+              'type': 'bigint',
+            }),
+            dict({
+              'symbol': 'sum',
+              'type': 'decimal(38,2)',
+            }),
+          ]),
+          'peak_memory_bytes': None,
+          'physical_input_bytes': None,
+          'spilled_bytes': None,
+          'wall_time_ms': None,
+        }),
+      ]),
+      'cpu_time_ms': None,
+      'descriptor': dict({
+        'columnNames': '[status, _col1, _col2]',
+      }),
+      'details': list([
+        '_col1 := count',
+        '_col2 := sum',
+      ]),
+      'estimates': list([
+        dict({
+          'cpu_cost': 0.0,
+          'memory_cost': 0.0,
+          'network_cost': 0.0,
+          'output_row_count': 3.0,
+          'output_size_in_bytes': 231.0,
+        }),
+      ]),
+      'iceberg_file_count': None,
+      'iceberg_partition_spec_id': None,
+      'iceberg_split_count': None,
+      'id': '9',
+      'input_bytes': None,
+      'input_rows': None,
+      'name': 'Output',
+      'output_bytes': None,
+      'output_rows': None,
+      'outputs': list([
+        dict({
+          'symbol': 'status',
+          'type': 'varchar',
+        }),
+        dict({
+          'symbol': 'count',
+          'type': 'bigint',
+        }),
+        dict({
+          'symbol': 'sum',
+          'type': 'decimal(38,2)',
+        }),
+      ]),
+      'peak_memory_bytes': None,
+      'physical_input_bytes': None,
+      'spilled_bytes': None,
+      'wall_time_ms': None,
+    }),
+    'schema_drift_warnings': list([
+      dict({
+        'description': "EXPLAIN JSON has 2 fragments (keys: ['0', '1']). Parsing fragment '0' (output fragment) as the plan root. Other fragments are available in the raw fixture for distributed plan analysis.",
+        'field_name': None,
+        'node_path': 'root',
+        'severity': 'info',
+      }),
+    ]),
+    'source_trino_version': '429',
+  })
+# ---
+# name: test_fixture_snapshot[429-aggregate-aggregate_analyze.txt-executed]
+  dict({
+    'plan_type': 'executed',
+    'root': dict({
+      'blocked_time_ms': None,
+      'children': list([
+        dict({
+          'blocked_time_ms': None,
+          'children': list([
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '3',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Output',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '4',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Output',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+            dict({
+              'blocked_time_ms': 0.0,
+              'children': list([
+              ]),
+              'cpu_time_ms': 3.0,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '5',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Aggregate',
+              'output_bytes': 110,
+              'output_rows': 3,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': 3.0,
+            }),
+            dict({
+              'blocked_time_ms': 203.0,
+              'children': list([
+                dict({
+                  'blocked_time_ms': 379.0,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': 43.56,
+                  'descriptor': dict({
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '7',
+                  'input_bytes': 411,
+                  'input_rows': 20,
+                  'name': 'RemoteSource',
+                  'output_bytes': 420,
+                  'output_rows': 13,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': 77.8,
+                }),
+              ]),
+              'cpu_time_ms': 0.0,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '6',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'LocalExchange',
+              'output_bytes': 420,
+              'output_rows': 13,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': 0.0,
+            }),
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '8',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Output',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '9',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Output',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+            dict({
+              'blocked_time_ms': 0.0,
+              'children': list([
+              ]),
+              'cpu_time_ms': 20.0,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '10',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Aggregate',
+              'output_bytes': 420,
+              'output_rows': 13,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': 49.0,
+            }),
+            dict({
+              'blocked_time_ms': 0.0,
+              'children': list([
+                dict({
+                  'blocked_time_ms': None,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': None,
+                  'descriptor': dict({
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '12',
+                  'input_bytes': None,
+                  'input_rows': None,
+                  'name': 'amount',
+                  'output_bytes': None,
+                  'output_rows': None,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': None,
+                }),
+                dict({
+                  'blocked_time_ms': None,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': None,
+                  'descriptor': dict({
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '13',
+                  'input_bytes': 411,
+                  'input_rows': 20,
+                  'name': 'status',
+                  'output_bytes': None,
+                  'output_rows': None,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': None,
+                }),
+              ]),
+              'cpu_time_ms': 23.0,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '11',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'TableScan',
+              'output_bytes': 411,
+              'output_rows': 20,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': 28.0,
+            }),
+          ]),
+          'cpu_time_ms': 7.79,
+          'descriptor': dict({
+          }),
+          'details': list([
+          ]),
+          'estimates': list([
+          ]),
+          'iceberg_file_count': None,
+          'iceberg_partition_spec_id': None,
+          'iceberg_split_count': None,
+          'id': '2',
+          'input_bytes': 420,
+          'input_rows': 13,
+          'name': 'Queued',
+          'output_bytes': 110,
+          'output_rows': 3,
+          'outputs': list([
+          ]),
+          'peak_memory_bytes': None,
+          'physical_input_bytes': None,
+          'spilled_bytes': None,
+          'wall_time_ms': 17.04,
+        }),
+      ]),
+      'cpu_time_ms': None,
+      'descriptor': dict({
+      }),
+      'details': list([
+      ]),
+      'estimates': list([
+      ]),
+      'iceberg_file_count': None,
+      'iceberg_partition_spec_id': None,
+      'iceberg_split_count': None,
+      'id': '1',
+      'input_bytes': None,
+      'input_rows': None,
+      'name': 'Trino',
+      'output_bytes': None,
+      'output_rows': None,
+      'outputs': list([
+      ]),
+      'peak_memory_bytes': None,
+      'physical_input_bytes': None,
+      'spilled_bytes': None,
+      'wall_time_ms': None,
+    }),
+    'schema_drift_warnings': list([
+    ]),
+    'source_trino_version': '429',
+  })
+# ---
+# name: test_fixture_snapshot[429-simple_select-simple_select.json-estimated]
+  dict({
+    'plan_type': 'estimated',
+    'root': dict({
+      'blocked_time_ms': None,
+      'children': list([
+        dict({
+          'blocked_time_ms': None,
+          'children': list([
+          ]),
+          'cpu_time_ms': None,
+          'descriptor': dict({
+            'filterPredicate': '("id" > BIGINT \'10\')',
+            'table': 'iceberg:test_fixtures.orders$data@7192078785404198795',
+          }),
+          'details': list([
+            'name := 2:name:varchar',
+            'id := 1:id:bigint',
+          ]),
+          'estimates': list([
+            dict({
+              'cpu_cost': 401.0,
+              'memory_cost': 0.0,
+              'network_cost': 0.0,
+              'output_row_count': 10.0,
+              'output_size_in_bytes': 401.0,
+            }),
+            dict({
+              'cpu_cost': 401.0,
+              'memory_cost': 0.0,
+              'network_cost': 0.0,
+              'output_row_count': 10.0,
+              'output_size_in_bytes': 401.0,
+            }),
+          ]),
+          'iceberg_file_count': None,
+          'iceberg_partition_spec_id': None,
+          'iceberg_split_count': None,
+          'id': '1',
+          'input_bytes': None,
+          'input_rows': None,
+          'name': 'ScanFilter',
+          'output_bytes': None,
+          'output_rows': None,
+          'outputs': list([
+            dict({
+              'symbol': 'id',
+              'type': 'bigint',
+            }),
+            dict({
+              'symbol': 'name',
+              'type': 'varchar',
+            }),
+          ]),
+          'peak_memory_bytes': None,
+          'physical_input_bytes': None,
+          'spilled_bytes': None,
+          'wall_time_ms': None,
+        }),
+      ]),
+      'cpu_time_ms': None,
+      'descriptor': dict({
+        'columnNames': '[id, name]',
+      }),
+      'details': list([
+      ]),
+      'estimates': list([
+        dict({
+          'cpu_cost': 0.0,
+          'memory_cost': 0.0,
+          'network_cost': 0.0,
+          'output_row_count': 10.0,
+          'output_size_in_bytes': 401.0,
+        }),
+      ]),
+      'iceberg_file_count': None,
+      'iceberg_partition_spec_id': None,
+      'iceberg_split_count': None,
+      'id': '6',
+      'input_bytes': None,
+      'input_rows': None,
+      'name': 'Output',
+      'output_bytes': None,
+      'output_rows': None,
+      'outputs': list([
+        dict({
+          'symbol': 'id',
+          'type': 'bigint',
+        }),
+        dict({
+          'symbol': 'name',
+          'type': 'varchar',
+        }),
+      ]),
+      'peak_memory_bytes': None,
+      'physical_input_bytes': None,
+      'spilled_bytes': None,
+      'wall_time_ms': None,
+    }),
+    'schema_drift_warnings': list([
+    ]),
+    'source_trino_version': '429',
+  })
+# ---
+# name: test_fixture_snapshot[429-simple_select-simple_select_analyze.txt-executed]
+  dict({
+    'plan_type': 'executed',
+    'root': dict({
+      'blocked_time_ms': None,
+      'children': list([
+        dict({
+          'blocked_time_ms': None,
+          'children': list([
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '3',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Output',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '4',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Output',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+            dict({
+              'blocked_time_ms': 0.0,
+              'children': list([
+                dict({
+                  'blocked_time_ms': None,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': None,
+                  'descriptor': dict({
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '6',
+                  'input_bytes': None,
+                  'input_rows': None,
+                  'name': 'name',
+                  'output_bytes': None,
+                  'output_rows': None,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': None,
+                }),
+                dict({
+                  'blocked_time_ms': None,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': None,
+                  'descriptor': dict({
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '7',
+                  'input_bytes': 173,
+                  'input_rows': 10,
+                  'name': 'id',
+                  'output_bytes': None,
+                  'output_rows': None,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': None,
+                }),
+              ]),
+              'cpu_time_ms': 17.0,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '5',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'ScanFilter',
+              'output_bytes': 173,
+              'output_rows': 10,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': 18.0,
+            }),
+          ]),
+          'cpu_time_ms': 17.19,
+          'descriptor': dict({
+          }),
+          'details': list([
+          ]),
+          'estimates': list([
+          ]),
+          'iceberg_file_count': None,
+          'iceberg_partition_spec_id': None,
+          'iceberg_split_count': None,
+          'id': '2',
+          'input_bytes': 173,
+          'input_rows': 10,
+          'name': 'Queued',
+          'output_bytes': 173,
+          'output_rows': 10,
+          'outputs': list([
+          ]),
+          'peak_memory_bytes': None,
+          'physical_input_bytes': None,
+          'spilled_bytes': None,
+          'wall_time_ms': 18.42,
+        }),
+      ]),
+      'cpu_time_ms': None,
+      'descriptor': dict({
+      }),
+      'details': list([
+      ]),
+      'estimates': list([
+      ]),
+      'iceberg_file_count': None,
+      'iceberg_partition_spec_id': None,
+      'iceberg_split_count': None,
+      'id': '1',
+      'input_bytes': None,
+      'input_rows': None,
+      'name': 'Trino',
+      'output_bytes': None,
+      'output_rows': None,
+      'outputs': list([
+      ]),
+      'peak_memory_bytes': None,
+      'physical_input_bytes': None,
+      'spilled_bytes': None,
+      'wall_time_ms': None,
+    }),
+    'schema_drift_warnings': list([
+    ]),
+    'source_trino_version': '429',
+  })
+# ---
+# name: test_fixture_snapshot[455-aggregate-aggregate.json-estimated]
+  dict({
+    'plan_type': 'estimated',
+    'root': dict({
+      'blocked_time_ms': None,
+      'children': list([
+        dict({
+          'blocked_time_ms': None,
+          'children': list([
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+                dict({
+                  'blocked_time_ms': None,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': None,
+                  'descriptor': dict({
+                    'sourceFragmentIds': '[1]',
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '192',
+                  'input_bytes': None,
+                  'input_rows': None,
+                  'name': 'RemoteSource',
+                  'output_bytes': None,
+                  'output_rows': None,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': None,
+                }),
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+                'arguments': '[status::varchar]',
+                'hashColumn': '[]',
+                'isReplicateNullsAndAny': '',
+                'partitioning': 'HASH',
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+                dict({
+                  'cpu_cost': 2300.0,
+                  'memory_cost': 0.0,
+                  'network_cost': 0.0,
+                  'output_row_count': 20.0,
+                  'output_size_in_bytes': 2300.0,
+                }),
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '186',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'LocalExchange',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+          ]),
+          'cpu_time_ms': None,
+          'descriptor': dict({
+            'hash': '[]',
+            'keys': '[status]',
+            'type': 'FINAL',
+          }),
+          'details': list([
+            'count := count(count_0)',
+            'sum := sum(sum_1)',
+          ]),
+          'estimates': list([
+            dict({
+              'cpu_cost': 2300.0,
+              'memory_cost': 231.0,
+              'network_cost': 0.0,
+              'output_row_count': 3.0,
+              'output_size_in_bytes': 231.0,
+            }),
+          ]),
+          'iceberg_file_count': None,
+          'iceberg_partition_spec_id': None,
+          'iceberg_split_count': None,
+          'id': '4',
+          'input_bytes': None,
+          'input_rows': None,
+          'name': 'Aggregate',
+          'output_bytes': None,
+          'output_rows': None,
+          'outputs': list([
+          ]),
+          'peak_memory_bytes': None,
+          'physical_input_bytes': None,
+          'spilled_bytes': None,
+          'wall_time_ms': None,
+        }),
+      ]),
+      'cpu_time_ms': None,
+      'descriptor': dict({
+        'columnNames': '[status, _col1, _col2]',
+      }),
+      'details': list([
+        '_col1 := count',
+        '_col2 := sum',
+      ]),
+      'estimates': list([
+        dict({
+          'cpu_cost': 0.0,
+          'memory_cost': 0.0,
+          'network_cost': 0.0,
+          'output_row_count': 3.0,
+          'output_size_in_bytes': 231.0,
+        }),
+      ]),
+      'iceberg_file_count': None,
+      'iceberg_partition_spec_id': None,
+      'iceberg_split_count': None,
+      'id': '9',
+      'input_bytes': None,
+      'input_rows': None,
+      'name': 'Output',
+      'output_bytes': None,
+      'output_rows': None,
+      'outputs': list([
+      ]),
+      'peak_memory_bytes': None,
+      'physical_input_bytes': None,
+      'spilled_bytes': None,
+      'wall_time_ms': None,
+    }),
+    'schema_drift_warnings': list([
+      dict({
+        'description': "EXPLAIN JSON has 2 fragments (keys: ['0', '1']). Parsing fragment '0' (output fragment) as the plan root. Other fragments are available in the raw fixture for distributed plan analysis.",
+        'field_name': None,
+        'node_path': 'root',
+        'severity': 'info',
+      }),
+    ]),
+    'source_trino_version': '455',
+  })
+# ---
+# name: test_fixture_snapshot[455-aggregate-aggregate_analyze.txt-executed]
+  dict({
+    'plan_type': 'executed',
+    'root': dict({
+      'blocked_time_ms': None,
+      'children': list([
+        dict({
+          'blocked_time_ms': None,
+          'children': list([
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '3',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Output',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '4',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Output',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+            dict({
+              'blocked_time_ms': 0.0,
+              'children': list([
+              ]),
+              'cpu_time_ms': 2.0,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '5',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Aggregate',
+              'output_bytes': 110,
+              'output_rows': 3,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': 2.0,
+            }),
+            dict({
+              'blocked_time_ms': 457.0,
+              'children': list([
+                dict({
+                  'blocked_time_ms': 455.0,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': 40.28,
+                  'descriptor': dict({
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '7',
+                  'input_bytes': 411,
+                  'input_rows': 20,
+                  'name': 'RemoteSource',
+                  'output_bytes': 420,
+                  'output_rows': 13,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': 83.41,
+                }),
+              ]),
+              'cpu_time_ms': 0.0,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '6',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'LocalExchange',
+              'output_bytes': 420,
+              'output_rows': 13,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': 0.0,
+            }),
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '8',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Output',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '9',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Output',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+            dict({
+              'blocked_time_ms': 0.0,
+              'children': list([
+              ]),
+              'cpu_time_ms': 21.0,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '10',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Aggregate',
+              'output_bytes': 420,
+              'output_rows': 13,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': 58.0,
+            }),
+            dict({
+              'blocked_time_ms': 0.0,
+              'children': list([
+                dict({
+                  'blocked_time_ms': None,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': None,
+                  'descriptor': dict({
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '12',
+                  'input_bytes': None,
+                  'input_rows': None,
+                  'name': 'amount',
+                  'output_bytes': None,
+                  'output_rows': None,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': None,
+                }),
+                dict({
+                  'blocked_time_ms': None,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': None,
+                  'descriptor': dict({
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '13',
+                  'input_bytes': 411,
+                  'input_rows': 20,
+                  'name': 'status',
+                  'output_bytes': None,
+                  'output_rows': None,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': None,
+                }),
+              ]),
+              'cpu_time_ms': 18.0,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '11',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'TableScan',
+              'output_bytes': 411,
+              'output_rows': 20,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': 26.0,
+            }),
+          ]),
+          'cpu_time_ms': 6.39,
+          'descriptor': dict({
+          }),
+          'details': list([
+          ]),
+          'estimates': list([
+          ]),
+          'iceberg_file_count': None,
+          'iceberg_partition_spec_id': None,
+          'iceberg_split_count': None,
+          'id': '2',
+          'input_bytes': 420,
+          'input_rows': 13,
+          'name': 'Queued',
+          'output_bytes': 110,
+          'output_rows': 3,
+          'outputs': list([
+          ]),
+          'peak_memory_bytes': None,
+          'physical_input_bytes': None,
+          'spilled_bytes': None,
+          'wall_time_ms': 9.9,
+        }),
+      ]),
+      'cpu_time_ms': None,
+      'descriptor': dict({
+      }),
+      'details': list([
+      ]),
+      'estimates': list([
+      ]),
+      'iceberg_file_count': None,
+      'iceberg_partition_spec_id': None,
+      'iceberg_split_count': None,
+      'id': '1',
+      'input_bytes': None,
+      'input_rows': None,
+      'name': 'Trino',
+      'output_bytes': None,
+      'output_rows': None,
+      'outputs': list([
+      ]),
+      'peak_memory_bytes': None,
+      'physical_input_bytes': None,
+      'spilled_bytes': None,
+      'wall_time_ms': None,
+    }),
+    'schema_drift_warnings': list([
+    ]),
+    'source_trino_version': '455',
+  })
+# ---
+# name: test_fixture_snapshot[455-simple_select-simple_select.json-estimated]
+  dict({
+    'plan_type': 'estimated',
+    'root': dict({
+      'blocked_time_ms': None,
+      'children': list([
+        dict({
+          'blocked_time_ms': None,
+          'children': list([
+          ]),
+          'cpu_time_ms': None,
+          'descriptor': dict({
+            'filterPredicate': "(id > bigint '10')",
+            'table': 'iceberg:test_fixtures.orders$data@7192078785404198795',
+          }),
+          'details': list([
+            'id := 1:id:bigint',
+            'name := 2:name:varchar',
+          ]),
+          'estimates': list([
+            dict({
+              'cpu_cost': 401.0,
+              'memory_cost': 0.0,
+              'network_cost': 0.0,
+              'output_row_count': 10.0,
+              'output_size_in_bytes': 401.0,
+            }),
+            dict({
+              'cpu_cost': 401.0,
+              'memory_cost': 0.0,
+              'network_cost': 0.0,
+              'output_row_count': 10.0,
+              'output_size_in_bytes': 401.0,
+            }),
+          ]),
+          'iceberg_file_count': None,
+          'iceberg_partition_spec_id': None,
+          'iceberg_split_count': None,
+          'id': '1',
+          'input_bytes': None,
+          'input_rows': None,
+          'name': 'ScanFilter',
+          'output_bytes': None,
+          'output_rows': None,
+          'outputs': list([
+          ]),
+          'peak_memory_bytes': None,
+          'physical_input_bytes': None,
+          'spilled_bytes': None,
+          'wall_time_ms': None,
+        }),
+      ]),
+      'cpu_time_ms': None,
+      'descriptor': dict({
+        'columnNames': '[id, name]',
+      }),
+      'details': list([
+      ]),
+      'estimates': list([
+        dict({
+          'cpu_cost': 0.0,
+          'memory_cost': 0.0,
+          'network_cost': 0.0,
+          'output_row_count': 10.0,
+          'output_size_in_bytes': 401.0,
+        }),
+      ]),
+      'iceberg_file_count': None,
+      'iceberg_partition_spec_id': None,
+      'iceberg_split_count': None,
+      'id': '6',
+      'input_bytes': None,
+      'input_rows': None,
+      'name': 'Output',
+      'output_bytes': None,
+      'output_rows': None,
+      'outputs': list([
+      ]),
+      'peak_memory_bytes': None,
+      'physical_input_bytes': None,
+      'spilled_bytes': None,
+      'wall_time_ms': None,
+    }),
+    'schema_drift_warnings': list([
+    ]),
+    'source_trino_version': '455',
+  })
+# ---
+# name: test_fixture_snapshot[455-simple_select-simple_select_analyze.txt-executed]
+  dict({
+    'plan_type': 'executed',
+    'root': dict({
+      'blocked_time_ms': None,
+      'children': list([
+        dict({
+          'blocked_time_ms': None,
+          'children': list([
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '3',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Output',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '4',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Output',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+            dict({
+              'blocked_time_ms': 0.0,
+              'children': list([
+                dict({
+                  'blocked_time_ms': None,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': None,
+                  'descriptor': dict({
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '6',
+                  'input_bytes': None,
+                  'input_rows': None,
+                  'name': 'id',
+                  'output_bytes': None,
+                  'output_rows': None,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': None,
+                }),
+                dict({
+                  'blocked_time_ms': None,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': None,
+                  'descriptor': dict({
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '7',
+                  'input_bytes': 173,
+                  'input_rows': 10,
+                  'name': 'name',
+                  'output_bytes': None,
+                  'output_rows': None,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': None,
+                }),
+              ]),
+              'cpu_time_ms': 69.0,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '5',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'ScanFilter',
+              'output_bytes': 173,
+              'output_rows': 10,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': 95.0,
+            }),
+          ]),
+          'cpu_time_ms': 68.87,
+          'descriptor': dict({
+          }),
+          'details': list([
+          ]),
+          'estimates': list([
+          ]),
+          'iceberg_file_count': None,
+          'iceberg_partition_spec_id': None,
+          'iceberg_split_count': None,
+          'id': '2',
+          'input_bytes': 173,
+          'input_rows': 10,
+          'name': 'Queued',
+          'output_bytes': 173,
+          'output_rows': 10,
+          'outputs': list([
+          ]),
+          'peak_memory_bytes': None,
+          'physical_input_bytes': None,
+          'spilled_bytes': None,
+          'wall_time_ms': 95.48,
+        }),
+      ]),
+      'cpu_time_ms': None,
+      'descriptor': dict({
+      }),
+      'details': list([
+      ]),
+      'estimates': list([
+      ]),
+      'iceberg_file_count': None,
+      'iceberg_partition_spec_id': None,
+      'iceberg_split_count': None,
+      'id': '1',
+      'input_bytes': None,
+      'input_rows': None,
+      'name': 'Trino',
+      'output_bytes': None,
+      'output_rows': None,
+      'outputs': list([
+      ]),
+      'peak_memory_bytes': None,
+      'physical_input_bytes': None,
+      'spilled_bytes': None,
+      'wall_time_ms': None,
+    }),
+    'schema_drift_warnings': list([
+    ]),
+    'source_trino_version': '455',
+  })
+# ---
+# name: test_fixture_snapshot[480-aggregate-aggregate.json-estimated]
+  dict({
+    'plan_type': 'estimated',
+    'root': dict({
+      'blocked_time_ms': None,
+      'children': list([
+        dict({
+          'blocked_time_ms': None,
+          'children': list([
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+                dict({
+                  'blocked_time_ms': None,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': None,
+                  'descriptor': dict({
+                    'sourceFragmentIds': '[1]',
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '192',
+                  'input_bytes': None,
+                  'input_rows': None,
+                  'name': 'RemoteSource',
+                  'output_bytes': None,
+                  'output_rows': None,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': None,
+                }),
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+                'arguments': '[status::varchar]',
+                'isReplicateNullsAndAny': '',
+                'partitioning': 'HASH',
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+                dict({
+                  'cpu_cost': 2300.0,
+                  'memory_cost': 0.0,
+                  'network_cost': 0.0,
+                  'output_row_count': 20.0,
+                  'output_size_in_bytes': 2300.0,
+                }),
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '186',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'LocalExchange',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+          ]),
+          'cpu_time_ms': None,
+          'descriptor': dict({
+            'keys': '[status]',
+            'type': 'FINAL',
+          }),
+          'details': list([
+            'count := count(count_0)',
+            'sum := sum(sum_1)',
+          ]),
+          'estimates': list([
+            dict({
+              'cpu_cost': 2300.0,
+              'memory_cost': 231.0,
+              'network_cost': 0.0,
+              'output_row_count': 3.0,
+              'output_size_in_bytes': 231.0,
+            }),
+          ]),
+          'iceberg_file_count': None,
+          'iceberg_partition_spec_id': None,
+          'iceberg_split_count': None,
+          'id': '4',
+          'input_bytes': None,
+          'input_rows': None,
+          'name': 'Aggregate',
+          'output_bytes': None,
+          'output_rows': None,
+          'outputs': list([
+          ]),
+          'peak_memory_bytes': None,
+          'physical_input_bytes': None,
+          'spilled_bytes': None,
+          'wall_time_ms': None,
+        }),
+      ]),
+      'cpu_time_ms': None,
+      'descriptor': dict({
+        'columnNames': '[status, _col1, _col2]',
+      }),
+      'details': list([
+        '_col1 := count',
+        '_col2 := sum',
+      ]),
+      'estimates': list([
+        dict({
+          'cpu_cost': 0.0,
+          'memory_cost': 0.0,
+          'network_cost': 0.0,
+          'output_row_count': 3.0,
+          'output_size_in_bytes': 231.0,
+        }),
+      ]),
+      'iceberg_file_count': None,
+      'iceberg_partition_spec_id': None,
+      'iceberg_split_count': None,
+      'id': '9',
+      'input_bytes': None,
+      'input_rows': None,
+      'name': 'Output',
+      'output_bytes': None,
+      'output_rows': None,
+      'outputs': list([
+      ]),
+      'peak_memory_bytes': None,
+      'physical_input_bytes': None,
+      'spilled_bytes': None,
+      'wall_time_ms': None,
+    }),
+    'schema_drift_warnings': list([
+      dict({
+        'description': "EXPLAIN JSON has 2 fragments (keys: ['0', '1']). Parsing fragment '0' (output fragment) as the plan root. Other fragments are available in the raw fixture for distributed plan analysis.",
+        'field_name': None,
+        'node_path': 'root',
+        'severity': 'info',
+      }),
+    ]),
+    'source_trino_version': '480',
+  })
+# ---
+# name: test_fixture_snapshot[480-aggregate-aggregate_analyze.txt-executed]
+  dict({
+    'plan_type': 'executed',
+    'root': dict({
+      'blocked_time_ms': None,
+      'children': list([
+        dict({
+          'blocked_time_ms': None,
+          'children': list([
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '3',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Output',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '4',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Output',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+            dict({
+              'blocked_time_ms': 0.0,
+              'children': list([
+              ]),
+              'cpu_time_ms': 2.0,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '5',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Aggregate',
+              'output_bytes': 110,
+              'output_rows': 3,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': 3.0,
+            }),
+            dict({
+              'blocked_time_ms': 519.0,
+              'children': list([
+                dict({
+                  'blocked_time_ms': 536.0,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': 25.56,
+                  'descriptor': dict({
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '7',
+                  'input_bytes': 422,
+                  'input_rows': 20,
+                  'name': 'RemoteSource',
+                  'output_bytes': 420,
+                  'output_rows': 13,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': 9123,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': 80.56,
+                }),
+              ]),
+              'cpu_time_ms': 1.0,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '6',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'LocalExchange',
+              'output_bytes': 420,
+              'output_rows': 13,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': 1.0,
+            }),
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '8',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Output',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '9',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Output',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+            dict({
+              'blocked_time_ms': 0.0,
+              'children': list([
+              ]),
+              'cpu_time_ms': 18.0,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '10',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Aggregate',
+              'output_bytes': 420,
+              'output_rows': 13,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': 66.0,
+            }),
+            dict({
+              'blocked_time_ms': 0.0,
+              'children': list([
+                dict({
+                  'blocked_time_ms': None,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': None,
+                  'descriptor': dict({
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '12',
+                  'input_bytes': None,
+                  'input_rows': None,
+                  'name': 'status',
+                  'output_bytes': None,
+                  'output_rows': None,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': None,
+                }),
+                dict({
+                  'blocked_time_ms': None,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': None,
+                  'descriptor': dict({
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '13',
+                  'input_bytes': 422,
+                  'input_rows': 20,
+                  'name': 'amount',
+                  'output_bytes': None,
+                  'output_rows': None,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': None,
+                }),
+              ]),
+              'cpu_time_ms': 8.0,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '11',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'TableScan',
+              'output_bytes': 422,
+              'output_rows': 20,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': 13.0,
+            }),
+          ]),
+          'cpu_time_ms': 7.57,
+          'descriptor': dict({
+          }),
+          'details': list([
+          ]),
+          'estimates': list([
+          ]),
+          'iceberg_file_count': None,
+          'iceberg_partition_spec_id': None,
+          'iceberg_split_count': None,
+          'id': '2',
+          'input_bytes': 420,
+          'input_rows': 13,
+          'name': 'Queued',
+          'output_bytes': 110,
+          'output_rows': 3,
+          'outputs': list([
+          ]),
+          'peak_memory_bytes': 520,
+          'physical_input_bytes': None,
+          'spilled_bytes': None,
+          'wall_time_ms': 9.49,
+        }),
+      ]),
+      'cpu_time_ms': None,
+      'descriptor': dict({
+      }),
+      'details': list([
+      ]),
+      'estimates': list([
+      ]),
+      'iceberg_file_count': None,
+      'iceberg_partition_spec_id': None,
+      'iceberg_split_count': None,
+      'id': '1',
+      'input_bytes': None,
+      'input_rows': None,
+      'name': 'Trino',
+      'output_bytes': None,
+      'output_rows': None,
+      'outputs': list([
+      ]),
+      'peak_memory_bytes': None,
+      'physical_input_bytes': None,
+      'spilled_bytes': None,
+      'wall_time_ms': None,
+    }),
+    'schema_drift_warnings': list([
+    ]),
+    'source_trino_version': '480',
+  })
+# ---
+# name: test_fixture_snapshot[480-full_scan-full_scan.json-estimated]
+  dict({
+    'plan_type': 'estimated',
+    'root': dict({
+      'blocked_time_ms': None,
+      'children': list([
+        dict({
+          'blocked_time_ms': None,
+          'children': list([
+          ]),
+          'cpu_time_ms': None,
+          'descriptor': dict({
+            'table': 'iceberg:test_fixtures.orders$data@7192078785404198795',
+          }),
+          'details': list([
+            'status := 5:status:varchar',
+            'ts := 4:ts:timestamp(6) with time zone',
+            'id := 1:id:bigint',
+            'name := 2:name:varchar',
+            'amount := 3:amount:decimal(10,2)',
+          ]),
+          'estimates': list([
+            dict({
+              'cpu_cost': 2655.0,
+              'memory_cost': 0.0,
+              'network_cost': 0.0,
+              'output_row_count': 20.0,
+              'output_size_in_bytes': 2655.0,
+            }),
+          ]),
+          'iceberg_file_count': None,
+          'iceberg_partition_spec_id': None,
+          'iceberg_split_count': None,
+          'id': '0',
+          'input_bytes': None,
+          'input_rows': None,
+          'name': 'TableScan',
+          'output_bytes': None,
+          'output_rows': None,
+          'outputs': list([
+          ]),
+          'peak_memory_bytes': None,
+          'physical_input_bytes': None,
+          'spilled_bytes': None,
+          'wall_time_ms': None,
+        }),
+      ]),
+      'cpu_time_ms': None,
+      'descriptor': dict({
+        'columnNames': '[id, name, amount, ts, status]',
+      }),
+      'details': list([
+      ]),
+      'estimates': list([
+        dict({
+          'cpu_cost': 0.0,
+          'memory_cost': 0.0,
+          'network_cost': 0.0,
+          'output_row_count': 20.0,
+          'output_size_in_bytes': 2655.0,
+        }),
+      ]),
+      'iceberg_file_count': None,
+      'iceberg_partition_spec_id': None,
+      'iceberg_split_count': None,
+      'id': '5',
+      'input_bytes': None,
+      'input_rows': None,
+      'name': 'Output',
+      'output_bytes': None,
+      'output_rows': None,
+      'outputs': list([
+      ]),
+      'peak_memory_bytes': None,
+      'physical_input_bytes': None,
+      'spilled_bytes': None,
+      'wall_time_ms': None,
+    }),
+    'schema_drift_warnings': list([
+    ]),
+    'source_trino_version': '480',
+  })
+# ---
+# name: test_fixture_snapshot[480-full_scan-full_scan_analyze.txt-executed]
+  dict({
+    'plan_type': 'executed',
+    'root': dict({
+      'blocked_time_ms': None,
+      'children': list([
+        dict({
+          'blocked_time_ms': None,
+          'children': list([
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '3',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Output',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '4',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Output',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+            dict({
+              'blocked_time_ms': 0.0,
+              'children': list([
+                dict({
+                  'blocked_time_ms': None,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': None,
+                  'descriptor': dict({
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '6',
+                  'input_bytes': None,
+                  'input_rows': None,
+                  'name': 'status',
+                  'output_bytes': None,
+                  'output_rows': None,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': None,
+                }),
+                dict({
+                  'blocked_time_ms': None,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': None,
+                  'descriptor': dict({
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '7',
+                  'input_bytes': None,
+                  'input_rows': None,
+                  'name': 'ts',
+                  'output_bytes': None,
+                  'output_rows': None,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': None,
+                }),
+                dict({
+                  'blocked_time_ms': None,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': None,
+                  'descriptor': dict({
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '8',
+                  'input_bytes': None,
+                  'input_rows': None,
+                  'name': 'id',
+                  'output_bytes': None,
+                  'output_rows': None,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': None,
+                }),
+                dict({
+                  'blocked_time_ms': None,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': None,
+                  'descriptor': dict({
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '9',
+                  'input_bytes': None,
+                  'input_rows': None,
+                  'name': 'name',
+                  'output_bytes': None,
+                  'output_rows': None,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': None,
+                }),
+                dict({
+                  'blocked_time_ms': None,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': None,
+                  'descriptor': dict({
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '10',
+                  'input_bytes': 1034,
+                  'input_rows': 20,
+                  'name': 'amount',
+                  'output_bytes': None,
+                  'output_rows': None,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': None,
+                }),
+              ]),
+              'cpu_time_ms': 14.0,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '5',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'TableScan',
+              'output_bytes': 1034,
+              'output_rows': 20,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': 17.0,
+            }),
+          ]),
+          'cpu_time_ms': 15.0,
+          'descriptor': dict({
+          }),
+          'details': list([
+          ]),
+          'estimates': list([
+          ]),
+          'iceberg_file_count': None,
+          'iceberg_partition_spec_id': None,
+          'iceberg_split_count': None,
+          'id': '2',
+          'input_bytes': 1034,
+          'input_rows': 20,
+          'name': 'Queued',
+          'output_bytes': 1034,
+          'output_rows': 20,
+          'outputs': list([
+          ]),
+          'peak_memory_bytes': 4771,
+          'physical_input_bytes': None,
+          'spilled_bytes': None,
+          'wall_time_ms': 16.28,
+        }),
+      ]),
+      'cpu_time_ms': None,
+      'descriptor': dict({
+      }),
+      'details': list([
+      ]),
+      'estimates': list([
+      ]),
+      'iceberg_file_count': None,
+      'iceberg_partition_spec_id': None,
+      'iceberg_split_count': None,
+      'id': '1',
+      'input_bytes': None,
+      'input_rows': None,
+      'name': 'Trino',
+      'output_bytes': None,
+      'output_rows': None,
+      'outputs': list([
+      ]),
+      'peak_memory_bytes': None,
+      'physical_input_bytes': None,
+      'spilled_bytes': None,
+      'wall_time_ms': None,
+    }),
+    'schema_drift_warnings': list([
+    ]),
+    'source_trino_version': '480',
+  })
+# ---
+# name: test_fixture_snapshot[480-iceberg_partition_filter-iceberg_partition_filter.json-estimated]
+  dict({
+    'plan_type': 'estimated',
+    'root': dict({
+      'blocked_time_ms': None,
+      'children': list([
+        dict({
+          'blocked_time_ms': None,
+          'children': list([
+          ]),
+          'cpu_time_ms': None,
+          'descriptor': dict({
+            'table': 'iceberg:test_fixtures.orders$data@7192078785404198795 constraint on [ts]',
+          }),
+          'details': list([
+            'status := 5:status:varchar',
+            'ts := 4:ts:timestamp(6) with time zone',
+            '    :: [[2025-01-15 00:00:00.000000 UTC, 2025-01-16 00:00:00.000000 UTC)]',
+            'id := 1:id:bigint',
+            'name := 2:name:varchar',
+            'amount := 3:amount:decimal(10,2)',
+          ]),
+          'estimates': list([
+            dict({
+              'cpu_cost': 911.0,
+              'memory_cost': 0.0,
+              'network_cost': 0.0,
+              'output_row_count': 10.0,
+              'output_size_in_bytes': 911.0,
+            }),
+          ]),
+          'iceberg_file_count': None,
+          'iceberg_partition_spec_id': None,
+          'iceberg_split_count': None,
+          'id': '0',
+          'input_bytes': None,
+          'input_rows': None,
+          'name': 'TableScan',
+          'output_bytes': None,
+          'output_rows': None,
+          'outputs': list([
+          ]),
+          'peak_memory_bytes': None,
+          'physical_input_bytes': None,
+          'spilled_bytes': None,
+          'wall_time_ms': None,
+        }),
+      ]),
+      'cpu_time_ms': None,
+      'descriptor': dict({
+        'columnNames': '[id, name, amount, ts, status]',
+      }),
+      'details': list([
+      ]),
+      'estimates': list([
+        dict({
+          'cpu_cost': 0.0,
+          'memory_cost': 0.0,
+          'network_cost': 0.0,
+          'output_row_count': 10.0,
+          'output_size_in_bytes': 911.0,
+        }),
+      ]),
+      'iceberg_file_count': None,
+      'iceberg_partition_spec_id': None,
+      'iceberg_split_count': None,
+      'id': '6',
+      'input_bytes': None,
+      'input_rows': None,
+      'name': 'Output',
+      'output_bytes': None,
+      'output_rows': None,
+      'outputs': list([
+      ]),
+      'peak_memory_bytes': None,
+      'physical_input_bytes': None,
+      'spilled_bytes': None,
+      'wall_time_ms': None,
+    }),
+    'schema_drift_warnings': list([
+    ]),
+    'source_trino_version': '480',
+  })
+# ---
+# name: test_fixture_snapshot[480-iceberg_partition_filter-iceberg_partition_filter_analyze.txt-executed]
+  dict({
+    'plan_type': 'executed',
+    'root': dict({
+      'blocked_time_ms': None,
+      'children': list([
+        dict({
+          'blocked_time_ms': None,
+          'children': list([
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '3',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Output',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '4',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Output',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+            dict({
+              'blocked_time_ms': 0.0,
+              'children': list([
+                dict({
+                  'blocked_time_ms': None,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': None,
+                  'descriptor': dict({
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '6',
+                  'input_bytes': None,
+                  'input_rows': None,
+                  'name': 'status',
+                  'output_bytes': None,
+                  'output_rows': None,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': None,
+                }),
+                dict({
+                  'blocked_time_ms': None,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': None,
+                  'descriptor': dict({
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '7',
+                  'input_bytes': None,
+                  'input_rows': None,
+                  'name': 'ts',
+                  'output_bytes': None,
+                  'output_rows': None,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': None,
+                }),
+                dict({
+                  'blocked_time_ms': None,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': None,
+                  'descriptor': dict({
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '8',
+                  'input_bytes': None,
+                  'input_rows': None,
+                  'name': 'id',
+                  'output_bytes': None,
+                  'output_rows': None,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': None,
+                }),
+                dict({
+                  'blocked_time_ms': None,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': None,
+                  'descriptor': dict({
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '9',
+                  'input_bytes': None,
+                  'input_rows': None,
+                  'name': 'name',
+                  'output_bytes': None,
+                  'output_rows': None,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': None,
+                }),
+                dict({
+                  'blocked_time_ms': None,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': None,
+                  'descriptor': dict({
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '10',
+                  'input_bytes': 533,
+                  'input_rows': 10,
+                  'name': 'amount',
+                  'output_bytes': None,
+                  'output_rows': None,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': None,
+                }),
+              ]),
+              'cpu_time_ms': 1.0,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '5',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'TableScan',
+              'output_bytes': 533,
+              'output_rows': 10,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': 1.0,
+            }),
+          ]),
+          'cpu_time_ms': 1.56,
+          'descriptor': dict({
+          }),
+          'details': list([
+          ]),
+          'estimates': list([
+          ]),
+          'iceberg_file_count': None,
+          'iceberg_partition_spec_id': None,
+          'iceberg_split_count': None,
+          'id': '2',
+          'input_bytes': 533,
+          'input_rows': 10,
+          'name': 'Queued',
+          'output_bytes': 533,
+          'output_rows': 10,
+          'outputs': list([
+          ]),
+          'peak_memory_bytes': 1720,
+          'physical_input_bytes': None,
+          'spilled_bytes': None,
+          'wall_time_ms': 1.59,
+        }),
+      ]),
+      'cpu_time_ms': None,
+      'descriptor': dict({
+      }),
+      'details': list([
+      ]),
+      'estimates': list([
+      ]),
+      'iceberg_file_count': None,
+      'iceberg_partition_spec_id': None,
+      'iceberg_split_count': None,
+      'id': '1',
+      'input_bytes': None,
+      'input_rows': None,
+      'name': 'Trino',
+      'output_bytes': None,
+      'output_rows': None,
+      'outputs': list([
+      ]),
+      'peak_memory_bytes': None,
+      'physical_input_bytes': None,
+      'spilled_bytes': None,
+      'wall_time_ms': None,
+    }),
+    'schema_drift_warnings': list([
+    ]),
+    'source_trino_version': '480',
+  })
+# ---
+# name: test_fixture_snapshot[480-join-join.json-estimated]
+  dict({
+    'plan_type': 'estimated',
+    'root': dict({
+      'blocked_time_ms': None,
+      'children': list([
+        dict({
+          'blocked_time_ms': None,
+          'children': list([
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+                'dynamicFilters': '{id_0 = #df_388}',
+                'filterPredicate': '',
+                'table': 'iceberg:test_fixtures.orders$data@7192078785404198795',
+              }),
+              'details': list([
+                'id_0 := 1:id:bigint',
+                'status_4 := 5:status:varchar',
+              ]),
+              'estimates': list([
+                dict({
+                  'cpu_cost': 1200.0,
+                  'memory_cost': 0.0,
+                  'network_cost': 0.0,
+                  'output_row_count': 20.0,
+                  'output_size_in_bytes': 1200.0,
+                }),
+                dict({
+                  'cpu_cost': 1200.0,
+                  'memory_cost': 0.0,
+                  'network_cost': 0.0,
+                  'output_row_count': 20.0,
+                  'output_size_in_bytes': 1200.0,
+                }),
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '389',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'ScanFilter',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+                dict({
+                  'blocked_time_ms': None,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': None,
+                  'descriptor': dict({
+                    'sourceFragmentIds': '[1]',
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '362',
+                  'input_bytes': None,
+                  'input_rows': None,
+                  'name': 'RemoteSource',
+                  'output_bytes': None,
+                  'output_rows': None,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': None,
+                }),
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+                'arguments': '[]',
+                'isReplicateNullsAndAny': '',
+                'partitioning': 'SINGLE',
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+                dict({
+                  'cpu_cost': 0.0,
+                  'memory_cost': 0.0,
+                  'network_cost': 0.0,
+                  'output_row_count': 16.05339524085897,
+                  'output_size_in_bytes': 959.1903656413234,
+                }),
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '430',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'LocalExchange',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+          ]),
+          'cpu_time_ms': None,
+          'descriptor': dict({
+            'criteria': '(id_0 = id)',
+            'distribution': 'REPLICATED',
+          }),
+          'details': list([
+            'Distribution: REPLICATED',
+            'dynamicFilterAssignments = {id -> #df_388}',
+          ]),
+          'estimates': list([
+            dict({
+              'cpu_cost': 3937.1038885664543,
+              'memory_cost': 959.1903656413234,
+              'network_cost': 0.0,
+              'output_row_count': 16.053395240858972,
+              'output_size_in_bytes': 1777.913522925131,
+            }),
+          ]),
+          'iceberg_file_count': None,
+          'iceberg_partition_spec_id': None,
+          'iceberg_split_count': None,
+          'id': '319',
+          'input_bytes': None,
+          'input_rows': None,
+          'name': 'InnerJoin',
+          'output_bytes': None,
+          'output_rows': None,
+          'outputs': list([
+          ]),
+          'peak_memory_bytes': None,
+          'physical_input_bytes': None,
+          'spilled_bytes': None,
+          'wall_time_ms': None,
+        }),
+      ]),
+      'cpu_time_ms': None,
+      'descriptor': dict({
+        'columnNames': '[id, name, status]',
+      }),
+      'details': list([
+        'id := id_0',
+        'status := status_4',
+      ]),
+      'estimates': list([
+        dict({
+          'cpu_cost': 0.0,
+          'memory_cost': 0.0,
+          'network_cost': 0.0,
+          'output_row_count': 16.053395240858972,
+          'output_size_in_bytes': 1777.913522925131,
+        }),
+      ]),
+      'iceberg_file_count': None,
+      'iceberg_partition_spec_id': None,
+      'iceberg_split_count': None,
+      'id': '12',
+      'input_bytes': None,
+      'input_rows': None,
+      'name': 'Output',
+      'output_bytes': None,
+      'output_rows': None,
+      'outputs': list([
+      ]),
+      'peak_memory_bytes': None,
+      'physical_input_bytes': None,
+      'spilled_bytes': None,
+      'wall_time_ms': None,
+    }),
+    'schema_drift_warnings': list([
+      dict({
+        'description': "EXPLAIN JSON has 2 fragments (keys: ['0', '1']). Parsing fragment '0' (output fragment) as the plan root. Other fragments are available in the raw fixture for distributed plan analysis.",
+        'field_name': None,
+        'node_path': 'root',
+        'severity': 'info',
+      }),
+    ]),
+    'source_trino_version': '480',
+  })
+# ---
+# name: test_fixture_snapshot[480-join-join_analyze.txt-executed]
+  dict({
+    'plan_type': 'executed',
+    'root': dict({
+      'blocked_time_ms': None,
+      'children': list([
+        dict({
+          'blocked_time_ms': None,
+          'children': list([
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '3',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Output',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '4',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Output',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+            dict({
+              'blocked_time_ms': 33.0,
+              'children': list([
+              ]),
+              'cpu_time_ms': 9.0,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '5',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'InnerJoin',
+              'output_bytes': 299,
+              'output_rows': 11,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': 11.0,
+            }),
+            dict({
+              'blocked_time_ms': 0.0,
+              'children': list([
+              ]),
+              'cpu_time_ms': 12.0,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '6',
+              'input_bytes': 365,
+              'input_rows': 20,
+              'name': 'ScanFilter',
+              'output_bytes': 201,
+              'output_rows': 11,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': 13.0,
+            }),
+            dict({
+              'blocked_time_ms': 13.0,
+              'children': list([
+                dict({
+                  'blocked_time_ms': 331.0,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': 15.76,
+                  'descriptor': dict({
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '8',
+                  'input_bytes': 445,
+                  'input_rows': 20,
+                  'name': 'RemoteSource',
+                  'output_bytes': 197,
+                  'output_rows': 11,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': 1259,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': 17.6,
+                }),
+              ]),
+              'cpu_time_ms': 0.0,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '7',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'LocalExchange',
+              'output_bytes': 197,
+              'output_rows': 11,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': 1.0,
+            }),
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '9',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Output',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '10',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Output',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+            dict({
+              'blocked_time_ms': 0.0,
+              'children': list([
+                dict({
+                  'blocked_time_ms': None,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': None,
+                  'descriptor': dict({
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '12',
+                  'input_bytes': None,
+                  'input_rows': None,
+                  'name': 'id',
+                  'output_bytes': None,
+                  'output_rows': None,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': None,
+                }),
+                dict({
+                  'blocked_time_ms': None,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': None,
+                  'descriptor': dict({
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '13',
+                  'input_bytes': None,
+                  'input_rows': None,
+                  'name': 'name',
+                  'output_bytes': None,
+                  'output_rows': None,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': None,
+                }),
+                dict({
+                  'blocked_time_ms': None,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': None,
+                  'descriptor': dict({
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '14',
+                  'input_bytes': 445,
+                  'input_rows': 20,
+                  'name': 'amount',
+                  'output_bytes': None,
+                  'output_rows': None,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': None,
+                }),
+              ]),
+              'cpu_time_ms': 16.0,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '11',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'ScanFilterProject',
+              'output_bytes': 197,
+              'output_rows': 11,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': 17.0,
+            }),
+          ]),
+          'cpu_time_ms': 26.94,
+          'descriptor': dict({
+          }),
+          'details': list([
+          ]),
+          'estimates': list([
+          ]),
+          'iceberg_file_count': None,
+          'iceberg_partition_spec_id': None,
+          'iceberg_split_count': None,
+          'id': '2',
+          'input_bytes': 562,
+          'input_rows': 31,
+          'name': 'Queued',
+          'output_bytes': 299,
+          'output_rows': 11,
+          'outputs': list([
+          ]),
+          'peak_memory_bytes': 131072,
+          'physical_input_bytes': None,
+          'spilled_bytes': None,
+          'wall_time_ms': 30.78,
+        }),
+      ]),
+      'cpu_time_ms': None,
+      'descriptor': dict({
+      }),
+      'details': list([
+      ]),
+      'estimates': list([
+      ]),
+      'iceberg_file_count': None,
+      'iceberg_partition_spec_id': None,
+      'iceberg_split_count': None,
+      'id': '1',
+      'input_bytes': None,
+      'input_rows': None,
+      'name': 'Trino',
+      'output_bytes': None,
+      'output_rows': None,
+      'outputs': list([
+      ]),
+      'peak_memory_bytes': None,
+      'physical_input_bytes': None,
+      'spilled_bytes': None,
+      'wall_time_ms': None,
+    }),
+    'schema_drift_warnings': list([
+    ]),
+    'source_trino_version': '480',
+  })
+# ---
+# name: test_fixture_snapshot[480-simple_select-simple_select.json-estimated]
+  dict({
+    'plan_type': 'estimated',
+    'root': dict({
+      'blocked_time_ms': None,
+      'children': list([
+        dict({
+          'blocked_time_ms': None,
+          'children': list([
+          ]),
+          'cpu_time_ms': None,
+          'descriptor': dict({
+            'filterPredicate': "(id > bigint '10')",
+            'table': 'iceberg:test_fixtures.orders$data@7192078785404198795',
+          }),
+          'details': list([
+            'id := 1:id:bigint',
+            'name := 2:name:varchar',
+          ]),
+          'estimates': list([
+            dict({
+              'cpu_cost': 401.0,
+              'memory_cost': 0.0,
+              'network_cost': 0.0,
+              'output_row_count': 10.0,
+              'output_size_in_bytes': 401.0,
+            }),
+            dict({
+              'cpu_cost': 401.0,
+              'memory_cost': 0.0,
+              'network_cost': 0.0,
+              'output_row_count': 10.0,
+              'output_size_in_bytes': 401.0,
+            }),
+          ]),
+          'iceberg_file_count': None,
+          'iceberg_partition_spec_id': None,
+          'iceberg_split_count': None,
+          'id': '1',
+          'input_bytes': None,
+          'input_rows': None,
+          'name': 'ScanFilter',
+          'output_bytes': None,
+          'output_rows': None,
+          'outputs': list([
+          ]),
+          'peak_memory_bytes': None,
+          'physical_input_bytes': None,
+          'spilled_bytes': None,
+          'wall_time_ms': None,
+        }),
+      ]),
+      'cpu_time_ms': None,
+      'descriptor': dict({
+        'columnNames': '[id, name]',
+      }),
+      'details': list([
+      ]),
+      'estimates': list([
+        dict({
+          'cpu_cost': 0.0,
+          'memory_cost': 0.0,
+          'network_cost': 0.0,
+          'output_row_count': 10.0,
+          'output_size_in_bytes': 401.0,
+        }),
+      ]),
+      'iceberg_file_count': None,
+      'iceberg_partition_spec_id': None,
+      'iceberg_split_count': None,
+      'id': '6',
+      'input_bytes': None,
+      'input_rows': None,
+      'name': 'Output',
+      'output_bytes': None,
+      'output_rows': None,
+      'outputs': list([
+      ]),
+      'peak_memory_bytes': None,
+      'physical_input_bytes': None,
+      'spilled_bytes': None,
+      'wall_time_ms': None,
+    }),
+    'schema_drift_warnings': list([
+    ]),
+    'source_trino_version': '480',
+  })
+# ---
+# name: test_fixture_snapshot[480-simple_select-simple_select_analyze.txt-executed]
+  dict({
+    'plan_type': 'executed',
+    'root': dict({
+      'blocked_time_ms': None,
+      'children': list([
+        dict({
+          'blocked_time_ms': None,
+          'children': list([
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '3',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Output',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+            dict({
+              'blocked_time_ms': None,
+              'children': list([
+              ]),
+              'cpu_time_ms': None,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '4',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'Output',
+              'output_bytes': None,
+              'output_rows': None,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': None,
+            }),
+            dict({
+              'blocked_time_ms': 0.0,
+              'children': list([
+                dict({
+                  'blocked_time_ms': None,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': None,
+                  'descriptor': dict({
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '6',
+                  'input_bytes': None,
+                  'input_rows': None,
+                  'name': 'id',
+                  'output_bytes': None,
+                  'output_rows': None,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': None,
+                }),
+                dict({
+                  'blocked_time_ms': None,
+                  'children': list([
+                  ]),
+                  'cpu_time_ms': None,
+                  'descriptor': dict({
+                  }),
+                  'details': list([
+                  ]),
+                  'estimates': list([
+                  ]),
+                  'iceberg_file_count': None,
+                  'iceberg_partition_spec_id': None,
+                  'iceberg_split_count': None,
+                  'id': '7',
+                  'input_bytes': 173,
+                  'input_rows': 10,
+                  'name': 'name',
+                  'output_bytes': None,
+                  'output_rows': None,
+                  'outputs': list([
+                  ]),
+                  'peak_memory_bytes': None,
+                  'physical_input_bytes': None,
+                  'spilled_bytes': None,
+                  'wall_time_ms': None,
+                }),
+              ]),
+              'cpu_time_ms': 4.0,
+              'descriptor': dict({
+              }),
+              'details': list([
+              ]),
+              'estimates': list([
+              ]),
+              'iceberg_file_count': None,
+              'iceberg_partition_spec_id': None,
+              'iceberg_split_count': None,
+              'id': '5',
+              'input_bytes': None,
+              'input_rows': None,
+              'name': 'ScanFilter',
+              'output_bytes': 173,
+              'output_rows': 10,
+              'outputs': list([
+              ]),
+              'peak_memory_bytes': None,
+              'physical_input_bytes': None,
+              'spilled_bytes': None,
+              'wall_time_ms': 4.0,
+            }),
+          ]),
+          'cpu_time_ms': 4.56,
+          'descriptor': dict({
+          }),
+          'details': list([
+          ]),
+          'estimates': list([
+          ]),
+          'iceberg_file_count': None,
+          'iceberg_partition_spec_id': None,
+          'iceberg_split_count': None,
+          'id': '2',
+          'input_bytes': 173,
+          'input_rows': 10,
+          'name': 'Queued',
+          'output_bytes': 173,
+          'output_rows': 10,
+          'outputs': list([
+          ]),
+          'peak_memory_bytes': 272,
+          'physical_input_bytes': None,
+          'spilled_bytes': None,
+          'wall_time_ms': 4.66,
+        }),
+      ]),
+      'cpu_time_ms': None,
+      'descriptor': dict({
+      }),
+      'details': list([
+      ]),
+      'estimates': list([
+      ]),
+      'iceberg_file_count': None,
+      'iceberg_partition_spec_id': None,
+      'iceberg_split_count': None,
+      'id': '1',
+      'input_bytes': None,
+      'input_rows': None,
+      'name': 'Trino',
+      'output_bytes': None,
+      'output_rows': None,
+      'outputs': list([
+      ]),
+      'peak_memory_bytes': None,
+      'physical_input_bytes': None,
+      'spilled_bytes': None,
+      'wall_time_ms': None,
+    }),
+    'schema_drift_warnings': list([
+    ]),
+    'source_trino_version': '480',
+  })
+# ---

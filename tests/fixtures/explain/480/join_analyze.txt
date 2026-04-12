@@ -1,0 +1,50 @@
+Trino version: 480
+Queued: 136.42us, Analysis: 5.74ms, Planning: 41.88ms, Execution: 231.59ms, Finishing: 0.00ns
+Fragment 1 [SOURCE]
+    CPU: 26.94ms, Scheduled: 30.78ms, Blocked 376.80ms (Input: 330.67ms, Output: 0.00ns), Input: 31 rows (562B); per task: avg.: 31.00 std.dev.: 0.00, Output: 11 rows (299B)
+    Peak Memory: 128kB, Tasks count: 1; per task: max: 128kB
+    Output layout: [status_4, id_0, name]
+    Output partitioning: SINGLE []
+    InnerJoin[criteria = (id_0 = id), distribution = REPLICATED]
+    │   Layout: [id_0:bigint, status_4:varchar, name:varchar]
+    │   Estimates: {rows: 16 (1.74kB), cpu: 3.84k, memory: 959B, network: 0B}
+    │   CPU: 9.00ms (23.68%), Scheduled: 11.00ms (25.58%), Blocked: 33.00ms (8.75%), Output: 11 rows (299B)
+    │   Left (probe) Input avg.: 1.83 rows, Input std.dev.: 101.64%
+    │   Right (build) Input avg.: 11.00 rows, Input std.dev.: 0.00%
+    │   Distribution: REPLICATED
+    │   dynamicFilterAssignments = {id -> #df_447}
+    ├─ ScanFilter[table = iceberg:test_fixtures.orders$data@7192078785404198795, dynamicFilters = {id_0 = #df_447}]
+    │      Layout: [id_0:bigint, status_4:varchar]
+    │      Estimates: {rows: 20 (1.17kB), cpu: 1.17k, memory: 0B, network: 0B}/{rows: 20 (1.17kB), cpu: 1.17k, memory: 0B, network: 0B}
+    │      CPU: 12.00ms (31.58%), Scheduled: 13.00ms (30.23%), Blocked: 0.00ns (0.00%), Output: 11 rows (201B)
+    │      Input avg.: 3.33 rows, Input std.dev.: 89.44%
+    │      id_0 := 1:id:bigint
+    │      status_4 := 5:status:varchar
+    │      Input: 20 rows (365B), Filtered: 45.00%, Physical input: 4.78kB, Physical input time: 29.83us, Splits: 6, Splits generation wait time: 37.39ms
+    │      Dynamic filters: 
+    │          - df_447, [ SortedRangeSet[type=bigint, ranges=11, {[1], ..., [19]}] ], collection time=46.16ms
+    └─ LocalExchange[partitioning = SINGLE]
+       │   Layout: [id:bigint, name:varchar]
+       │   Estimates: {rows: 16 (959B), cpu: 0, memory: 0B, network: 0B}
+       │   CPU: 0.00ns (0.00%), Scheduled: 1.00ms (2.33%), Blocked: 13.00ms (3.45%), Output: 11 rows (197B)
+       │   Input avg.: 0.69 rows, Input std.dev.: 216.47%
+       └─ RemoteSource[sourceFragmentIds = [2]]
+              Layout: [id:bigint, name:varchar]
+              CPU: 1.00ms (2.63%), Scheduled: 1.00ms (2.33%), Blocked: 331.00ms (87.80%), Output: 11 rows (197B)
+              Input avg.: 0.69 rows, Input std.dev.: 216.47%
+
+Fragment 2 [SOURCE]
+    CPU: 15.76ms, Scheduled: 17.60ms, Blocked 0.00ns (Input: 0.00ns, Output: 0.00ns), Input: 20 rows (445B); per task: avg.: 20.00 std.dev.: 0.00, Output: 11 rows (197B)
+    Peak Memory: 1.23kB, Tasks count: 1; per task: max: 1.23kB
+    Output layout: [id, name]
+    Output partitioning: BROADCAST []
+    ScanFilterProject[table = iceberg:test_fixtures.orders$data@7192078785404198795, filterPredicate = (amount > decimal(10,2) '100.00')]
+        Layout: [id:bigint, name:varchar]
+        Estimates: {rows: 20 (1.17kB), cpu: 1.34k, memory: 0B, network: 0B}/{rows: 16 (959B), cpu: 1.34k, memory: 0B, network: 0B}/{rows: 16 (959B), cpu: 959, memory: 0B, network: 0B}
+        CPU: 16.00ms (42.11%), Scheduled: 17.00ms (39.53%), Blocked: 0.00ns (0.00%), Output: 11 rows (197B)
+        Input avg.: 3.33 rows, Input std.dev.: 89.44%
+        id := 1:id:bigint
+        name := 2:name:varchar
+        amount := 3:amount:decimal(10,2)
+        Input: 20 rows (445B), Filtered: 45.00%, Physical input: 4.78kB, Physical input time: 27.75us, Splits: 6, Splits generation wait time: 19.07ms
+

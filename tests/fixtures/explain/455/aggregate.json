@@ -1,0 +1,205 @@
+{
+  "0": {
+    "id": "9",
+    "name": "Output",
+    "descriptor": {
+      "columnNames": "[status, _col1, _col2]"
+    },
+    "outputs": [
+      {
+        "type": "varchar",
+        "name": "status"
+      },
+      {
+        "type": "bigint",
+        "name": "count"
+      },
+      {
+        "type": "decimal(38,2)",
+        "name": "sum"
+      }
+    ],
+    "details": [
+      "_col1 := count",
+      "_col2 := sum"
+    ],
+    "estimates": [
+      {
+        "outputRowCount": 3.0,
+        "outputSizeInBytes": 231.0,
+        "cpuCost": 0.0,
+        "memoryCost": 0.0,
+        "networkCost": 0.0
+      }
+    ],
+    "children": [
+      {
+        "id": "4",
+        "name": "Aggregate",
+        "descriptor": {
+          "type": "FINAL",
+          "keys": "[status]",
+          "hash": "[]"
+        },
+        "outputs": [
+          {
+            "type": "varchar",
+            "name": "status"
+          },
+          {
+            "type": "bigint",
+            "name": "count"
+          },
+          {
+            "type": "decimal(38,2)",
+            "name": "sum"
+          }
+        ],
+        "details": [
+          "count := count(count_0)",
+          "sum := sum(sum_1)"
+        ],
+        "estimates": [
+          {
+            "outputRowCount": 3.0,
+            "outputSizeInBytes": 231.0,
+            "cpuCost": 2300.0,
+            "memoryCost": 231.0,
+            "networkCost": 0.0
+          }
+        ],
+        "children": [
+          {
+            "id": "186",
+            "name": "LocalExchange",
+            "descriptor": {
+              "partitioning": "HASH",
+              "isReplicateNullsAndAny": "",
+              "hashColumn": "[]",
+              "arguments": "[status::varchar]"
+            },
+            "outputs": [
+              {
+                "type": "varchar",
+                "name": "status"
+              },
+              {
+                "type": "bigint",
+                "name": "count_0"
+              },
+              {
+                "type": "varbinary",
+                "name": "sum_1"
+              }
+            ],
+            "details": [],
+            "estimates": [
+              {
+                "outputRowCount": 20.0,
+                "outputSizeInBytes": 2300.0,
+                "cpuCost": 2300.0,
+                "memoryCost": 0.0,
+                "networkCost": 0.0
+              }
+            ],
+            "children": [
+              {
+                "id": "192",
+                "name": "RemoteSource",
+                "descriptor": {
+                  "sourceFragmentIds": "[1]"
+                },
+                "outputs": [
+                  {
+                    "type": "varchar",
+                    "name": "status"
+                  },
+                  {
+                    "type": "bigint",
+                    "name": "count_0"
+                  },
+                  {
+                    "type": "varbinary",
+                    "name": "sum_1"
+                  }
+                ],
+                "details": [],
+                "estimates": [],
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "1": {
+    "id": "190",
+    "name": "Aggregate",
+    "descriptor": {
+      "type": "PARTIAL",
+      "keys": "[status]",
+      "hash": "[]"
+    },
+    "outputs": [
+      {
+        "type": "varchar",
+        "name": "status"
+      },
+      {
+        "type": "bigint",
+        "name": "count_0"
+      },
+      {
+        "type": "varbinary",
+        "name": "sum_1"
+      }
+    ],
+    "details": [
+      "count_0 := count(*)",
+      "sum_1 := sum(amount)"
+    ],
+    "estimates": [
+      {
+        "outputRowCount": 20.0,
+        "outputSizeInBytes": 2300.0,
+        "cpuCost": "NaN",
+        "memoryCost": "NaN",
+        "networkCost": "NaN"
+      }
+    ],
+    "children": [
+      {
+        "id": "0",
+        "name": "TableScan",
+        "descriptor": {
+          "table": "iceberg:test_fixtures.orders$data@7192078785404198795"
+        },
+        "outputs": [
+          {
+            "type": "decimal(10,2)",
+            "name": "amount"
+          },
+          {
+            "type": "varchar",
+            "name": "status"
+          }
+        ],
+        "details": [
+          "amount := 3:amount:decimal(10,2)",
+          "status := 5:status:varchar"
+        ],
+        "estimates": [
+          {
+            "outputRowCount": 20.0,
+            "outputSizeInBytes": 1200.0,
+            "cpuCost": 1200.0,
+            "memoryCost": 0.0,
+            "networkCost": 0.0
+          }
+        ],
+        "children": []
+      }
+    ]
+  }
+}

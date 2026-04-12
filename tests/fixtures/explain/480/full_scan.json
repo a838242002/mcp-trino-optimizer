@@ -1,0 +1,89 @@
+{
+  "0": {
+    "id": "5",
+    "name": "Output",
+    "descriptor": {
+      "columnNames": "[id, name, amount, ts, status]"
+    },
+    "outputs": [
+      {
+        "type": "bigint",
+        "name": "id"
+      },
+      {
+        "type": "varchar",
+        "name": "name"
+      },
+      {
+        "type": "decimal(10,2)",
+        "name": "amount"
+      },
+      {
+        "type": "timestamp(6) with time zone",
+        "name": "ts"
+      },
+      {
+        "type": "varchar",
+        "name": "status"
+      }
+    ],
+    "details": [],
+    "estimates": [
+      {
+        "outputRowCount": 20.0,
+        "outputSizeInBytes": 2655.0,
+        "cpuCost": 0.0,
+        "memoryCost": 0.0,
+        "networkCost": 0.0
+      }
+    ],
+    "children": [
+      {
+        "id": "0",
+        "name": "TableScan",
+        "descriptor": {
+          "table": "iceberg:test_fixtures.orders$data@7192078785404198795"
+        },
+        "outputs": [
+          {
+            "type": "bigint",
+            "name": "id"
+          },
+          {
+            "type": "varchar",
+            "name": "name"
+          },
+          {
+            "type": "decimal(10,2)",
+            "name": "amount"
+          },
+          {
+            "type": "timestamp(6) with time zone",
+            "name": "ts"
+          },
+          {
+            "type": "varchar",
+            "name": "status"
+          }
+        ],
+        "details": [
+          "status := 5:status:varchar",
+          "ts := 4:ts:timestamp(6) with time zone",
+          "id := 1:id:bigint",
+          "name := 2:name:varchar",
+          "amount := 3:amount:decimal(10,2)"
+        ],
+        "estimates": [
+          {
+            "outputRowCount": 20.0,
+            "outputSizeInBytes": 2655.0,
+            "cpuCost": 2655.0,
+            "memoryCost": 0.0,
+            "networkCost": 0.0
+          }
+        ],
+        "children": []
+      }
+    ]
+  }
+}
