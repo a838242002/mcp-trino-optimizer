@@ -61,9 +61,13 @@ class TrinoThreadPool:
             TrinoPoolBusyError: If all worker slots are currently occupied.
         """
         # Try to acquire the semaphore within the short timeout.
+        # asyncio.shield() prevents wait_for from cancelling the acquire()
+        # coroutine on timeout, avoiding the bpo-45584 semaphore counter leak
+        # that occurs on Python 3.11+ when the acquire() task completes between
+        # the TimeoutError being raised and wait_for's cleanup running.
         try:
-            acquired = await asyncio.wait_for(
-                self._semaphore.acquire(),
+            await asyncio.wait_for(
+                asyncio.shield(self._semaphore.acquire()),
                 timeout=_ACQUIRE_TIMEOUT,
             )
         except asyncio.TimeoutError:
@@ -72,7 +76,7 @@ class TrinoThreadPool:
                 "Try again later or increase max_concurrent_queries."
             )
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         try:
             if kwargs:
                 import functools

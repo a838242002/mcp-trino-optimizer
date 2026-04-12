@@ -36,7 +36,7 @@ from mcp_trino_optimizer._context import (
 )
 from mcp_trino_optimizer.adapters.trino.auth import build_authentication
 from mcp_trino_optimizer.adapters.trino.classifier import SqlClassifier
-from mcp_trino_optimizer.adapters.trino.errors import TrinoAuthError
+from mcp_trino_optimizer.adapters.trino.errors import TrinoAuthError, TrinoClassifierRejected
 from mcp_trino_optimizer.adapters.trino.handle import (
     QueryHandle,
     QueryIdCell,
@@ -48,6 +48,13 @@ from mcp_trino_optimizer.ports.plan_source import ExplainPlan
 from mcp_trino_optimizer.settings import Settings
 
 __all__ = ["TrinoClient"]
+
+# Authoritative allowlist of Iceberg metadata table suffixes (CR-01 / T-02-13).
+# LiveCatalogSource may apply its own fast-fail, but this is the definitive gate
+# at the lowest abstraction level — regardless of which caller invokes the method.
+_ALLOWED_ICEBERG_SUFFIXES: frozenset[str] = frozenset(
+    {"snapshots", "files", "manifests", "partitions", "history", "refs"}
+)
 
 
 def _get_version() -> str:
@@ -142,6 +149,11 @@ class TrinoClient:
         *,
         timeout: float | None = None,
     ) -> list[dict[str, Any]] | TimeoutResult[list[dict[str, Any]]]:
+        if suffix not in _ALLOWED_ICEBERG_SUFFIXES:
+            raise TrinoClassifierRejected(
+                f"Unknown Iceberg metadata suffix {suffix!r}. "
+                f"Allowed: {sorted(_ALLOWED_ICEBERG_SUFFIXES)}"
+            )
         sql = f'SELECT * FROM "{catalog}"."{schema}"."{table}${suffix}"'
         self._classifier.assert_read_only(sql)
         return await self._execute_query(sql, timeout=timeout)
@@ -165,8 +177,12 @@ class TrinoClient:
         Sends DELETE /v1/query/{queryId} and awaits confirmation.
         Returns True if confirmed, False if unconfirmed within budget.
         """
+        http_scheme = "https" if self._settings.trino_verify_ssl else "http"
+        ssl_verify: bool | str = (
+            self._settings.trino_ca_bundle or self._settings.trino_verify_ssl
+        )
         base_url = (
-            f"{'https' if self._settings.trino_auth_mode != 'none' else 'http'}"
+            f"{http_scheme}"
             f"://{self._settings.trino_host}:{self._settings.trino_port}"
         )
         handle = QueryHandle(
@@ -174,7 +190,7 @@ class TrinoClient:
             query_id_cell=QueryIdCell(),
         )
         handle.query_id_cell.set_once(query_id)
-        return await handle.cancel(base_url=base_url)
+        return await handle.cancel(base_url=base_url, ssl_verify=ssl_verify)
 
     async def probe_capabilities(self) -> dict[str, Any]:
         """Probe Trino version and capabilities.
@@ -287,11 +303,15 @@ class TrinoClient:
                 raise
         except asyncio.TimeoutError:
             elapsed = int((time.monotonic() - start_ms) * 1000)
+            http_scheme = "https" if self._settings.trino_verify_ssl else "http"
+            ssl_verify: bool | str = (
+                self._settings.trino_ca_bundle or self._settings.trino_verify_ssl
+            )
             base_url = (
-                f"{'https' if self._settings.trino_auth_mode != 'none' else 'http'}"
+                f"{http_scheme}"
                 f"://{self._settings.trino_host}:{self._settings.trino_port}"
             )
-            await handle.cancel(base_url=base_url)
+            await handle.cancel(base_url=base_url, ssl_verify=ssl_verify)
             return TimeoutResult(
                 partial=result,
                 elapsed_ms=elapsed,

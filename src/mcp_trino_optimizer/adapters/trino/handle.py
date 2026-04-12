@@ -43,12 +43,14 @@ class QueryIdCell:
     def __init__(self) -> None:
         self._event = threading.Event()
         self._value: str | None = None
+        self._lock = threading.Lock()
 
     def set_once(self, query_id: str) -> None:
         """Store *query_id* and fire the event. Idempotent — no-op if already set."""
-        if self._value is not None:
-            return
-        self._value = query_id
+        with self._lock:
+            if self._value is not None:
+                return
+            self._value = query_id
         self._event.set()
 
     def wait_for(self, timeout: float) -> str | None:
@@ -101,6 +103,7 @@ class QueryHandle:
         self,
         base_url: str,
         auth_headers: dict[str, str] | None = None,
+        ssl_verify: bool | str = True,
     ) -> bool:
         """Send DELETE /v1/query/{queryId} and poll for confirmation.
 
@@ -115,6 +118,8 @@ class QueryHandle:
         Args:
             base_url: Trino coordinator base URL, e.g. "http://localhost:8080".
             auth_headers: Optional dict of HTTP headers for auth (Bearer / Basic).
+            ssl_verify: Passed as ``verify=`` to httpx.AsyncClient. True uses
+                system CAs, False disables verification, a str is a CA bundle path.
 
         Returns:
             True if cancellation confirmed, False if unconfirmed within budget.
@@ -129,7 +134,7 @@ class QueryHandle:
 
         headers = dict(auth_headers or {})
 
-        async with httpx.AsyncClient(base_url=base_url, headers=headers) as client:
+        async with httpx.AsyncClient(base_url=base_url, headers=headers, verify=ssl_verify) as client:
             # Step 1: fire the DELETE
             try:
                 resp = await client.delete(f"/v1/query/{qid}")
