@@ -113,6 +113,26 @@ class Settings(BaseSettings):
         description="Max concurrent Trino queries per MCP process.",
     )
 
+    # ── Recommender (Phase 5) ────────────────────────────────────────────
+    recommender_tier_p1: float = Field(
+        default=2.4,
+        description="Priority score threshold for P1 tier.",
+    )
+    recommender_tier_p2: float = Field(
+        default=1.2,
+        description="Priority score threshold for P2 tier.",
+    )
+    recommender_tier_p3: float = Field(
+        default=0.5,
+        description="Priority score threshold for P3 tier.",
+    )
+    recommender_top_n_bottleneck: int = Field(
+        default=5,
+        ge=1,
+        le=50,
+        description="Number of top operators in bottleneck ranking (D-08).",
+    )
+
     @model_validator(mode="after")
     def _require_bearer_for_http(self) -> Settings:
         if self.transport == "http" and self.http_bearer_token is None:
