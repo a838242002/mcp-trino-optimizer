@@ -81,9 +81,11 @@ Requirements cluster naturally into 9 functional areas that map one-to-one onto 
   3. For an `IcebergTableScan` node, the parsed output exposes split count, file count, and partition spec identifier as first-class typed fields, sourced from the operator's raw detail string and cross-checked against the multi-version fixture snapshots. (PLN-04)
   4. A plan shape containing `ScanFilterProject` is normalized by the parser into the equivalent `TableScan + filter + projection` structure before any consumer sees it; a test fixture with a `Project` wrapper around a scan can be found by a "find scan under this subtree" walk without special-casing. (PLN-05)
   5. The multi-version fixture corpus (at least one `EXPLAIN` + one `EXPLAIN ANALYZE` per version × three versions) is stored in the repo, is gated by a `syrupy` snapshot test in CI, and every fixture parses without error; when a future Trino version adds a field, the snapshot test surfaces it as a diff rather than a crash. (PLN-06)
-**Plans**: TBD
+**Plans**: 2 plans across 2 waves
+  - [ ] 03-01-parser-models-normalizer-PLAN.md — Wave 1: PlanNode models, dual-path parser (JSON + text), normalizer, port/adapter migration
+  - [ ] 03-02-fixture-corpus-snapshots-PLAN.md — Wave 2: Multi-version fixture capture script + corpus, syrupy snapshot tests
 **UI hint**: no
-**Needs research**: yes — multi-version EXPLAIN JSON fixture capture is the single biggest undocumented contract in the project. Capture from Trino 429 / LTS / 480+ via a spike against a minimal compose stack (full productized stack lands in Phase 9). Trigger `/gsd-research-phase` before planning.
+**Needs research**: done — see 03-RESEARCH.md
 
 ### Phase 4: Rule Engine & 13 Deterministic Rules
 **Goal**: The deterministic core of the product — a plugin registry of rules that each consume a typed plan plus declared evidence, produce structured `RuleFinding` objects pointing at specific plan operator IDs, and never let one rule's failure abort the analysis. Ships all the table-stakes rules plus the differentiator rules that justify the tool over `EXPLAIN ANALYZE` + Slack + runbooks.
@@ -95,7 +97,9 @@ Requirements cluster naturally into 9 functional areas that map one-to-one onto 
   3. Running the engine on a hand-crafted synthetic-minimum fixture for any of the 13 rules (R1 missing/stale stats, R2 partition pruning failure, R3 predicate pushdown failure, R4 dynamic filtering not applied, R5 broadcast too big, R6 join order inversion, R7 CPU/wall skew, R8 excessive exchange, R9 low-selectivity scan, I1 Iceberg small files, I3 delete-file accumulation, I6 stale snapshots, I8 partition transform mismatch, plus D11 cost-vs-actual divergence) produces exactly the expected `RuleFinding` with `rule_id`, `severity`, `confidence`, human message, and a machine-readable evidence payload referencing the specific plan operator IDs the rule matched. (RUL-05, RUL-07 through RUL-20)
   4. Every rule ships with three fixture classes: a synthetic-minimum unit fixture, a realistic-from-compose fixture (captured via the Phase 3 multi-version corpus), and a negative-control fixture that the rule must NOT trigger on; the negative-control tests serve as regression guards against false positives and are part of CI. (RUL-06)
   5. Every rule threshold is declared in a config-overridable constants file with a sourced citation comment (no magic numbers); changing a threshold via config re-runs the fixture tests and at least one negative-control starts or stops triggering — verified by a parameterized test that proves the thresholds are actually data-driven. (RUL-21)
-**Plans**: TBD
+**Plans**: 2 plans across 2 waves
+  - [ ] 03-01-parser-models-normalizer-PLAN.md — Wave 1: PlanNode models, dual-path parser (JSON + text), normalizer, port/adapter migration
+  - [ ] 03-02-fixture-corpus-snapshots-PLAN.md — Wave 2: Multi-version fixture capture script + corpus, syrupy snapshot tests
 **UI hint**: no
 **Needs research**: yes — partition-transform semantics per Trino version (Trino issue #19266) for R2/I8, and the `$files` cross-reference workaround for Trino issue #28910 for I3 (since `$partitions` does not expose delete metrics). Trigger `/gsd-research-phase` before planning.
 
@@ -109,7 +113,9 @@ Requirements cluster naturally into 9 functional areas that map one-to-one onto 
   3. Recommendation narrative is composed entirely from templates keyed by `rule_id` that live in source control; a unit test injects a user-origin SQL string containing a prompt-injection attempt and asserts that string never appears verbatim in any recommendation body — only templated references to plan operator IDs and rule-declared evidence fields do. (REC-03)
   4. When a rule's fix is a Trino session property, the recommendation embeds the exact `SET SESSION` statement using the property name read from the `trino_session_properties` resource; a test with a stub resource that omits a property name asserts the recommendation falls back to an advisory-only message rather than fabricating a property name. (REC-05)
   5. For any analysis that touches an Iceberg table, the recommender emits an Iceberg table health summary with snapshot count, small-file ratio, delete-file ratio, partition spec evolution state, and last compaction reference, plus an operator-level bottleneck ranking with a templated natural-language narrative for the top N operators — both rendered from structured evidence with no free-form text. (REC-06, REC-07)
-**Plans**: TBD
+**Plans**: 2 plans across 2 waves
+  - [ ] 03-01-parser-models-normalizer-PLAN.md — Wave 1: PlanNode models, dual-path parser (JSON + text), normalizer, port/adapter migration
+  - [ ] 03-02-fixture-corpus-snapshots-PLAN.md — Wave 2: Multi-version fixture capture script + corpus, syrupy snapshot tests
 **UI hint**: no
 **Needs research**: no
 
@@ -123,7 +129,9 @@ Requirements cluster naturally into 9 functional areas that map one-to-one onto 
   3. Every rewrite declares its preconditions explicitly and refuses with a structured `precondition_failed` reason when any precondition is violated; a unit test feeds each whitelisted transform a query that violates one precondition at a time and asserts the refusal reason is specific and machine-readable. (RWR-03)
   4. With `dangerous_rewrites: false` (the default), a query pattern matching `NOT IN ↔ NOT EXISTS`, `LEFT JOIN` predicate motion, correlated subquery unwrap, window frame mutation, `CASE` restructuring, `UNNEST`, UDFs, or `WITH RECURSIVE` returns only advisory-only notes — never a rewrite; a test asserts none of those transforms can ever appear in the rewrite output under the default config. `EXISTS ↔ JOIN` is off by default and, when enabled, only runs when join keys are provably `NOT NULL` from catalog introspection. (RWR-05, RWR-07)
   5. When live mode is available, an integration test runs a rewrite through the engine, executes both the original and rewritten SQL against the compose stack, computes `SELECT COUNT(*), SUM(HASH(...))` on both, and asserts the rewrite is either marked "validated — equivalent" or "failed validation" with the delta surfaced; any non-zero delta forces a failed validation regardless of what the transform logic says. (RWR-06)
-**Plans**: TBD
+**Plans**: 2 plans across 2 waves
+  - [ ] 03-01-parser-models-normalizer-PLAN.md — Wave 1: PlanNode models, dual-path parser (JSON + text), normalizer, port/adapter migration
+  - [ ] 03-02-fixture-corpus-snapshots-PLAN.md — Wave 2: Multi-version fixture capture script + corpus, syrupy snapshot tests
 **UI hint**: no
 **Needs research**: yes — `sqlglot` Trino dialect expression-walking API (precondition checks + rewrite construction) and property-based equivalence testing patterns (hypothesis vs custom fixtures). Trigger `/gsd-research-phase` before planning.
 
@@ -137,7 +145,9 @@ Requirements cluster naturally into 9 functional areas that map one-to-one onto 
   3. An integration test runs a comparison across an Iceberg snapshot boundary (by committing a write to the table between the two runs) and asserts the comparator returns a structured `snapshot_boundary_error` and refuses to produce a report. (CMP-04)
   4. An integration test runs a comparison where the rewritten SQL returns a different number of output rows than the original and asserts the comparator surfaces this as a potential correctness bug — not as a "win" — in the structured report. (CMP-05)
   5. Given the same paired run data, the comparator emits a `confidence` field of HIGH / MEDIUM / LOW based on the CPU-time delta divided by the MAD (HIGH when delta > 3×MAD and consistent sign, MEDIUM for mixed evidence, LOW when delta is within noise), and the classification appears alongside the raw numbers so a caller can show the user whether to trust the result. (CMP-06)
-**Plans**: TBD
+**Plans**: 2 plans across 2 waves
+  - [ ] 03-01-parser-models-normalizer-PLAN.md — Wave 1: PlanNode models, dual-path parser (JSON + text), normalizer, port/adapter migration
+  - [ ] 03-02-fixture-corpus-snapshots-PLAN.md — Wave 2: Multi-version fixture capture script + corpus, syrupy snapshot tests
 **UI hint**: no
 **Needs research**: no
 
@@ -151,7 +161,9 @@ Requirements cluster naturally into 9 functional areas that map one-to-one onto 
   3. All 3 prompts (`optimize_trino_query`, `iceberg_query_review`, `generate_optimization_report`) are listable from a Claude Code session, render from jinja templates, and when invoked against the server produce tool-call sequences that the server's tools satisfy end-to-end. (MCP-13, MCP-14, MCP-15)
   4. A code review asserts every tool handler is under ~30 lines and delegates to the service layer; the same `FastMCP` app object is wired to both stdio and Streamable HTTP transports via `app.py` with zero transport-aware branches inside any tool handler; a snapshot test of the registered tool descriptions asserts they are identical across restarts (no user input flows into descriptions, preventing tool-description prompt injection). (MCP-16, MCP-17)
   5. Every tool schema still satisfies the Phase 1 strict-schema posture (`additionalProperties: false`, bounded `maxLength`, identifier `pattern`, bounded arrays) — verified by a schema-lint test that scans all registered tools — and every tool output containing a user-origin string wraps it in the `untrusted_content` envelope established in Phase 1. (reinforces PLAT-10, PLAT-11)
-**Plans**: TBD
+**Plans**: 2 plans across 2 waves
+  - [ ] 03-01-parser-models-normalizer-PLAN.md — Wave 1: PlanNode models, dual-path parser (JSON + text), normalizer, port/adapter migration
+  - [ ] 03-02-fixture-corpus-snapshots-PLAN.md — Wave 2: Multi-version fixture capture script + corpus, syrupy snapshot tests
 **UI hint**: no
 **Needs research**: no
 
@@ -165,7 +177,9 @@ Requirements cluster naturally into 9 functional areas that map one-to-one onto 
   3. A stdio-cleanliness test in CI boots the server, sends a JSON-RPC `initialize`, and asserts that stdout contains only valid JSON-RPC frames (bytes between frames must be empty) — the same day-one guard from Phase 1 now exercised against the full production wiring. (TST-05)
   4. A prompt-injection adversarial corpus runs against every MCP tool and asserts: (a) the server never passes untrusted content outside a typed envelope in any tool response, and (b) the SQL classifier gate rejects injected DDL/DML wrapped in SQL comments, Unicode tricks, and multi-statement blocks. (TST-06)
   5. `.env.example` ships randomized MinIO credentials (re-rolled by a setup script), compose binds every service to `127.0.0.1` only, `gitleaks` runs in CI on every commit, and the install-matrix CI builds and runs the smoke test (stdio `initialize` + `mcp_selftest` round trip) on `{3.11, 3.12, 3.13} × {macOS, Linux, Windows}`; a matrix failure blocks merge. (TST-07, TST-08)
-**Plans**: TBD
+**Plans**: 2 plans across 2 waves
+  - [ ] 03-01-parser-models-normalizer-PLAN.md — Wave 1: PlanNode models, dual-path parser (JSON + text), normalizer, port/adapter migration
+  - [ ] 03-02-fixture-corpus-snapshots-PLAN.md — Wave 2: Multi-version fixture capture script + corpus, syrupy snapshot tests
 **UI hint**: no
 **Needs research**: yes — Lakekeeper compose configuration for the `trinodb/trino:480` combination, MinIO bucket/policy bootstrap sequence, `testcontainers` `DockerCompose` wait strategies, and sourcing/authoring the prompt-injection adversarial corpus (OWASP LLM Top 10 / promptfoo vs custom). Trigger `/gsd-research-phase` before planning.
 
