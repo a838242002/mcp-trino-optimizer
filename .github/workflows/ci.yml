@@ -96,11 +96,27 @@ jobs:
         shell: bash
 
   # ────────────────────────────────────────────────────────────────
-  # integration — reserved for Phase 2+ (docker-compose stack)
+  # integration — Trino 480 + Lakekeeper + MinIO (push-to-main only)
   # ────────────────────────────────────────────────────────────────
   integration:
-    name: Integration (Phase 2+ — docker-compose stack)
-    if: false  # Phase 2+ flips this to run the testcontainers-based suite
+    name: Integration (Trino 480 + Lakekeeper + MinIO)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Integration job placeholder — populated in Phase 2+"
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install package
+        run: uv pip install -e ".[dev]"
+        shell: bash
+
+      - name: Run integration tests
+        run: uv run pytest -m integration -x --timeout=300
+        shell: bash
+        env:
+          MCPTO_GIT_SHA: ${{ github.sha }}
+          PYTHONUNBUFFERED: "1"

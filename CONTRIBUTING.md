@@ -57,23 +57,41 @@ A PR is ready when:
 
 ## Safe-execution boundaries
 
-Four invariants the server makes with its callers:
+Five invariants the server makes with its callers:
 
 1. **Read-only guarantee.** Every code path that reaches Trino routes
    through the `SqlClassifier` AST gate (Phase 2). The gate rejects
    `INSERT`, `UPDATE`, `DELETE`, `MERGE`, `DROP`, `CREATE`, `ALTER`,
    `TRUNCATE`, `CALL`, and multi-statement blocks — even when wrapped in
    comments or Unicode escapes.
-2. **Untrusted envelope rule.** Every tool response that includes a
+2. **SqlClassifier invariant.** Every `TrinoClient` public method that
+   accepts a `sql: str` parameter calls `assert_read_only(sql)` as its
+   **first executable line** — before any network call, before any logging.
+   This is enforced by `tests/adapters/test_trino_client_invariant.py`
+   and must not be relaxed without explicit review.
+3. **Untrusted envelope rule.** Every tool response that includes a
    user-origin string wraps it in
    `{"source": "untrusted", "content": "..."}` via
    `safety.envelope.wrap_untrusted()`.
-3. **Schema-lint rule.** Every tool's input JSON Schema passes
+4. **Schema-lint rule.** Every tool's input JSON Schema passes
    `safety.schema_lint.assert_tools_compliant` at startup (runtime guard)
    AND in CI (regression guard).
-4. **Stdout discipline.** Stdio mode installs `stdout_guard` before the
+5. **Stdout discipline.** Stdio mode installs `stdout_guard` before the
    transport starts; a CI smoke test asserts every byte on stdout is a
    valid JSON-RPC frame.
+
+### Integration test DDL boundary
+
+No code in `src/` or in any integration test file other than
+`tests/integration/fixtures.py` may issue Trino DDL statements.
+
+- Raw `trino-python-client` DBAPI access (`trino.dbapi.connect`) is
+  **only permitted** in `tests/integration/fixtures.py` (D-25). All other
+  modules must go through `TrinoClient`.
+- `tests/integration/fixtures.py` exists solely for test seeding
+  (CREATE TABLE / INSERT). It must never be imported in `src/`.
+- Enforced by pre-commit grep: `grep -r "trino.dbapi.connect" src/`
+  must return no results.
 
 ## Local development
 
