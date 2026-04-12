@@ -5,13 +5,16 @@ as its first executable statement.
 This test introspects ``client.py`` via the ``ast`` module so it acts as a
 compile-time regression guard — any refactor that accidentally removes or
 relocates the classifier call will break CI.
+
+Note: ``fetch_stats`` and ``fetch_iceberg_metadata`` take catalog/schema/table
+params and build SQL internally — they still call assert_read_only on the
+constructed SQL but are not in the "sql: str param" category tested here.
+``cancel_query`` and ``probe_capabilities`` are fully classifier-exempt.
 """
 
 from __future__ import annotations
 
 import ast
-import inspect
-import textwrap
 from pathlib import Path
 
 import pytest
@@ -25,27 +28,29 @@ CLIENT_SRC = (
     / "src/mcp_trino_optimizer/adapters/trino/client.py"
 )
 
+_AnyFuncDef = ast.FunctionDef | ast.AsyncFunctionDef
+
 
 def _parse_client() -> ast.Module:
     """Parse client.py and return its AST Module node."""
     return ast.parse(CLIENT_SRC.read_text())
 
 
-def _get_public_methods(tree: ast.Module) -> list[ast.FunctionDef]:
-    """Return all public (non-underscore) methods of TrinoClient."""
-    methods: list[ast.FunctionDef] = []
+def _get_public_methods(tree: ast.Module) -> list[_AnyFuncDef]:
+    """Return all public (non-underscore) methods of TrinoClient (sync + async)."""
+    methods: list[_AnyFuncDef] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.ClassDef) and node.name == "TrinoClient":
             for item in node.body:
                 if (
-                    isinstance(item, ast.FunctionDef)
+                    isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef))
                     and not item.name.startswith("_")
                 ):
                     methods.append(item)
     return methods
 
 
-def _has_sql_str_param(method: ast.FunctionDef) -> bool:
+def _has_sql_str_param(method: _AnyFuncDef) -> bool:
     """Return True if the method has a parameter named ``sql`` annotated as ``str``."""
     for arg in method.args.args:
         if arg.arg == "sql":
@@ -55,7 +60,7 @@ def _has_sql_str_param(method: ast.FunctionDef) -> bool:
     return False
 
 
-def _first_executable_stmt(method: ast.FunctionDef) -> ast.stmt | None:
+def _first_executable_stmt(method: _AnyFuncDef) -> ast.stmt | None:
     """Return the first non-docstring statement in the method body."""
     body = method.body
     if not body:
@@ -120,16 +125,15 @@ def test_trino_client_class_exists() -> None:
 @pytest.mark.parametrize(
     "method_name",
     [
+        # Methods that take sql: str directly — must call assert_read_only(sql) first
         "fetch_plan",
         "fetch_analyze_plan",
         "fetch_distributed_plan",
-        "fetch_stats",
-        "fetch_iceberg_metadata",
         "fetch_system_runtime",
     ],
 )
 def test_sql_taking_method_calls_classifier_first(method_name: str) -> None:
-    """Every public sql-taking method must have assert_read_only(sql) as first line."""
+    """Every public method with a sql: str param has assert_read_only(sql) as first line."""
     tree = _parse_client()
     methods = {m.name: m for m in _get_public_methods(tree)}
 
@@ -173,8 +177,27 @@ def test_probe_capabilities_has_no_sql_param() -> None:
     )
 
 
-def test_all_public_methods_enumerated() -> None:
-    """All public TrinoClient methods with sql param are covered by the invariant check."""
+def test_all_required_methods_present() -> None:
+    """All 8 required public methods are present in TrinoClient."""
+    tree = _parse_client()
+    methods = {m.name for m in _get_public_methods(tree)}
+
+    required = {
+        "fetch_plan",
+        "fetch_analyze_plan",
+        "fetch_distributed_plan",
+        "fetch_stats",
+        "fetch_iceberg_metadata",
+        "fetch_system_runtime",
+        "cancel_query",
+        "probe_capabilities",
+    }
+    missing = required - methods
+    assert not missing, f"Missing required public methods: {missing}"
+
+
+def test_sql_str_param_methods_enumerated() -> None:
+    """Exactly the expected set of methods have a sql: str parameter."""
     tree = _parse_client()
     methods = _get_public_methods(tree)
 
@@ -182,19 +205,11 @@ def test_all_public_methods_enumerated() -> None:
         "fetch_plan",
         "fetch_analyze_plan",
         "fetch_distributed_plan",
-        "fetch_stats",
-        "fetch_iceberg_metadata",
         "fetch_system_runtime",
     }
-    expected_exempt = {"cancel_query", "probe_capabilities"}
 
     actual_sql_methods = {m.name for m in methods if _has_sql_str_param(m)}
-    actual_exempt = {m.name for m in methods if not _has_sql_str_param(m)}
-
     assert expected_sql_methods == actual_sql_methods, (
-        f"Unexpected public sql-taking methods. "
+        f"Unexpected public sql: str-taking methods. "
         f"Expected: {expected_sql_methods}, Got: {actual_sql_methods}"
     )
-
-    for exempt in expected_exempt:
-        assert exempt in actual_exempt, f"{exempt} should be exempt (no sql param)"
