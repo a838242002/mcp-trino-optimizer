@@ -61,27 +61,27 @@ Requirements for the initial v1 release. Each maps to exactly one roadmap phase.
 
 ### Rule Engine (RUL) — Deterministic Core
 
-- [ ] **RUL-01**: Rules are registered via a plugin registry; each rule is a class inheriting a shared `Rule` base with a deterministic `check(plan, evidence)` method
-- [ ] **RUL-02**: Each rule declares its evidence requirement via an enum (`PLAN_ONLY`, `PLAN_WITH_METRICS`, `TABLE_STATS`, `ICEBERG_METADATA`); the engine prefetches the union of all required evidence once per analysis
-- [ ] **RUL-03**: Rules that require unavailable evidence (e.g., ICEBERG_METADATA in offline mode) are skipped with a structured `rule_skipped` finding, not an exception
-- [ ] **RUL-04**: A rule failure is isolated — one crashing rule never aborts the whole analysis; the engine reports `rule_error` and continues
-- [ ] **RUL-05**: Every rule produces `RuleFinding` objects with `rule_id`, `severity`, `confidence`, human message, and a machine-readable evidence payload referencing specific plan operator IDs
-- [ ] **RUL-06**: Each rule ships with three fixture classes: synthetic-minimum (pure unit), realistic-from-compose (captured from docker-compose), and negative-control (a plan that must NOT trigger)
-- [ ] **RUL-07**: **R1 — missing or stale table statistics**: detects tables with no stats, or estimates vs ANALYZE actuals divergent by > 5×, by cross-referencing `SHOW STATS`, Iceberg `$snapshots`/`$files`, and executed operator metrics
-- [ ] **RUL-08**: **R2 — partition pruning failure**: detects scans where `physicalInputRows` ≈ total table rows despite a partition predicate (the #1 real-world cliff), using actual-bytes comparison, not predicate text
-- [ ] **RUL-09**: **R3 — predicate pushdown failure**: detects function-wrapped column predicates (e.g., `DATE(ts) = X`) that prevent pushdown, including timezone and timestamp-cast patterns
-- [ ] **RUL-10**: **R4 — dynamic filtering not applied**: detects joins where dynamic filtering was eligible but the collected filter was not propagated to the probe side (the #2 real-world cliff)
-- [ ] **RUL-11**: **R5 — large build side / broadcast too big**: detects `BROADCAST` joins where the build side exceeds configured threshold, recommending `PARTITIONED` distribution
-- [ ] **RUL-12**: **R6 — join order inversion**: detects joins where the CBO-selected order leaves a very large probe side due to missing stats
-- [ ] **RUL-13**: **R7 — CPU / wall-time skew**: detects stages where p99/p50 worker metric ratio exceeds 5×
-- [ ] **RUL-14**: **R8 — excessive exchange volume**: detects exchanges where bytes shuffled exceed scanned bytes
-- [ ] **RUL-15**: **R9 — low-selectivity scan**: detects scans where selected bytes / scanned bytes < configured threshold (default 0.10)
-- [ ] **RUL-16**: **I1 — Iceberg small-files explosion**: detects tables with p50 file size < 16MB or split count > 10k on the scan
-- [ ] **RUL-17**: **I3 — Iceberg delete-file accumulation**: detects tables where position-delete + equality-delete file count exceeds thresholds, using the `$files`-cross-reference workaround for Trino issue #28910 (since `$partitions` does not expose delete metrics)
-- [ ] **RUL-18**: **I6 — stale snapshot accumulation**: detects tables with too many retained snapshots or snapshots older than the configured retention window
-- [ ] **RUL-19**: **I8 — partition transform mismatch**: detects predicates that don't align with the Iceberg partition transform (e.g., `ts = '2025-01-01'` on a `day(ts)` partitioned table) and feeds the Phase 6 rewrite engine
-- [ ] **RUL-20**: **D11 — cost-vs-actual divergence**: detects operators where CBO estimate vs `EXPLAIN ANALYZE` actuals diverge by > 5× (smoking gun for stale stats)
-- [ ] **RUL-21**: Rule thresholds are data-driven with sourced rationale (each threshold carries a citation and is overridable via config, not a magic number)
+- [x] **RUL-01**: Rules are registered via a plugin registry; each rule is a class inheriting a shared `Rule` base with a deterministic `check(plan, evidence)` method
+- [x] **RUL-02**: Each rule declares its evidence requirement via an enum (`PLAN_ONLY`, `PLAN_WITH_METRICS`, `TABLE_STATS`, `ICEBERG_METADATA`); the engine prefetches the union of all required evidence once per analysis
+- [x] **RUL-03**: Rules that require unavailable evidence (e.g., ICEBERG_METADATA in offline mode) are skipped with a structured `rule_skipped` finding, not an exception
+- [x] **RUL-04**: A rule failure is isolated — one crashing rule never aborts the whole analysis; the engine reports `rule_error` and continues
+- [x] **RUL-05**: Every rule produces `RuleFinding` objects with `rule_id`, `severity`, `confidence`, human message, and a machine-readable evidence payload referencing specific plan operator IDs
+- [x] **RUL-06**: Each rule ships with three fixture classes: synthetic-minimum (pure unit), realistic-from-compose (captured from docker-compose), and negative-control (a plan that must NOT trigger)
+- [x] **RUL-07**: **R1 — missing or stale table statistics**: detects tables with no stats, or estimates vs ANALYZE actuals divergent by > 5×, by cross-referencing `SHOW STATS`, Iceberg `$snapshots`/`$files`, and executed operator metrics
+- [x] **RUL-08**: **R2 — partition pruning failure**: detects scans where `physicalInputRows` ≈ total table rows despite a partition predicate (the #1 real-world cliff), using actual-bytes comparison, not predicate text
+- [x] **RUL-09**: **R3 — predicate pushdown failure**: detects function-wrapped column predicates (e.g., `DATE(ts) = X`) that prevent pushdown, including timezone and timestamp-cast patterns
+- [x] **RUL-10**: **R4 — dynamic filtering not applied**: detects joins where dynamic filtering was eligible but the collected filter was not propagated to the probe side (the #2 real-world cliff)
+- [x] **RUL-11**: **R5 — large build side / broadcast too big**: detects `BROADCAST` joins where the build side exceeds configured threshold, recommending `PARTITIONED` distribution
+- [x] **RUL-12**: **R6 — join order inversion**: detects joins where the CBO-selected order leaves a very large probe side due to missing stats
+- [x] **RUL-13**: **R7 — CPU / wall-time skew**: detects stages where p99/p50 worker metric ratio exceeds 5×
+- [x] **RUL-14**: **R8 — excessive exchange volume**: detects exchanges where bytes shuffled exceed scanned bytes
+- [x] **RUL-15**: **R9 — low-selectivity scan**: detects scans where selected bytes / scanned bytes < configured threshold (default 0.10)
+- [x] **RUL-16**: **I1 — Iceberg small-files explosion**: detects tables with p50 file size < 16MB or split count > 10k on the scan
+- [x] **RUL-17**: **I3 — Iceberg delete-file accumulation**: detects tables where position-delete + equality-delete file count exceeds thresholds, using the `$files`-cross-reference workaround for Trino issue #28910 (since `$partitions` does not expose delete metrics)
+- [x] **RUL-18**: **I6 — stale snapshot accumulation**: detects tables with too many retained snapshots or snapshots older than the configured retention window
+- [x] **RUL-19**: **I8 — partition transform mismatch**: detects predicates that don't align with the Iceberg partition transform (e.g., `ts = '2025-01-01'` on a `day(ts)` partitioned table) and feeds the Phase 6 rewrite engine
+- [x] **RUL-20**: **D11 — cost-vs-actual divergence**: detects operators where CBO estimate vs `EXPLAIN ANALYZE` actuals diverge by > 5× (smoking gun for stale stats)
+- [x] **RUL-21**: Rule thresholds are data-driven with sourced rationale (each threshold carries a citation and is overridable via config, not a magic number)
 
 ### Recommendation Engine (REC) — Scoring, Prioritization, Narrative
 
@@ -247,27 +247,27 @@ Populated by the roadmapper on 2026-04-11. Every v1 REQ-ID maps to exactly one p
 | PLN-05 | Phase 3 | Complete |
 | PLN-06 | Phase 3 | Complete |
 | PLN-07 | Phase 3 | Complete |
-| RUL-01 | Phase 4 | Pending |
-| RUL-02 | Phase 4 | Pending |
-| RUL-03 | Phase 4 | Pending |
-| RUL-04 | Phase 4 | Pending |
-| RUL-05 | Phase 4 | Pending |
-| RUL-06 | Phase 4 | Pending |
-| RUL-07 | Phase 4 | Pending |
-| RUL-08 | Phase 4 | Pending |
-| RUL-09 | Phase 4 | Pending |
-| RUL-10 | Phase 4 | Pending |
-| RUL-11 | Phase 4 | Pending |
-| RUL-12 | Phase 4 | Pending |
-| RUL-13 | Phase 4 | Pending |
-| RUL-14 | Phase 4 | Pending |
-| RUL-15 | Phase 4 | Pending |
-| RUL-16 | Phase 4 | Pending |
-| RUL-17 | Phase 4 | Pending |
-| RUL-18 | Phase 4 | Pending |
-| RUL-19 | Phase 4 | Pending |
-| RUL-20 | Phase 4 | Pending |
-| RUL-21 | Phase 4 | Pending |
+| RUL-01 | Phase 4 | Complete |
+| RUL-02 | Phase 4 | Complete |
+| RUL-03 | Phase 4 | Complete |
+| RUL-04 | Phase 4 | Complete |
+| RUL-05 | Phase 4 | Complete |
+| RUL-06 | Phase 4 | Complete |
+| RUL-07 | Phase 4 | Complete |
+| RUL-08 | Phase 4 | Complete |
+| RUL-09 | Phase 4 | Complete |
+| RUL-10 | Phase 4 | Complete |
+| RUL-11 | Phase 4 | Complete |
+| RUL-12 | Phase 4 | Complete |
+| RUL-13 | Phase 4 | Complete |
+| RUL-14 | Phase 4 | Complete |
+| RUL-15 | Phase 4 | Complete |
+| RUL-16 | Phase 4 | Complete |
+| RUL-17 | Phase 4 | Complete |
+| RUL-18 | Phase 4 | Complete |
+| RUL-19 | Phase 4 | Complete |
+| RUL-20 | Phase 4 | Complete |
+| RUL-21 | Phase 4 | Complete |
 | REC-01 | Phase 5 | Pending |
 | REC-02 | Phase 5 | Pending |
 | REC-03 | Phase 5 | Pending |

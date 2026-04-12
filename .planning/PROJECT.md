@@ -46,23 +46,23 @@ Turn opaque Trino query performance problems into actionable, evidence-backed op
 - [x] Normalize differences between EXPLAIN and EXPLAIN ANALYZE shapes
 - [x] Handle Iceberg-specific operators (IcebergTableScan, split info, manifest reads)
 
+#### Rule Engine — Phase 4 ✅ (2026-04-13)
+
+- [x] Missing / stale table statistics (R1, D11)
+- [x] Join order issues (large build side, missing stats-driven reorder) (R6)
+- [x] Partition pruning failure (R2)
+- [x] Predicate pushdown failure (R3)
+- [x] Dynamic filtering not applied (R4)
+- [x] Data skew across workers (R7)
+- [x] Excessive exchange volume / wrong distribution type (R8)
+- [x] Large scan with low selectivity (R9)
+- [x] Iceberg small-files explosion (I1), delete-file accumulation (I3), stale snapshots (I6), partition transform mismatch (I8)
+- [x] Broadcast join too big (R5)
+- [x] Each rule is deterministic, testable in isolation, and produces structured `RuleFinding` with severity + evidence (RUL-01–RUL-21, 559 tests, 14 rules)
+
 ### Active
 
 <!-- Current scope. Building toward these. -->
-
-#### Rule Engine (minimum 10 rules)
-
-- [ ] Missing / stale table statistics
-- [ ] Join order issues (large build side, missing stats-driven reorder)
-- [ ] Partition pruning failure
-- [ ] Predicate pushdown failure
-- [ ] Dynamic filtering not applied
-- [ ] Data skew across workers
-- [ ] Excessive exchange volume / wrong distribution type
-- [ ] Large scan with low selectivity (poor filter ratio)
-- [ ] Iceberg file scan explosion (too many small files / high split count)
-- [ ] Iceberg small-files / stale snapshot / compaction needed
-- [ ] Each rule is deterministic, testable in isolation, and produces structured findings with severity + evidence
 
 #### Recommendation Engine
 
@@ -194,4 +194,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-12 — Phases 1–3 complete; requirements moved to Validated; Key Decisions confirmed*
+*Last updated: 2026-04-13 — Phase 4 complete; RUL-01–21 moved to Validated; 14 rules shipped (R1–R9, I1/I3/I6/I8, D11); 559 tests passing*
