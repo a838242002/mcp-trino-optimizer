@@ -97,9 +97,7 @@ def pool() -> Iterator[TrinoThreadPool]:
 
 
 @pytest.mark.asyncio
-async def test_trino_query_executed_event_emitted(
-    log_capture: io.StringIO, pool: TrinoThreadPool
-) -> None:
+async def test_trino_query_executed_event_emitted(log_capture: io.StringIO, pool: TrinoThreadPool) -> None:
     """trino_query_executed log event is emitted after a successful query."""
     sql = "SELECT 1"
     expected_hash = hashlib.sha256(sql.encode()).hexdigest()
@@ -117,9 +115,7 @@ async def test_trino_query_executed_event_emitted(
     lines = _capture_log_lines(log_capture)
     exec_events = [ln for ln in lines if ln.get("event") == "trino_query_executed"]
 
-    assert len(exec_events) >= 1, (
-        f"Expected at least one trino_query_executed event. Got lines: {lines}"
-    )
+    assert len(exec_events) >= 1, f"Expected at least one trino_query_executed event. Got lines: {lines}"
     evt = exec_events[0]
     assert evt.get("statement_hash") == expected_hash, (
         f"statement_hash mismatch. Expected {expected_hash}, got {evt.get('statement_hash')}"
@@ -129,9 +125,7 @@ async def test_trino_query_executed_event_emitted(
 
 
 @pytest.mark.asyncio
-async def test_raw_sql_never_in_log(
-    log_capture: io.StringIO, pool: TrinoThreadPool
-) -> None:
+async def test_raw_sql_never_in_log(log_capture: io.StringIO, pool: TrinoThreadPool) -> None:
     """Raw SQL text must never appear in any log line (T-02-10)."""
     sql = "SELECT secret_column FROM sensitive_table"
 
@@ -146,18 +140,12 @@ async def test_raw_sql_never_in_log(
 
     raw_output = log_capture.getvalue()
     # Neither the full SQL nor distinctive substrings should appear
-    assert "secret_column" not in raw_output, (
-        "Raw SQL appeared in log output (field name found)"
-    )
-    assert "sensitive_table" not in raw_output, (
-        "Raw SQL appeared in log output (table name found)"
-    )
+    assert "secret_column" not in raw_output, "Raw SQL appeared in log output (field name found)"
+    assert "sensitive_table" not in raw_output, "Raw SQL appeared in log output (table name found)"
 
 
 @pytest.mark.asyncio
-async def test_statement_hash_is_sha256(
-    log_capture: io.StringIO, pool: TrinoThreadPool
-) -> None:
+async def test_statement_hash_is_sha256(log_capture: io.StringIO, pool: TrinoThreadPool) -> None:
     """statement_hash must be SHA-256(sql.encode()).hexdigest()."""
     sql = "SELECT count(*) FROM iceberg.default.orders"
     expected_hash = hashlib.sha256(sql.encode()).hexdigest()
@@ -178,9 +166,7 @@ async def test_statement_hash_is_sha256(
 
 
 @pytest.mark.asyncio
-async def test_request_id_in_log_event(
-    log_capture: io.StringIO, pool: TrinoThreadPool
-) -> None:
+async def test_request_id_in_log_event(log_capture: io.StringIO, pool: TrinoThreadPool) -> None:
     """request_id must be present in the trino_query_executed log event."""
     from mcp_trino_optimizer._context import new_request_id
 

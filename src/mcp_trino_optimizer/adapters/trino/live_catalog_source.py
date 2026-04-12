@@ -9,6 +9,7 @@ is also allowlisted to prevent injection via arbitrary suffix values.  All
 constructed SQL goes through ``SqlClassifier.assert_read_only()`` inside
 ``TrinoClient`` before execution (T-02-13 mitigation).
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
@@ -21,9 +22,7 @@ if TYPE_CHECKING:
 __all__ = ["LiveCatalogSource"]
 
 # Allowlist of Iceberg metadata table suffixes (T-02-13 mitigation).
-_ALLOWED_SUFFIXES: frozenset[str] = frozenset(
-    {"snapshots", "files", "manifests", "partitions", "history", "refs"}
-)
+_ALLOWED_SUFFIXES: frozenset[str] = frozenset({"snapshots", "files", "manifests", "partitions", "history", "refs"})
 
 
 class LiveCatalogSource:
@@ -63,8 +62,7 @@ class LiveCatalogSource:
         """
         if suffix not in _ALLOWED_SUFFIXES:
             raise ValueError(
-                f"Unknown Iceberg metadata suffix {suffix!r}. "
-                f"Allowed suffixes: {sorted(_ALLOWED_SUFFIXES)}"
+                f"Unknown Iceberg metadata suffix {suffix!r}. Allowed suffixes: {sorted(_ALLOWED_SUFFIXES)}"
             )
         result = await self._client.fetch_iceberg_metadata(catalog, schema, table, suffix)
         if isinstance(result, TimeoutResult):

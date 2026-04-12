@@ -3,6 +3,7 @@
 TDD RED phase: validates offline JSON plan parsing, size limits,
 plan type detection, and classifier-exempt behavior.
 """
+
 from __future__ import annotations
 
 import json
@@ -213,9 +214,7 @@ class TestClassifierExempt:
         source = module_path.read_text()
 
         # Check raw text for SqlClassifier
-        assert "SqlClassifier" not in source, (
-            "OfflinePlanSource must not reference SqlClassifier (D-15)"
-        )
+        assert "SqlClassifier" not in source, "OfflinePlanSource must not reference SqlClassifier (D-15)"
         assert "classifier" not in source.lower() or "classifier-exempt" in source.lower(), (
             "OfflinePlanSource must not import or use a classifier"
         )

@@ -3,6 +3,7 @@
 RED phase: these tests validate that the port Protocols exist with the right
 shape and that no adapter coupling exists in the ports package.
 """
+
 from __future__ import annotations
 
 import ast
@@ -104,12 +105,7 @@ def test_ports_package_exports_all_symbols() -> None:
 
 def test_ports_have_no_adapter_imports() -> None:
     """Port modules must NOT import from adapters — zero coupling."""
-    ports_dir = (
-        Path(__file__).parent.parent.parent
-        / "src"
-        / "mcp_trino_optimizer"
-        / "ports"
-    )
+    ports_dir = Path(__file__).parent.parent.parent / "src" / "mcp_trino_optimizer" / "ports"
     assert ports_dir.is_dir(), f"ports dir not found: {ports_dir}"
 
     for py_file in ports_dir.glob("*.py"):
@@ -118,11 +114,7 @@ def test_ports_have_no_adapter_imports() -> None:
         for node in ast.walk(tree):
             if isinstance(node, (ast.Import, ast.ImportFrom)):
                 if isinstance(node, ast.ImportFrom) and node.module:
-                    assert "adapters" not in node.module, (
-                        f"{py_file.name} imports from adapters: {node.module}"
-                    )
+                    assert "adapters" not in node.module, f"{py_file.name} imports from adapters: {node.module}"
                 elif isinstance(node, ast.Import):
                     for alias in node.names:
-                        assert "adapters" not in alias.name, (
-                            f"{py_file.name} imports adapters: {alias.name}"
-                        )
+                        assert "adapters" not in alias.name, f"{py_file.name} imports adapters: {alias.name}"

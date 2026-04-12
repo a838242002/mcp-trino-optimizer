@@ -127,20 +127,11 @@ class Settings(BaseSettings):
         """Fail fast on invalid auth config before any network call (T-02-04)."""
         if self.trino_auth_mode == "basic":
             if self.trino_user is None:
-                raise ValueError(
-                    "trino_user is required when trino_auth_mode=basic. "
-                    "Set MCPTO_TRINO_USER."
-                )
+                raise ValueError("trino_user is required when trino_auth_mode=basic. Set MCPTO_TRINO_USER.")
             if self.trino_password is None:
-                raise ValueError(
-                    "trino_password is required when trino_auth_mode=basic. "
-                    "Set MCPTO_TRINO_PASSWORD."
-                )
+                raise ValueError("trino_password is required when trino_auth_mode=basic. Set MCPTO_TRINO_PASSWORD.")
         if self.trino_auth_mode == "jwt" and self.trino_jwt is None:
-            raise ValueError(
-                "trino_jwt is required when trino_auth_mode=jwt. "
-                "Set MCPTO_TRINO_JWT."
-            )
+            raise ValueError("trino_jwt is required when trino_auth_mode=jwt. Set MCPTO_TRINO_JWT.")
         return self
 
 

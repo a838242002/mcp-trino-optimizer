@@ -36,13 +36,9 @@ class TestFetchPlans:
         assert isinstance(result, ExplainPlan), f"Expected ExplainPlan, got {type(result)}"
         assert result.plan_type == "distributed"
 
-    async def test_fetch_plan_iceberg_table(
-        self, trino_client: TrinoClient, seeded_stack: tuple[str, int]
-    ) -> None:
+    async def test_fetch_plan_iceberg_table(self, trino_client: TrinoClient, seeded_stack: tuple[str, int]) -> None:
         """EXPLAIN plan for a real Iceberg table query returns a populated ExplainPlan."""
-        result = await trino_client.fetch_plan(
-            "SELECT * FROM iceberg.test_schema.test_table"
-        )
+        result = await trino_client.fetch_plan("SELECT * FROM iceberg.test_schema.test_table")
         assert isinstance(result, ExplainPlan), f"Expected ExplainPlan, got {type(result)}"
         assert result.plan_type == "estimated"
         # The plan JSON should have content for a real table scan

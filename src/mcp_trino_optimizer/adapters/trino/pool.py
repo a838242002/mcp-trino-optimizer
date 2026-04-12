@@ -80,6 +80,7 @@ class TrinoThreadPool:
         try:
             if kwargs:
                 import functools
+
                 result: T = await loop.run_in_executor(
                     self._executor,
                     functools.partial(fn, *args, **kwargs),

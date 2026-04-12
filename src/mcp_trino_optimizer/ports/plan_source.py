@@ -4,6 +4,7 @@ This module is a pure Protocol definition. It MUST NOT import anything from
 ``mcp_trino_optimizer.adapters``. Both live and offline adapters satisfy this
 Protocol, keeping rule/recommender/rewrite engines mode-agnostic.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field

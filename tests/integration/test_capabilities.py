@@ -27,12 +27,9 @@ class TestCapabilities:
 
         assert isinstance(matrix, CapabilityMatrix)
         assert matrix.trino_version_major == 480, (
-            f"Expected Trino 480, got {matrix.trino_version_major} "
-            f"(version_str={matrix.trino_version!r})"
+            f"Expected Trino 480, got {matrix.trino_version_major} (version_str={matrix.trino_version!r})"
         )
-        assert "iceberg" in matrix.catalogs, (
-            f"Expected 'iceberg' in catalogs, got {matrix.catalogs!r}"
-        )
+        assert "iceberg" in matrix.catalogs, f"Expected 'iceberg' in catalogs, got {matrix.catalogs!r}"
         assert matrix.iceberg_catalog_name == "iceberg", (
             f"Expected iceberg_catalog_name='iceberg', got {matrix.iceberg_catalog_name!r}"
         )

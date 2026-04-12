@@ -93,7 +93,9 @@ async def test_pool_max_workers_1_sequential() -> None:
     results: list[int] = []
     try:
         for i in range(3):
-            val = await pool.run(lambda x=i: x, )
+            val = await pool.run(
+                lambda x=i: x,
+            )
             results.append(val)
         assert results == [0, 1, 2]
     finally:

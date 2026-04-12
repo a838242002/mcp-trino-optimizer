@@ -151,8 +151,7 @@ class TrinoClient:
     ) -> list[dict[str, Any]] | TimeoutResult[list[dict[str, Any]]]:
         if suffix not in _ALLOWED_ICEBERG_SUFFIXES:
             raise TrinoClassifierRejected(
-                f"Unknown Iceberg metadata suffix {suffix!r}. "
-                f"Allowed: {sorted(_ALLOWED_ICEBERG_SUFFIXES)}"
+                f"Unknown Iceberg metadata suffix {suffix!r}. Allowed: {sorted(_ALLOWED_ICEBERG_SUFFIXES)}"
             )
         sql = f'SELECT * FROM "{catalog}"."{schema}"."{table}${suffix}"'
         self._classifier.assert_read_only(sql)
@@ -178,13 +177,8 @@ class TrinoClient:
         Returns True if confirmed, False if unconfirmed within budget.
         """
         http_scheme = "https" if self._settings.trino_verify_ssl else "http"
-        ssl_verify: bool | str = (
-            self._settings.trino_ca_bundle or self._settings.trino_verify_ssl
-        )
-        base_url = (
-            f"{http_scheme}"
-            f"://{self._settings.trino_host}:{self._settings.trino_port}"
-        )
+        ssl_verify: bool | str = self._settings.trino_ca_bundle or self._settings.trino_verify_ssl
+        base_url = f"{http_scheme}://{self._settings.trino_host}:{self._settings.trino_port}"
         handle = QueryHandle(
             request_id=current_request_id(),
             query_id_cell=QueryIdCell(),
@@ -308,13 +302,8 @@ class TrinoClient:
         except TimeoutError:
             elapsed = int((time.monotonic() - start_ms) * 1000)
             http_scheme = "https" if self._settings.trino_verify_ssl else "http"
-            ssl_verify: bool | str = (
-                self._settings.trino_ca_bundle or self._settings.trino_verify_ssl
-            )
-            base_url = (
-                f"{http_scheme}"
-                f"://{self._settings.trino_host}:{self._settings.trino_port}"
-            )
+            ssl_verify: bool | str = self._settings.trino_ca_bundle or self._settings.trino_verify_ssl
+            base_url = f"{http_scheme}://{self._settings.trino_host}:{self._settings.trino_port}"
             await handle.cancel(base_url=base_url, ssl_verify=ssl_verify)
             return TimeoutResult(
                 partial=result,

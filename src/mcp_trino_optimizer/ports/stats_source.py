@@ -4,6 +4,7 @@ This module is a pure Protocol definition. It MUST NOT import anything from
 ``mcp_trino_optimizer.adapters``. The rule engine and recommender consume this
 port without knowing whether stats come from a live cluster or a fixture file.
 """
+
 from __future__ import annotations
 
 from typing import Any, Protocol, runtime_checkable

@@ -132,9 +132,7 @@ async def test_retry_once_on_401_then_succeeds(pool: TrinoThreadPool) -> None:
         result = await client.fetch_system_runtime("SELECT 1")
 
     assert result == fake_rows
-    assert mock_run.call_count == 2, (
-        f"Expected exactly 2 calls (initial + retry), got {mock_run.call_count}"
-    )
+    assert mock_run.call_count == 2, f"Expected exactly 2 calls (initial + retry), got {mock_run.call_count}"
 
 
 @pytest.mark.asyncio
@@ -149,15 +147,11 @@ async def test_double_401_raises_trino_auth_error(pool: TrinoThreadPool) -> None
     with patch.object(client, "_run_in_thread", mock_run), pytest.raises(TrinoAuthError):
         await client.fetch_system_runtime("SELECT 1")
 
-    assert mock_run.call_count == 2, (
-        f"Expected exactly 2 calls, got {mock_run.call_count}"
-    )
+    assert mock_run.call_count == 2, f"Expected exactly 2 calls, got {mock_run.call_count}"
 
 
 @pytest.mark.asyncio
-async def test_auth_retry_log_event_emitted(
-    log_capture: io.StringIO, pool: TrinoThreadPool
-) -> None:
+async def test_auth_retry_log_event_emitted(log_capture: io.StringIO, pool: TrinoThreadPool) -> None:
     """trino_auth_retry log event is emitted on 401 retry with correct fields."""
     from mcp_trino_optimizer._context import new_request_id
 
@@ -174,9 +168,7 @@ async def test_auth_retry_log_event_emitted(
     lines = _parse_log_lines(log_capture)
     retry_events = [ln for ln in lines if ln.get("event") == "trino_auth_retry"]
 
-    assert len(retry_events) == 1, (
-        f"Expected exactly 1 trino_auth_retry event. Got: {retry_events}"
-    )
+    assert len(retry_events) == 1, f"Expected exactly 1 trino_auth_retry event. Got: {retry_events}"
     evt = retry_events[0]
     assert evt.get("request_id") == rid, "request_id missing from trino_auth_retry"
     assert "attempt" in evt, "attempt missing from trino_auth_retry"
@@ -185,9 +177,7 @@ async def test_auth_retry_log_event_emitted(
 
 
 @pytest.mark.asyncio
-async def test_auth_retry_log_has_no_secret(
-    log_capture: io.StringIO, pool: TrinoThreadPool
-) -> None:
+async def test_auth_retry_log_has_no_secret(log_capture: io.StringIO, pool: TrinoThreadPool) -> None:
     """No token/password/jwt value appears in the trino_auth_retry log event."""
     import os
 
@@ -205,9 +195,7 @@ async def test_auth_retry_log_has_no_secret(
     os.environ.pop("MCPTO_TRINO_JWT", None)
 
     raw_output = log_capture.getvalue()
-    assert "super-secret-jwt-value-12345" not in raw_output, (
-        "JWT token value appeared in log output"
-    )
+    assert "super-secret-jwt-value-12345" not in raw_output, "JWT token value appeared in log output"
 
 
 @pytest.mark.asyncio
@@ -222,15 +210,11 @@ async def test_non_401_error_not_retried(pool: TrinoThreadPool) -> None:
     with patch.object(client, "_run_in_thread", mock_run), pytest.raises(trino.exceptions.TrinoExternalError):
         await client.fetch_system_runtime("SELECT 1")
 
-    assert mock_run.call_count == 1, (
-        f"Non-401 error should not trigger retry, got {mock_run.call_count} calls"
-    )
+    assert mock_run.call_count == 1, f"Non-401 error should not trigger retry, got {mock_run.call_count} calls"
 
 
 @pytest.mark.asyncio
-async def test_no_auth_retry_log_for_non_401(
-    log_capture: io.StringIO, pool: TrinoThreadPool
-) -> None:
+async def test_no_auth_retry_log_for_non_401(log_capture: io.StringIO, pool: TrinoThreadPool) -> None:
     """trino_auth_retry event is NOT emitted for non-401 errors."""
     settings = _make_settings()
     client = TrinoClient(settings=settings, pool=pool)
@@ -242,6 +226,4 @@ async def test_no_auth_retry_log_for_non_401(
 
     lines = _parse_log_lines(log_capture)
     retry_events = [ln for ln in lines if ln.get("event") == "trino_auth_retry"]
-    assert retry_events == [], (
-        f"Expected no trino_auth_retry events for 500 error, got: {retry_events}"
-    )
+    assert retry_events == [], f"Expected no trino_auth_retry events for 500 error, got: {retry_events}"

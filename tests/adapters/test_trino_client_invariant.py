@@ -23,10 +23,7 @@ import pytest
 # Helpers
 # ---------------------------------------------------------------------------
 
-CLIENT_SRC = (
-    Path(__file__).parent.parent.parent
-    / "src/mcp_trino_optimizer/adapters/trino/client.py"
-)
+CLIENT_SRC = Path(__file__).parent.parent.parent / "src/mcp_trino_optimizer/adapters/trino/client.py"
 
 _AnyFuncDef = ast.FunctionDef | ast.AsyncFunctionDef
 
@@ -42,10 +39,7 @@ def _get_public_methods(tree: ast.Module) -> list[_AnyFuncDef]:
     for node in ast.walk(tree):
         if isinstance(node, ast.ClassDef) and node.name == "TrinoClient":
             for item in node.body:
-                if (
-                    isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef))
-                    and not item.name.startswith("_")
-                ):
+                if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)) and not item.name.startswith("_"):
                     methods.append(item)
     return methods
 
@@ -114,9 +108,7 @@ def test_client_py_exists() -> None:
 def test_trino_client_class_exists() -> None:
     """TrinoClient class must be defined in client.py."""
     tree = _parse_client()
-    class_names = [
-        node.name for node in ast.walk(tree) if isinstance(node, ast.ClassDef)
-    ]
+    class_names = [node.name for node in ast.walk(tree) if isinstance(node, ast.ClassDef)]
     assert "TrinoClient" in class_names, "TrinoClient class not found in client.py"
 
 
@@ -136,14 +128,11 @@ def test_sql_taking_method_calls_classifier_first(method_name: str) -> None:
     methods = {m.name: m for m in _get_public_methods(tree)}
 
     assert method_name in methods, (
-        f"Method '{method_name}' not found in TrinoClient. "
-        f"Available public methods: {list(methods)}"
+        f"Method '{method_name}' not found in TrinoClient. Available public methods: {list(methods)}"
     )
 
     method = methods[method_name]
-    assert _has_sql_str_param(method), (
-        f"Method '{method_name}' does not have a 'sql: str' parameter."
-    )
+    assert _has_sql_str_param(method), f"Method '{method_name}' does not have a 'sql: str' parameter."
 
     first_stmt = _first_executable_stmt(method)
     assert _is_assert_read_only_call(first_stmt), (
@@ -159,9 +148,7 @@ def test_cancel_query_has_no_sql_param() -> None:
     methods = {m.name: m for m in _get_public_methods(tree)}
 
     assert "cancel_query" in methods, "cancel_query not found in TrinoClient"
-    assert not _has_sql_str_param(methods["cancel_query"]), (
-        "cancel_query should not have a sql parameter"
-    )
+    assert not _has_sql_str_param(methods["cancel_query"]), "cancel_query should not have a sql parameter"
 
 
 def test_probe_capabilities_has_no_sql_param() -> None:
@@ -170,9 +157,7 @@ def test_probe_capabilities_has_no_sql_param() -> None:
     methods = {m.name: m for m in _get_public_methods(tree)}
 
     assert "probe_capabilities" in methods, "probe_capabilities not found in TrinoClient"
-    assert not _has_sql_str_param(methods["probe_capabilities"]), (
-        "probe_capabilities should not have a sql parameter"
-    )
+    assert not _has_sql_str_param(methods["probe_capabilities"]), "probe_capabilities should not have a sql parameter"
 
 
 def test_all_required_methods_present() -> None:
@@ -208,6 +193,5 @@ def test_sql_str_param_methods_enumerated() -> None:
 
     actual_sql_methods = {m.name for m in methods if _has_sql_str_param(m)}
     assert expected_sql_methods == actual_sql_methods, (
-        f"Unexpected public sql: str-taking methods. "
-        f"Expected: {expected_sql_methods}, Got: {actual_sql_methods}"
+        f"Unexpected public sql: str-taking methods. Expected: {expected_sql_methods}, Got: {actual_sql_methods}"
     )

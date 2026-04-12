@@ -7,6 +7,7 @@ network call is made. The live-adapter read-only gate is not applicable here.
 Security note (T-02-05): enforces a 1MB size cap on raw JSON input before
 parsing to prevent memory exhaustion from adversarial payloads.
 """
+
 from __future__ import annotations
 
 from typing import Any, Literal
@@ -163,14 +164,10 @@ class OfflinePlanSource:
         except orjson.JSONDecodeError as exc:
             raise ValueError(f"Invalid JSON: {exc}") from exc
         if not isinstance(result, dict):
-            raise ValueError(
-                f"Invalid JSON: expected a JSON object (dict), got {type(result).__name__}"
-            )
+            raise ValueError(f"Invalid JSON: expected a JSON object (dict), got {type(result).__name__}")
         return result
 
-    def _detect_plan_type(
-        self, plan_dict: dict[str, Any]
-    ) -> Literal["estimated", "executed"]:
+    def _detect_plan_type(self, plan_dict: dict[str, Any]) -> Literal["estimated", "executed"]:
         """Heuristically detect whether a plan is estimated or executed.
 
         Checks the top-level JSON object for runtime metric keys that are

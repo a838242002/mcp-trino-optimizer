@@ -1,4 +1,5 @@
 """Tests for CapabilityMatrix, parse_trino_version, and probe_capabilities — TRN-07, D-18, D-19."""
+
 from __future__ import annotations
 
 from datetime import UTC, datetime

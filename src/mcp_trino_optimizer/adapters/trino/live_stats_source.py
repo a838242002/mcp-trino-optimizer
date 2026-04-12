@@ -4,6 +4,7 @@ Thin wrapper that delegates SHOW STATS and system.runtime queries to
 ``TrinoClient``.  On ``TimeoutResult``, returns partial data (best-effort)
 because callers can make useful decisions from incomplete stats.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any

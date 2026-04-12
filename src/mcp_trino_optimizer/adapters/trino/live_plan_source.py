@@ -7,6 +7,7 @@ does not duplicate it.
 On ``TimeoutResult``, raises ``TrinoTimeoutError`` rather than silently
 returning empty/partial data, since a partial EXPLAIN plan is not useful.
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

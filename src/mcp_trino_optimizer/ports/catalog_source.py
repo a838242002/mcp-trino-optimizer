@@ -5,6 +5,7 @@ This module is a pure Protocol definition. It MUST NOT import anything from
 count, file counts, partition stats) consume this port without coupling to a
 specific catalog implementation.
 """
+
 from __future__ import annotations
 
 from typing import Any, Protocol, runtime_checkable

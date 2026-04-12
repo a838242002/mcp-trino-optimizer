@@ -10,6 +10,7 @@ through TrinoClient (which enforces the classifier gate).  It:
 5. If the configured catalog is an Iceberg catalog, probes metadata availability.
 6. Returns an immutable CapabilityMatrix.
 """
+
 from __future__ import annotations
 
 import re
@@ -128,9 +129,7 @@ async def probe_capabilities(
     catalogs: frozenset[str]
     if isinstance(catalog_rows, list):
         catalogs = frozenset(
-            str(row.get("Catalog", row.get("catalog", "")))
-            for row in catalog_rows
-            if isinstance(row, dict)
+            str(row.get("Catalog", row.get("catalog", ""))) for row in catalog_rows if isinstance(row, dict)
         )
     else:
         # TimeoutResult — best effort empty set

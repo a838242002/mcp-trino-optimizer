@@ -10,6 +10,7 @@ Public API:
     StatsSource     — port for fetching Trino table/runtime statistics
     CatalogSource   — port for fetching Iceberg catalog metadata
 """
+
 from __future__ import annotations
 
 from mcp_trino_optimizer.ports.catalog_source import CatalogSource

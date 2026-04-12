@@ -29,18 +29,16 @@ __all__ = ["SqlClassifier", "TrinoClassifierRejected"]
 
 # Node types that are unconditionally allowed at the top level.
 _ALLOWED_NODE_TYPES: tuple[type[exp.Expression], ...] = (
-    exp.Select,   # SELECT … (includes WITH/CTE prefix)
-    exp.Describe, # DESCRIBE t
-    exp.Use,      # USE catalog
-    exp.Values,   # VALUES (…)
+    exp.Select,  # SELECT … (includes WITH/CTE prefix)
+    exp.Describe,  # DESCRIBE t
+    exp.Use,  # USE catalog
+    exp.Values,  # VALUES (…)
 )
 
 # Command keyword prefixes (case-insensitive) that are allowed.
 # sqlglot parses EXPLAIN, SHOW, DESCRIBE (when not recognized), etc. as
 # exp.Command nodes — we guard with an allowlist.
-_ALLOWED_COMMAND_PREFIXES: frozenset[str] = frozenset(
-    {"EXPLAIN", "SHOW", "DESCRIBE"}
-)
+_ALLOWED_COMMAND_PREFIXES: frozenset[str] = frozenset({"EXPLAIN", "SHOW", "DESCRIBE"})
 
 # Regex to strip leading ANALYZE and parenthesised option groups from the
 # expression part of an EXPLAIN command so we can re-parse the inner SQL.
@@ -77,8 +75,7 @@ class SqlClassifier:
         stripped = sql.strip()
         if not stripped:
             raise TrinoClassifierRejected(
-                "SQL statement is empty or whitespace-only. "
-                "Only read-only statements are allowed."
+                "SQL statement is empty or whitespace-only. Only read-only statements are allowed."
             )
 
         try:
@@ -93,8 +90,7 @@ class SqlClassifier:
 
         if len(non_none) == 0:
             raise TrinoClassifierRejected(
-                "SQL statement is empty or produced no parse output. "
-                "Only read-only statements are allowed."
+                "SQL statement is empty or produced no parse output. Only read-only statements are allowed."
             )
 
         if len(non_none) > 1:
@@ -127,8 +123,7 @@ class SqlClassifier:
 
         if cmd_name not in _ALLOWED_COMMAND_PREFIXES:
             raise TrinoClassifierRejected(
-                f"Command '{cmd_name}' is not allowed. "
-                "Only EXPLAIN, SHOW, and DESCRIBE commands are permitted."
+                f"Command '{cmd_name}' is not allowed. Only EXPLAIN, SHOW, and DESCRIBE commands are permitted."
             )
 
         # For EXPLAIN commands, recursively validate the inner statement.
@@ -160,9 +155,7 @@ class SqlClassifier:
         try:
             inner_statements = sqlglot.parse(inner_sql, dialect="trino")
         except Exception as exc:
-            raise TrinoClassifierRejected(
-                f"EXPLAIN inner SQL could not be parsed: {exc}"
-            ) from exc
+            raise TrinoClassifierRejected(f"EXPLAIN inner SQL could not be parsed: {exc}") from exc
 
         inner_non_none = [s for s in inner_statements if s is not None]
         if not inner_non_none:
@@ -170,8 +163,7 @@ class SqlClassifier:
 
         if len(inner_non_none) > 1:
             raise TrinoClassifierRejected(
-                "EXPLAIN contains multiple inner statements. "
-                "Only a single read-only statement is allowed."
+                "EXPLAIN contains multiple inner statements. Only a single read-only statement is allowed."
             )
 
         # Recursively assert the inner node is read-only.

@@ -59,18 +59,13 @@ class TestEventLoopLag:
 
         # Verify all queries returned valid plans
         for result in results:
-            assert isinstance(result, ExplainPlan), (
-                f"Expected ExplainPlan, got {type(result)}"
-            )
+            assert isinstance(result, ExplainPlan), f"Expected ExplainPlan, got {type(result)}"
 
         # Verify event-loop was never blocked > 100ms
         if len(tick_timestamps) < 2:
             pytest.skip("Not enough ticks recorded — query completed too quickly to measure lag")
 
-        max_gap_ms = max(
-            (tick_timestamps[i + 1] - tick_timestamps[i]) * 1000
-            for i in range(len(tick_timestamps) - 1)
-        )
+        max_gap_ms = max((tick_timestamps[i + 1] - tick_timestamps[i]) * 1000 for i in range(len(tick_timestamps) - 1))
         assert max_gap_ms <= 100, (
             f"Event loop was blocked for {max_gap_ms:.1f}ms — "
             "Trino calls must run in the thread pool, not the event loop. "
