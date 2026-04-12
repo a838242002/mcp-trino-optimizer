@@ -14,6 +14,7 @@ do not install all dev extras) do not fail at collection time.
 from __future__ import annotations
 
 import os
+import time
 from collections.abc import Generator
 from typing import TYPE_CHECKING
 
@@ -46,8 +47,26 @@ def compose_stack() -> Generator[DockerCompose, None, None]:
         compose_file_name="docker-compose.yml",
     )
     compose.start()
-    # Wait for Trino to be healthy (up to 120 seconds)
+    # Wait for Trino to respond (up to 120 seconds)
     compose.wait_for("http://localhost:8080/v1/info")
+    # wait_for only checks HTTP 200; Trino still returns 200 while "starting": true.
+    # Poll until starting=false or 120 s timeout.
+    import urllib.request
+
+    deadline = time.monotonic() + 120
+    while time.monotonic() < deadline:
+        try:
+            with urllib.request.urlopen("http://localhost:8080/v1/info", timeout=5) as resp:
+                import json as _json
+
+                info = _json.loads(resp.read())
+                if not info.get("starting", True):
+                    break
+        except Exception:
+            pass
+        time.sleep(2)
+    else:
+        pytest.fail("Trino did not finish initializing within 120 seconds")
     yield compose
     compose.stop()
 
