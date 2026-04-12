@@ -44,7 +44,7 @@ from mcp_trino_optimizer.adapters.trino.handle import (
 )
 from mcp_trino_optimizer.adapters.trino.pool import TrinoThreadPool
 from mcp_trino_optimizer.logging_setup import get_logger
-from mcp_trino_optimizer.parser import parse_estimated_plan, parse_executed_plan
+from mcp_trino_optimizer.parser import parse_distributed_plan, parse_estimated_plan, parse_executed_plan
 from mcp_trino_optimizer.parser.models import EstimatedPlan, ExecutedPlan, PlanNode
 from mcp_trino_optimizer.settings import Settings
 
@@ -124,7 +124,7 @@ class TrinoClient:
         timeout: float | None = None,
     ) -> EstimatedPlan | TimeoutResult[EstimatedPlan]:
         self._classifier.assert_read_only(sql)
-        return await self._fetch_estimated(f"EXPLAIN (TYPE DISTRIBUTED) {sql}", timeout=timeout)
+        return await self._fetch_distributed(f"EXPLAIN (TYPE DISTRIBUTED) {sql}", timeout=timeout)
 
     async def fetch_stats(
         self,
@@ -360,3 +360,25 @@ class TrinoClient:
             )
         plan_text = str(next(iter(raw[0].values()), "")) if raw else ""
         return parse_executed_plan(plan_text)
+
+    async def _fetch_distributed(
+        self,
+        explain_sql: str,
+        *,
+        timeout: float | None = None,
+    ) -> EstimatedPlan | TimeoutResult[EstimatedPlan]:
+        """Execute EXPLAIN (TYPE DISTRIBUTED) and return a typed EstimatedPlan.
+
+        EXPLAIN (TYPE DISTRIBUTED) returns text (same format as EXPLAIN ANALYZE),
+        not JSON. Uses parse_distributed_plan to produce an EstimatedPlan.
+        """
+        raw = await self._execute_query(explain_sql, timeout=timeout)
+        if isinstance(raw, TimeoutResult):
+            return TimeoutResult(
+                partial=EstimatedPlan(root=PlanNode(id="0", name="Unknown")),
+                timed_out=raw.timed_out,
+                elapsed_ms=raw.elapsed_ms,
+                query_id=raw.query_id,
+            )
+        plan_text = str(next(iter(raw[0].values()), "")) if raw else ""
+        return parse_distributed_plan(plan_text)

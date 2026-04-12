@@ -127,6 +127,48 @@ def parse_executed_plan(text: str, trino_version: str | None = None) -> Executed
     return plan
 
 
+def parse_distributed_plan(text: str, trino_version: str | None = None) -> EstimatedPlan:
+    """Parse EXPLAIN (TYPE DISTRIBUTED) text output into a typed EstimatedPlan.
+
+    EXPLAIN (TYPE DISTRIBUTED) returns text (same format as EXPLAIN ANALYZE)
+    showing fragment/stage layout without runtime metrics. Parsed with the same
+    text parser as EXPLAIN ANALYZE, but wrapped in EstimatedPlan since it
+    contains no runtime data.
+
+    Args:
+        text: The raw text from EXPLAIN (TYPE DISTRIBUTED).
+        trino_version: Optional Trino version string for provenance tracking.
+
+    Returns:
+        EstimatedPlan with a typed PlanNode tree. No runtime metrics are populated.
+    """
+    warnings: list[SchemaDriftWarning] = []
+
+    if not text or not text.strip():
+        root = PlanNode(id="0", name="Unknown")
+        return EstimatedPlan(
+            root=root,
+            schema_drift_warnings=warnings,
+            source_trino_version=trino_version,
+            raw_text=text,
+        )
+
+    root = _parse_explain_analyze_text(text, warnings)
+    root = normalize_plan_tree(root, warnings)
+
+    plan = EstimatedPlan(
+        root=root,
+        schema_drift_warnings=warnings,
+        source_trino_version=trino_version,
+        raw_text=text,
+    )
+
+    if warnings:
+        log.debug("schema_drift_warnings", count=len(warnings), plan_type="distributed")
+
+    return plan
+
+
 # ── Private: EXPLAIN JSON parsing ─────────────────────────────────────────────
 
 
