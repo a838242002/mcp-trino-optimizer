@@ -98,9 +98,13 @@ Requirements cluster naturally into 9 functional areas that map one-to-one onto 
   3. Running the engine on a hand-crafted synthetic-minimum fixture for any of the 13 rules (R1 missing/stale stats, R2 partition pruning failure, R3 predicate pushdown failure, R4 dynamic filtering not applied, R5 broadcast too big, R6 join order inversion, R7 CPU/wall skew, R8 excessive exchange, R9 low-selectivity scan, I1 Iceberg small files, I3 delete-file accumulation, I6 stale snapshots, I8 partition transform mismatch, plus D11 cost-vs-actual divergence) produces exactly the expected `RuleFinding` with `rule_id`, `severity`, `confidence`, human message, and a machine-readable evidence payload referencing the specific plan operator IDs the rule matched. (RUL-05, RUL-07 through RUL-20)
   4. Every rule ships with three fixture classes: a synthetic-minimum unit fixture, a realistic-from-compose fixture (captured via the Phase 3 multi-version corpus), and a negative-control fixture that the rule must NOT trigger on; the negative-control tests serve as regression guards against false positives and are part of CI. (RUL-06)
   5. Every rule threshold is declared in a config-overridable constants file with a sourced citation comment (no magic numbers); changing a threshold via config re-runs the fixture tests and at least one negative-control starts or stops triggering — verified by a parameterized test that proves the thresholds are actually data-driven. (RUL-21)
-**Plans**: *(Not yet planned — run `/gsd-plan-phase 4` to generate plans)*
+**Plans**: 4 plans across 4 waves
+  - [ ] 04-01-rule-infrastructure-PLAN.md — Wave 1: walk() WR-01 fix + findings + evidence + base + registry + thresholds + engine + all test stubs
+  - [ ] 04-02-general-rules-r1-r4-PLAN.md — Wave 2: R1 missing stats, R2 partition pruning, R3 predicate pushdown, R4 dynamic filtering
+  - [ ] 04-03-general-rules-r5-r9-d11-PLAN.md — Wave 3: R5 broadcast, R6 join order, R7 skew, R8 exchange, R9 low selectivity, D11 cost vs actual
+  - [ ] 04-04-iceberg-rules-i1-i3-i6-i8-PLAN.md — Wave 4: I1 small files, I3 delete files, I6 stale snapshots, I8 partition transform
 **UI hint**: no
-**Needs research**: yes — partition-transform semantics per Trino version (Trino issue #19266) for R2/I8, and the `$files` cross-reference workaround for Trino issue #28910 for I3 (since `$partitions` does not expose delete metrics). Trigger `/gsd-research-phase` before planning.
+**Needs research**: done — see 04-RESEARCH.md
 
 ### Phase 5: Recommendation Engine
 **Goal**: Turn raw `RuleFinding` observations into prioritized, grounded, actionable `Recommendation` objects that an LLM caller or a human can apply directly. Conflict resolution for overlapping rules, audited templates keyed by rule ID (no free-form user text ever flowing into recommendation bodies), session-property grounding via the `trino_session_properties` resource, and the two narrative differentiators (table health summary, operator bottleneck ranking) all land here.
@@ -179,7 +183,7 @@ Requirements cluster naturally into 9 functional areas that map one-to-one onto 
 | 1. Skeleton & Safety Foundation | 6/6 | Complete | 2026-04-12 |
 | 2. Trino Adapter & Read-Only Gate | 5/5 | Complete | 2026-04-12 |
 | 3. Plan Parser & Normalizer | 2/2 | Complete | 2026-04-12 |
-| 4. Rule Engine & 13 Deterministic Rules | 0/? | Not started | - |
+| 4. Rule Engine & 13 Deterministic Rules | 0/4 | Planned | - |
 | 5. Recommendation Engine | 0/? | Not started | - |
 | 6. Safe SQL Rewrite Engine | 0/? | Not started | - |
 | 7. Comparison Engine | 0/? | Not started | - |
