@@ -105,7 +105,7 @@ class SqlClassifier:
 
         self._assert_node_allowed(non_none[0])
 
-    def _assert_node_allowed(self, node: exp.Expression) -> None:
+    def _assert_node_allowed(self, node: exp.Expr) -> None:
         """Assert a single parsed AST node is read-only."""
         if isinstance(node, _ALLOWED_NODE_TYPES):
             return

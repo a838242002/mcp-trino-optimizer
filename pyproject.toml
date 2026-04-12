@@ -47,6 +47,7 @@ dev = [
     "ruff>=0.15.10",
     "pre-commit>=3.8",
     "testcontainers[trino,minio]>=4.14.2",
+    "types-requests>=2.33.0",
 ]
 
 [project.scripts]
@@ -123,3 +124,4 @@ markers = [
     "integration: opt-in tests requiring docker-compose stack (Phase 2+)",
     "slow: long-running tests",
 ]
+
