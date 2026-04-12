@@ -14,7 +14,7 @@ import pytest
 from mcp_trino_optimizer.adapters.trino.client import TrinoClient
 from mcp_trino_optimizer.adapters.trino.errors import TrinoAuthError
 from mcp_trino_optimizer.adapters.trino.pool import TrinoThreadPool
-from mcp_trino_optimizer.ports.plan_source import ExplainPlan
+from mcp_trino_optimizer.parser.models import EstimatedPlan
 from mcp_trino_optimizer.settings import Settings
 
 
@@ -25,7 +25,7 @@ class TestAuth:
     async def test_no_auth_connection(self, trino_client: TrinoClient) -> None:
         """auth_mode='none' connects and executes SELECT 1 successfully."""
         result = await trino_client.fetch_plan("SELECT 1")
-        assert isinstance(result, ExplainPlan)
+        assert isinstance(result, EstimatedPlan)
         assert result.plan_type == "estimated"
 
     async def test_basic_auth_wrong_credentials(self, trino_host: tuple[str, int]) -> None:
@@ -50,7 +50,7 @@ class TestAuth:
         # Either succeeds (Trino has no auth configured) or raises TrinoAuthError
         try:
             result = await client.fetch_plan("SELECT 1")
-            assert isinstance(result, ExplainPlan)
+            assert isinstance(result, EstimatedPlan)
         except TrinoAuthError:
             pass  # Expected if Trino is configured with auth
 

@@ -65,7 +65,7 @@ jobs:
         shell: bash
 
       - name: Run unit tests (not integration)
-        run: uv run pytest -m "not integration" -x
+        run: uv run pytest -m "not integration" --ignore=tests/integration -x
         shell: bash
         env:
           MCPTO_GIT_SHA: ${{ github.sha }}
