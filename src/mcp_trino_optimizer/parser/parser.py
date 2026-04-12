@@ -18,7 +18,6 @@ import orjson
 import structlog
 
 from mcp_trino_optimizer.parser.models import (
-    BasePlan,
     CostEstimate,
     EstimatedPlan,
     ExecutedPlan,
@@ -565,7 +564,7 @@ def _build_tree_from_operators(
             stack.pop()
 
         # Current top of stack is the parent
-        parent_indent, parent_node = stack[-1]
+        _parent_indent, parent_node = stack[-1]
         children_map[parent_node.id].append(node)
 
         # Push this node onto the stack

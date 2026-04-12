@@ -10,6 +10,8 @@ See 03-RESEARCH.md Pitfall 3.
 
 from __future__ import annotations
 
+import re
+
 from mcp_trino_optimizer.parser.models import (
     CostEstimate,
     PlanNode,
@@ -20,8 +22,23 @@ from mcp_trino_optimizer.parser.models import (
 # IMPORTANT: This is "ScanFilterAndProject" (with "And"), not "ScanFilterProject".
 SCAN_FILTER_AND_PROJECT = "ScanFilterAndProject"
 
-# Filter predicate heuristics: these strings in a detail line suggest a filter exists.
-_FILTER_INDICATORS = frozenset({"WHERE", "=", ">", "<", "!=", "<>", "IN", "BETWEEN", "LIKE", "IS NULL", "IS NOT NULL"})
+# Filter predicate heuristics: keywords that unambiguously indicate a SQL predicate.
+# NOTE: bare "=" is too broad — it also appears in "table = schema.name" descriptor entries.
+# We check for WHERE keyword, filterPredicate key, SQL predicate keywords, and
+# comparison operators other than plain "=" (e.g. !=, <>, >=, <=, >, <).
+_FILTER_KEYWORDS = frozenset({
+    "WHERE",
+    "FILTERPREDICATE",   # Trino detail line key (case-insensitive match used below)
+    "BETWEEN",
+    "LIKE",
+    "IS NULL",
+    "IS NOT NULL",
+    "IS DISTINCT",
+    "NOT IN",
+})
+
+# Comparison operators that definitively indicate a predicate (not a descriptor key=value)
+_COMPARISON_OPS_RE = re.compile(r"(?:!=|<>|>=|<=|(?<![=<>!])[><](?![=]))")
 
 
 def normalize_plan_tree(
@@ -56,7 +73,7 @@ def _normalize_node(
         for i, child in enumerate(node.children)
     ]
 
-    # Rebuild node with normalized children
+    # Rebuild node with normalized children if any changed
     if new_children != list(node.children):
         node = node.model_copy(update={"children": new_children})
 
@@ -68,10 +85,19 @@ def _normalize_node(
 
 
 def _has_filter_predicate(details: list[str]) -> bool:
-    """Heuristically determine if a details list contains a filter predicate."""
+    """Heuristically determine if a details list contains a SQL filter predicate.
+
+    Avoids false positives from "table = schema.name" descriptor entries by
+    requiring either explicit SQL keywords (WHERE, BETWEEN, etc.) or
+    comparison operators other than plain "=" (!=, <>, >, <, >=, <=).
+    """
     for detail in details:
         detail_upper = detail.upper()
-        if any(indicator in detail_upper for indicator in _FILTER_INDICATORS):
+        # Check for unambiguous SQL predicate keywords
+        if any(kw in detail_upper for kw in _FILTER_KEYWORDS):
+            return True
+        # Check for comparison operators (!=, <>, >, <, >=, <=)
+        if _COMPARISON_OPS_RE.search(detail):
             return True
     return False
 
@@ -99,8 +125,7 @@ def _decompose_scan_filter_and_project(
     """
     has_filter = _has_filter_predicate(node.details)
 
-    # Extract filter-relevant details vs table/projection details
-    # Details may contain: table reference, filter predicate, output columns
+    # Split details: predicate lines vs table/descriptor lines
     filter_details = [d for d in node.details if _has_filter_predicate([d])]
     table_details = [d for d in node.details if not _has_filter_predicate([d])]
 
@@ -109,15 +134,15 @@ def _decompose_scan_filter_and_project(
         "id": f"{node.id}_scan",
         "name": "TableScan",
         "descriptor": node.descriptor,
-        "outputs": [],  # TableScan outputs are raw columns, handled by Project
+        "outputs": [],  # TableScan outputs are raw columns; handled by Project
         "details": table_details,
         "estimates": _get_estimate(node.estimates, 0),
-        "children": list(node.children),  # original children
+        "children": list(node.children),  # original children of the fused node
         # Transfer Iceberg fields
         "iceberg_split_count": node.iceberg_split_count,
         "iceberg_file_count": node.iceberg_file_count,
         "iceberg_partition_spec_id": node.iceberg_partition_spec_id,
-        # Transfer runtime metrics (from executed plan parsing)
+        # Transfer runtime metrics (populated for executed plans)
         "cpu_time_ms": node.cpu_time_ms,
         "wall_time_ms": node.wall_time_ms,
         "input_rows": node.input_rows,
@@ -126,7 +151,7 @@ def _decompose_scan_filter_and_project(
         "physical_input_bytes": node.physical_input_bytes,
         "spilled_bytes": node.spilled_bytes,
         "blocked_time_ms": node.blocked_time_ms,
-        # Transfer unknown extra fields from model_extra
+        # Transfer unknown extra fields from model_extra (version-specific fields)
         **node.raw,
     }
     scan_node = PlanNode.model_validate(scan_node_data)
@@ -142,11 +167,11 @@ def _decompose_scan_filter_and_project(
             estimates=_get_estimate(node.estimates, 1),
             children=[scan_node],
         )
-        inner_node = filter_node
+        inner_node: PlanNode = filter_node
     else:
         inner_node = scan_node
 
-    # Build Project node wrapping Filter (or TableScan)
+    # Build Project node wrapping Filter (or TableScan if no filter)
     project_node = PlanNode(
         id=f"{node.id}_project",
         name="Project",
@@ -155,7 +180,7 @@ def _decompose_scan_filter_and_project(
         details=[],
         estimates=_get_estimate(node.estimates, 2),
         children=[inner_node],
-        # Transfer output_rows/output_bytes to Project (the outermost node)
+        # Transfer output metrics to Project (the outermost node)
         output_rows=node.output_rows,
         output_bytes=node.output_bytes,
     )
@@ -165,8 +190,7 @@ def _decompose_scan_filter_and_project(
             node_path=path,
             description=(
                 f"ScanFilterAndProject node (id={node.id}) decomposed into "
-                f"Project(Filter(TableScan))" if has_filter else
-                f"Project(TableScan)"
+                + ("Project(Filter(TableScan))" if has_filter else "Project(TableScan)")
             ),
             severity="info",
         )

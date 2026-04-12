@@ -42,9 +42,9 @@ from mcp_trino_optimizer.adapters.trino.handle import (
     QueryIdCell,
     TimeoutResult,
 )
+from mcp_trino_optimizer.adapters.trino._explain_plan import ExplainPlan
 from mcp_trino_optimizer.adapters.trino.pool import TrinoThreadPool
 from mcp_trino_optimizer.logging_setup import get_logger
-from mcp_trino_optimizer.ports.plan_source import ExplainPlan
 from mcp_trino_optimizer.settings import Settings
 
 __all__ = ["TrinoClient"]

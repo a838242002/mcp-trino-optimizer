@@ -1,42 +1,29 @@
-"""OfflinePlanSource — PlanSource implementation from raw EXPLAIN JSON text.
+"""OfflinePlanSource — PlanSource implementation from raw EXPLAIN text.
 
 This adapter is read-only-gate-exempt (D-15): it accepts a pre-materialized
-EXPLAIN JSON string, not a SQL statement. There is no SQL to gate and no
+EXPLAIN text string, not a SQL statement. There is no SQL to gate and no
 network call is made. The live-adapter read-only gate is not applicable here.
 
-Security note (T-02-05): enforces a 1MB size cap on raw JSON input before
+Security note (T-02-05, T-03-01): enforces a 1MB size cap on raw input before
 parsing to prevent memory exhaustion from adversarial payloads.
+
+Phase 3: Updated to return EstimatedPlan/ExecutedPlan (typed domain objects)
+instead of the old ExplainPlan placeholder. Parsing is delegated to the
+parser subpackage.
 """
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from mcp_trino_optimizer.parser import parse_estimated_plan, parse_executed_plan
+from mcp_trino_optimizer.parser.models import EstimatedPlan, ExecutedPlan
 
-import orjson
-
-from mcp_trino_optimizer.ports.plan_source import ExplainPlan
-
-# Maximum allowed size for raw plan JSON input (1MB).
-# Enforced before orjson.loads() to prevent memory exhaustion.
+# Maximum allowed size for raw plan input (1MB).
+# Enforced before parsing to prevent memory exhaustion.
 MAX_PLAN_BYTES = 1_000_000
-
-# Runtime metric keys that indicate an EXPLAIN ANALYZE (executed) plan.
-# If any of these keys appear in the top-level plan dict, the plan was
-# produced by EXPLAIN ANALYZE rather than plain EXPLAIN.
-_EXECUTED_PLAN_KEYS = frozenset(
-    {
-        "cpuTimeMillis",
-        "wallTimeMillis",
-        "processedRows",
-        "processedBytes",
-        "physicalWrittenBytes",
-        "peakMemoryBytes",
-    }
-)
 
 
 class OfflinePlanSource:
-    """PlanSource from raw JSON text — no Trino connection needed.
+    """PlanSource from raw text — no Trino connection needed.
 
     Satisfies the ``PlanSource`` Protocol (verified via runtime_checkable
     isinstance check in tests/adapters/test_port_conformance.py).
@@ -45,10 +32,11 @@ class OfflinePlanSource:
 
         source = OfflinePlanSource()
         plan = await source.fetch_plan(raw_json_text)
+        analyzed = await source.fetch_analyze_plan(explain_analyze_text)
     """
 
-    async def fetch_plan(self, sql: str) -> ExplainPlan:
-        """Parse ``sql`` as raw EXPLAIN (FORMAT JSON) text and return an ExplainPlan.
+    async def fetch_plan(self, sql: str) -> EstimatedPlan:
+        """Parse ``sql`` as raw EXPLAIN (FORMAT JSON) text and return an EstimatedPlan.
 
         The ``sql`` parameter name follows the PlanSource Protocol signature,
         but for this adapter the value is the raw JSON text of an EXPLAIN plan,
@@ -58,75 +46,59 @@ class OfflinePlanSource:
             sql: Raw JSON text from ``EXPLAIN (FORMAT JSON)`` output.
 
         Returns:
-            ExplainPlan with ``plan_type`` auto-detected from the JSON content
-            and ``source_trino_version=None`` (no cluster involved).
+            EstimatedPlan with a typed PlanNode tree.
+            ``source_trino_version=None`` (no cluster involved).
 
         Raises:
-            ValueError: If the input exceeds 1MB, is empty, or is not valid JSON.
+            ValueError: If the input exceeds 1MB or is empty.
+            ParseError: If the JSON is invalid or wrong top-level structure.
         """
         self._validate_size(sql)
-        plan_dict = self._parse_json(sql)
-        return ExplainPlan(
-            plan_json=plan_dict,
-            plan_type=self._detect_plan_type(plan_dict),
-            source_trino_version=None,
-            raw_text=sql,
-        )
+        return parse_estimated_plan(sql)
 
-    async def fetch_analyze_plan(self, sql: str) -> ExplainPlan:
-        """Parse ``sql`` as raw EXPLAIN ANALYZE (FORMAT JSON) text.
+    async def fetch_analyze_plan(self, sql: str) -> ExecutedPlan:
+        """Parse ``sql`` as raw EXPLAIN ANALYZE text and return an ExecutedPlan.
 
-        Always returns ``plan_type="executed"`` regardless of JSON content,
-        because the caller has indicated this is an EXPLAIN ANALYZE output.
+        EXPLAIN ANALYZE does NOT support FORMAT JSON (Trino grammar limitation).
+        The ``sql`` parameter is the raw text output of EXPLAIN ANALYZE.
 
         Args:
-            sql: Raw JSON text from ``EXPLAIN ANALYZE (FORMAT JSON)`` output.
+            sql: Raw text from ``EXPLAIN ANALYZE`` output.
 
         Returns:
-            ExplainPlan with ``plan_type="executed"`` and
-            ``source_trino_version=None``.
+            ExecutedPlan with per-operator runtime metrics.
+            ``source_trino_version=None`` (no cluster involved).
 
         Raises:
-            ValueError: If the input exceeds 1MB, is empty, or is not valid JSON.
+            ValueError: If the input exceeds 1MB.
         """
         self._validate_size(sql)
-        plan_dict = self._parse_json(sql)
-        return ExplainPlan(
-            plan_json=plan_dict,
-            plan_type="executed",
-            source_trino_version=None,
-            raw_text=sql,
-        )
+        return parse_executed_plan(sql)
 
-    async def fetch_distributed_plan(self, sql: str) -> ExplainPlan:
+    async def fetch_distributed_plan(self, sql: str) -> EstimatedPlan:
         """Parse ``sql`` as raw EXPLAIN (TYPE DISTRIBUTED, FORMAT JSON) text.
 
-        Always returns ``plan_type="distributed"`` regardless of JSON content.
+        Distributed plans are JSON format; parsed as EstimatedPlan.
 
         Args:
             sql: Raw JSON text from ``EXPLAIN (TYPE DISTRIBUTED, FORMAT JSON)``
                 output.
 
         Returns:
-            ExplainPlan with ``plan_type="distributed"`` and
-            ``source_trino_version=None``.
+            EstimatedPlan with stage/fragment distribution information.
+            ``source_trino_version=None`` (no cluster involved).
 
         Raises:
-            ValueError: If the input exceeds 1MB, is empty, or is not valid JSON.
+            ValueError: If the input exceeds 1MB or is empty.
+            ParseError: If the JSON is invalid or wrong top-level structure.
         """
         self._validate_size(sql)
-        plan_dict = self._parse_json(sql)
-        return ExplainPlan(
-            plan_json=plan_dict,
-            plan_type="distributed",
-            source_trino_version=None,
-            raw_text=sql,
-        )
+        return parse_estimated_plan(sql)
 
     # ── Private helpers ───────────────────────────────────────────────────
 
     def _validate_size(self, text: str) -> None:
-        """Raise ValueError if the encoded byte length exceeds MAX_PLAN_BYTES.
+        """Raise ValueError if the input is empty or exceeds MAX_PLAN_BYTES.
 
         Encoding to UTF-8 before measuring ensures multi-byte characters are
         counted correctly.
@@ -135,8 +107,10 @@ class OfflinePlanSource:
             text: The raw input text to measure.
 
         Raises:
-            ValueError: If ``len(text.encode('utf-8')) > MAX_PLAN_BYTES``.
+            ValueError: If text is empty, or ``len(text.encode('utf-8')) > MAX_PLAN_BYTES``.
         """
+        if not text.strip():
+            raise ValueError("Invalid JSON: input is empty")
         byte_len = len(text.encode("utf-8"))
         if byte_len > MAX_PLAN_BYTES:
             raise ValueError(
@@ -144,46 +118,3 @@ class OfflinePlanSource:
                 f"(got {byte_len} bytes). "
                 "Paste a smaller plan or use live mode to fetch it directly."
             )
-
-    def _parse_json(self, text: str) -> dict[str, Any]:
-        """Parse the raw JSON text using orjson.
-
-        Args:
-            text: JSON text to parse.
-
-        Returns:
-            Parsed dict.
-
-        Raises:
-            ValueError: If the text is not valid JSON or does not decode to a dict.
-        """
-        if not text.strip():
-            raise ValueError("Invalid JSON: input is empty")
-        try:
-            result = orjson.loads(text)
-        except orjson.JSONDecodeError as exc:
-            raise ValueError(f"Invalid JSON: {exc}") from exc
-        if not isinstance(result, dict):
-            raise ValueError(f"Invalid JSON: expected a JSON object (dict), got {type(result).__name__}")
-        return result
-
-    def _detect_plan_type(self, plan_dict: dict[str, Any]) -> Literal["estimated", "executed"]:
-        """Heuristically detect whether a plan is estimated or executed.
-
-        Checks the top-level JSON object for runtime metric keys that are
-        only present in EXPLAIN ANALYZE output. If any of the known runtime
-        keys appear, returns "executed"; otherwise "estimated".
-
-        "distributed" plans are only returned via fetch_distributed_plan(),
-        never by this heuristic.
-
-        Args:
-            plan_dict: The parsed plan JSON dict.
-
-        Returns:
-            ``"executed"`` if runtime metrics are detected, otherwise
-            ``"estimated"``.
-        """
-        if _EXECUTED_PLAN_KEYS.intersection(plan_dict.keys()):
-            return "executed"
-        return "estimated"

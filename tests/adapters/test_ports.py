@@ -64,43 +64,53 @@ def test_catalog_source_has_required_methods() -> None:
     assert hasattr(CatalogSource, "fetch_schemas")
 
 
-def test_explain_plan_has_required_fields() -> None:
-    """ExplainPlan must have plan_json, plan_type, source_trino_version fields."""
-    import dataclasses
+def test_estimated_plan_exported_from_ports() -> None:
+    """ports must export EstimatedPlan (Phase 3: replaces ExplainPlan)."""
+    from mcp_trino_optimizer.ports import EstimatedPlan
 
-    from mcp_trino_optimizer.ports import ExplainPlan
-
-    fields = {f.name for f in dataclasses.fields(ExplainPlan)}
-    assert "plan_json" in fields
-    assert "plan_type" in fields
-    assert "source_trino_version" in fields
+    assert EstimatedPlan is not None
 
 
-def test_explain_plan_plan_type_literal() -> None:
-    """ExplainPlan plan_type must accept estimated, executed, distributed."""
-    from mcp_trino_optimizer.ports import ExplainPlan
+def test_executed_plan_exported_from_ports() -> None:
+    """ports must export ExecutedPlan (Phase 3: replaces ExplainPlan)."""
+    from mcp_trino_optimizer.ports import ExecutedPlan
 
-    for plan_type in ("estimated", "executed", "distributed"):
-        ep = ExplainPlan(plan_json={"test": 1}, plan_type=plan_type)  # type: ignore[arg-type]
-        assert ep.plan_type == plan_type
+    assert ExecutedPlan is not None
 
 
-def test_explain_plan_source_trino_version_defaults_none() -> None:
-    """ExplainPlan.source_trino_version defaults to None."""
-    from mcp_trino_optimizer.ports import ExplainPlan
+def test_estimated_plan_has_root_and_plan_type() -> None:
+    """EstimatedPlan from ports has root PlanNode and plan_type='estimated'."""
+    from mcp_trino_optimizer.parser.models import PlanNode
+    from mcp_trino_optimizer.ports import EstimatedPlan
 
-    ep = ExplainPlan(plan_json={}, plan_type="estimated")
-    assert ep.source_trino_version is None
+    root = PlanNode(id="0", name="Output")
+    plan = EstimatedPlan(root=root)
+    assert plan.plan_type == "estimated"
+    assert plan.source_trino_version is None
+
+
+def test_executed_plan_has_root_and_plan_type() -> None:
+    """ExecutedPlan from ports has root PlanNode and plan_type='executed'."""
+    from mcp_trino_optimizer.parser.models import PlanNode
+    from mcp_trino_optimizer.ports import ExecutedPlan
+
+    root = PlanNode(id="0", name="Output")
+    plan = ExecutedPlan(root=root)
+    assert plan.plan_type == "executed"
+    assert plan.source_trino_version is None
 
 
 def test_ports_package_exports_all_symbols() -> None:
-    """The ports __init__.py must re-export PlanSource, StatsSource, CatalogSource, ExplainPlan."""
+    """The ports __init__.py must re-export PlanSource, StatsSource, CatalogSource, EstimatedPlan, ExecutedPlan."""
     from mcp_trino_optimizer import ports
 
     assert hasattr(ports, "PlanSource")
     assert hasattr(ports, "StatsSource")
     assert hasattr(ports, "CatalogSource")
-    assert hasattr(ports, "ExplainPlan")
+    assert hasattr(ports, "EstimatedPlan")
+    assert hasattr(ports, "ExecutedPlan")
+    # ExplainPlan is no longer a public port type (Phase 3 migration)
+    assert not hasattr(ports, "ExplainPlan")
 
 
 def test_ports_have_no_adapter_imports() -> None:

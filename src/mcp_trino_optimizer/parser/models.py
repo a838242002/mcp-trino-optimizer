@@ -7,7 +7,8 @@ evaluation breaks model_extra access and forward-reference resolution.
 All models are defined at module scope per Phase 1 UAT lesson.
 """
 
-from typing import Any, Iterator, Literal
+from collections.abc import Iterator
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
