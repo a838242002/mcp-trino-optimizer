@@ -55,7 +55,7 @@ class D11CostVsActual(Rule):
     def __init__(self, thresholds: RuleThresholds | None = None) -> None:
         self._thresholds = thresholds or RuleThresholds()
 
-    def check(self, plan: BasePlan, evidence: EvidenceBundle) -> list[RuleFinding]:  # noqa: ARG002
+    def check(self, plan: BasePlan, evidence: EvidenceBundle) -> list[RuleFinding]:
         """Detect scan nodes where CBO estimate diverges from actual rows."""
         findings: list[RuleFinding] = []
         factor = self._thresholds.stats_divergence_factor

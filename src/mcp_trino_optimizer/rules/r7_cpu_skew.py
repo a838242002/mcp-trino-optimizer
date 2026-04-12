@@ -45,7 +45,7 @@ class R7CpuSkew(Rule):
     def __init__(self, thresholds: RuleThresholds | None = None) -> None:
         self._thresholds = thresholds or RuleThresholds()
 
-    def check(self, plan: BasePlan, evidence: EvidenceBundle) -> list[RuleFinding]:  # noqa: ARG002
+    def check(self, plan: BasePlan, evidence: EvidenceBundle) -> list[RuleFinding]:
         """Detect CPU skew across operators."""
         # Collect all non-None cpu_time_ms values along with their node ids
         cpu_values: list[float] = []

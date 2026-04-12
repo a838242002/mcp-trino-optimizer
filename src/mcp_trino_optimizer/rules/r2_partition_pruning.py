@@ -74,7 +74,7 @@ class R2PartitionPruning(Rule):
     rule_id = "R2"
     evidence_requirement = EvidenceRequirement.TABLE_STATS
 
-    def check(self, plan: BasePlan, evidence: EvidenceBundle) -> list[RuleFinding]:  # noqa: ARG002
+    def check(self, plan: BasePlan, evidence: EvidenceBundle) -> list[RuleFinding]:
         """Detect Iceberg scans with filters but no partition constraint applied."""
         findings: list[RuleFinding] = []
 

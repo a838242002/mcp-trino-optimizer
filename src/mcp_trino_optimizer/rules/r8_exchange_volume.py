@@ -48,7 +48,7 @@ class R8ExchangeVolume(Rule):
     rule_id: ClassVar[str] = "R8"
     evidence_requirement: ClassVar[EvidenceRequirement] = EvidenceRequirement.PLAN_ONLY
 
-    def check(self, plan: BasePlan, evidence: EvidenceBundle) -> list[RuleFinding]:  # noqa: ARG002
+    def check(self, plan: BasePlan, evidence: EvidenceBundle) -> list[RuleFinding]:
         """Detect plans where exchange volume exceeds scan volume."""
         exchange_bytes = 0.0
         scan_bytes = 0.0

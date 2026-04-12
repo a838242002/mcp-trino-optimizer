@@ -49,7 +49,7 @@ class R5BroadcastTooBig(Rule):
     def __init__(self, thresholds: RuleThresholds | None = None) -> None:
         self._thresholds = thresholds or RuleThresholds()
 
-    def check(self, plan: BasePlan, evidence: EvidenceBundle) -> list[RuleFinding]:  # noqa: ARG002
+    def check(self, plan: BasePlan, evidence: EvidenceBundle) -> list[RuleFinding]:
         """Detect REPLICATED joins with oversized build sides."""
         findings: list[RuleFinding] = []
 

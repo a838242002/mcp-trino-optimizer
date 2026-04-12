@@ -22,13 +22,12 @@ Evidence: PLAN_ONLY.
 from __future__ import annotations
 
 import re
-from typing import Any
 
 import sqlglot
 import sqlglot.errors
 from sqlglot import exp
 
-from mcp_trino_optimizer.parser.models import BasePlan, PlanNode
+from mcp_trino_optimizer.parser.models import BasePlan
 from mcp_trino_optimizer.rules.base import Rule
 from mcp_trino_optimizer.rules.evidence import EvidenceBundle, EvidenceRequirement
 from mcp_trino_optimizer.rules.findings import RuleFinding
@@ -105,7 +104,7 @@ class R3PredicatePushdown(Rule):
     rule_id = "R3"
     evidence_requirement = EvidenceRequirement.PLAN_ONLY
 
-    def check(self, plan: BasePlan, evidence: EvidenceBundle) -> list[RuleFinding]:  # noqa: ARG002
+    def check(self, plan: BasePlan, evidence: EvidenceBundle) -> list[RuleFinding]:
         """Detect filter predicates with function-wrapped columns."""
         findings: list[RuleFinding] = []
 
