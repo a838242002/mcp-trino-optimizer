@@ -26,6 +26,7 @@ if TYPE_CHECKING:
 MAX_STRING_LEN = 100_000  # SQL cap from PLAT-10
 MAX_PROSE_LEN = 4_096  # Other freeform strings
 MAX_ARRAY_LEN = 1_000  # Default upper bound for arrays
+MAX_PLAN_JSON_LEN = 1_000_000  # EXPLAIN (FORMAT JSON) output cap (Phase 2)
 
 
 class SchemaLintError(Exception):
@@ -124,6 +125,7 @@ def _check_schema(
 
 __all__ = [
     "MAX_ARRAY_LEN",
+    "MAX_PLAN_JSON_LEN",
     "MAX_PROSE_LEN",
     "MAX_STRING_LEN",
     "SchemaLintError",

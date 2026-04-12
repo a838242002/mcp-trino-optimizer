@@ -16,10 +16,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Phase 1 config surface.
+    """Phase 1 + Phase 2 config surface.
 
-    See CONTEXT.md D-05..D-08 for the binding contract. Trino-side
-    settings (host, port, auth, TLS) defer to Phase 2.
+    See CONTEXT.md D-05..D-08 for the Phase 1 binding contract.
+    Phase 2 adds Trino adapter settings (host, port, auth, TLS, concurrency).
     """
 
     model_config = SettingsConfigDict(
@@ -30,6 +30,7 @@ class Settings(BaseSettings):
         extra="forbid",  # unknown fields → ValidationError
     )
 
+    # ── MCP transport ────────────────────────────────────────────────────
     transport: Literal["stdio", "http"] = Field(
         default="stdio",
         description="Which MCP transport to serve on.",
@@ -56,12 +57,89 @@ class Settings(BaseSettings):
         description="structlog logging level.",
     )
 
+    # ── Trino adapter (Phase 2) ──────────────────────────────────────────
+    trino_host: str | None = Field(
+        default=None,
+        description="Trino coordinator hostname. Required for live mode.",
+    )
+    trino_port: int = Field(
+        default=8080,
+        ge=1,
+        le=65535,
+        description="Trino coordinator port.",
+    )
+    trino_catalog: str = Field(
+        default="iceberg",
+        description="Default Trino catalog.",
+    )
+    trino_schema: str | None = Field(
+        default=None,
+        description="Default Trino schema.",
+    )
+    trino_auth_mode: Literal["none", "basic", "jwt"] = Field(
+        default="none",
+        description="Trino authentication mode.",
+    )
+    trino_user: str | None = Field(
+        default=None,
+        description="Trino user for basic auth.",
+    )
+    trino_password: SecretStr | None = Field(
+        default=None,
+        description="Trino password for basic auth.",
+    )
+    trino_jwt: SecretStr | None = Field(
+        default=None,
+        description="Trino JWT token for jwt auth.",
+    )
+    trino_verify_ssl: bool = Field(
+        default=True,
+        description="Verify SSL certificates for Trino connections.",
+    )
+    trino_ca_bundle: str | None = Field(
+        default=None,
+        description="Path to CA bundle for Trino TLS.",
+    )
+    trino_query_timeout_sec: int = Field(
+        default=60,
+        ge=1,
+        le=1800,
+        description="Wall-clock timeout per Trino query in seconds.",
+    )
+    max_concurrent_queries: int = Field(
+        default=4,
+        ge=1,
+        le=32,
+        description="Max concurrent Trino queries per MCP process.",
+    )
+
     @model_validator(mode="after")
     def _require_bearer_for_http(self) -> Settings:
         if self.transport == "http" and self.http_bearer_token is None:
             raise ValueError(
                 "http_bearer_token is required when transport=http. "
                 "Set MCPTO_HTTP_BEARER_TOKEN or pass --bearer-token on the CLI."
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _require_trino_auth_fields(self) -> Settings:
+        """Fail fast on invalid auth config before any network call (T-02-04)."""
+        if self.trino_auth_mode == "basic":
+            if self.trino_user is None:
+                raise ValueError(
+                    "trino_user is required when trino_auth_mode=basic. "
+                    "Set MCPTO_TRINO_USER."
+                )
+            if self.trino_password is None:
+                raise ValueError(
+                    "trino_password is required when trino_auth_mode=basic. "
+                    "Set MCPTO_TRINO_PASSWORD."
+                )
+        if self.trino_auth_mode == "jwt" and self.trino_jwt is None:
+            raise ValueError(
+                "trino_jwt is required when trino_auth_mode=jwt. "
+                "Set MCPTO_TRINO_JWT."
             )
         return self
 
