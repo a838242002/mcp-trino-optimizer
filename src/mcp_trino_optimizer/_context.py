@@ -13,6 +13,7 @@ import uuid
 import structlog
 
 _request_id: contextvars.ContextVar[str] = contextvars.ContextVar("request_id", default="")
+_trino_query_id: contextvars.ContextVar[str] = contextvars.ContextVar("trino_query_id", default="")
 
 
 def new_request_id() -> str:
@@ -27,4 +28,19 @@ def current_request_id() -> str:
     return _request_id.get()
 
 
-__all__ = ["current_request_id", "new_request_id"]
+def bind_trino_query_id(query_id: str) -> None:
+    """Bind a Trino query_id to the current context for structured logging."""
+    _trino_query_id.set(query_id)
+    structlog.contextvars.bind_contextvars(trino_query_id=query_id)
+
+
+def current_trino_query_id() -> str:
+    return _trino_query_id.get()
+
+
+__all__ = [
+    "bind_trino_query_id",
+    "current_request_id",
+    "current_trino_query_id",
+    "new_request_id",
+]
