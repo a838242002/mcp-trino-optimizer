@@ -1,61 +1,59 @@
 # Phase 2: Trino Adapter & Read-Only Gate - Research
 
 **Researched:** 2026-04-12
-**Domain:** Trino HTTP REST adapter, SQL classification, async concurrency, Docker integration testing
+**Domain:** Trino HTTP REST client, SQL classification, async concurrency, query cancellation, Iceberg metadata access, integration test harness
 **Confidence:** HIGH
 
 ## Summary
 
-Phase 2 builds the full Trino adapter layer: a `trino-python-client`-based HTTP REST client wrapped in `asyncio.to_thread`, a `sqlglot`-AST-based SQL classifier gate, hexagonal ports (`PlanSource`, `StatsSource`, `CatalogSource`), query cancellation via `DELETE nextUri`, and an integration test harness using testcontainers-python with a Trino 480 + Lakekeeper + MinIO + Postgres docker-compose stack.
+Phase 2 delivers the Trino adapter layer (HTTP REST client wrapped in async), the `SqlClassifier` read-only gate, hexagonal ports (`PlanSource`/`StatsSource`/`CatalogSource`), offline plan ingress, query cancellation with confirmation, capability probing, and the docker-compose integration test harness. This is the most complex phase so far -- it touches networking, concurrency, security classification, and multi-service Docker orchestration.
 
-The primary research risk was cancellation mechanics. The trino-python-client's `Cursor.cancel()` sends `DELETE` to `nextUri` (the dynamic URL from the last query response), NOT to a fixed `/v1/query/{queryId}` endpoint. The CONTEXT.md D-08 references `DELETE /v1/query/{queryId}` but this is not a documented Trino client protocol endpoint -- the correct mechanism is `DELETE nextUri`. The implementation must either (a) use the cursor's built-in `cancel()` which handles this, or (b) capture `nextUri` from the cursor internals and issue the DELETE via httpx. Option (b) aligns with D-08's requirement to use a separate httpx client, but must target `nextUri`, not a fabricated `/v1/query/{queryId}` path.
+The critical technical finding is that `sqlglot` parses Trino's `EXPLAIN`, `SHOW`, and `CALL` statements as `Command` fallback nodes (not typed AST classes), so the classifier must handle both typed expression nodes (Select, Insert, Delete, etc.) and `Command` nodes with keyword inspection. The `trino-python-client` exposes `cursor.query_id` immediately after `execute()` returns its first response, and `cursor.cancel()` sends a `DELETE` to the Trino `nextUri` -- but for the D-08 await-confirmed cancellation pattern, we need a separate `httpx` client hitting `/v1/query/{queryId}` directly. JWT per-request refresh (D-12) requires a custom authentication wrapper since `JWTAuthentication` only accepts a static string.
 
-A second critical finding: sqlglot's Trino dialect parses `EXPLAIN`, `SHOW`, and `CALL` statements as `Command` (a catch-all type), not as typed AST nodes. The classifier must handle this by inspecting `Command.this` (which holds the keyword string like `"EXPLAIN"`, `"SHOW"`, `"CALL"`) and parsing the remainder from `Command.expression.this`. For `EXPLAIN ANALYZE <inner>`, recursive validation requires extracting the inner SQL text from the `Command.expression` literal and re-parsing it.
-
-**Primary recommendation:** Build the classifier with a two-tier dispatch: typed expression nodes (`Select`, `Insert`, `Delete`, etc.) for DML/DDL, plus `Command.this` keyword inspection for `EXPLAIN`/`SHOW`/`CALL`. Use the trino-python-client cursor's `_next_uri` for cancellation via a separate httpx client, with confirmation polling via `system.runtime.queries`.
+**Primary recommendation:** Build the classifier as a typed-allowlist over sqlglot AST node types (Select, Describe, Use, Values) plus keyword-based allowlist for Command nodes (EXPLAIN, SHOW). Use a dedicated async httpx client for cancel confirmation. Create a custom `PerCallJWTAuthentication` that re-reads `os.environ` on every `set_http_session` invocation.
 
 <user_constraints>
 ## User Constraints (from CONTEXT.md)
 
 ### Locked Decisions
-- D-01: Hexagonal layout with ports/ and adapters/trino/ and adapters/offline/ module structure
-- D-02: Single TrinoClient class, every public method with sql param calls assert_read_only(sql) as first line
-- D-03: TRN-05 architectural test scoped to TrinoClient only, not OfflinePlanSource
-- D-04: Bounded asyncio.to_thread + semaphore in TrinoThreadPool, backpressure via TrinoPoolBusyError
-- D-05: Event-loop-lag probe test asserting < 100ms lag with 4 concurrent fetch_plan calls
-- D-06: QueryHandle dataclass with QueryIdCell thread-safe single-slot holder
-- D-07: Cancel on timeout/tool-cancel via async context manager __aexit__
-- D-08: Cancel is await-confirmed with bounded exponential backoff (100ms->300ms->900ms->2700ms, cap ~4s)
-- D-09: Timeout from settings (default 60s, bounded 1-1800) with per-call override
-- D-10: TimeoutResult[T] return type for partial results
-- D-11: Auth mode selector with MCPTO_TRINO_* settings fields, model_validator fail-fast
-- D-12: JWT re-read from env on every call, no caching
-- D-13: 401 retry-once policy
-- D-14: Mutually exclusive auth modes, no fallback chains
-- D-15: OfflinePlanSource does NOT call classifier
-- D-16: Classifier allowlist: SELECT, WITH/CTE, EXPLAIN, EXPLAIN ANALYZE, SHOW *, DESCRIBE, USE, VALUES
-- D-17: Classifier unit test corpus locked in Phase 2
-- D-18: Capability probe scope: version, catalogs, iceberg metadata availability (lazy init)
-- D-19: CapabilityMatrix frozen dataclass shape
-- D-20: OfflinePlanSource takes raw JSON text only, maxLength 1_000_000
-- D-21: Live + offline share one ExplainPlan dataclass (placeholder for Phase 3)
-- D-22: testcontainers + docker-compose with Trino 480, Lakekeeper, Postgres 16, MinIO
-- D-23: Integration mark + CI wiring (push-to-main only)
-- D-24: Integration test coverage targets (6 areas)
-- D-25: Fixture setup bypass using raw trino-python-client outside TrinoClient
-- D-26: Structured error taxonomy (6 exception classes)
-- D-27: Trino-side request context propagation (X-Trino-Source, X-Trino-Client-Tags, X-Trino-Client-Info)
-- D-28: Query log entry with statement_hash, never raw SQL
+- **D-01**: Hexagonal layout with ports/ and adapters/trino/ + adapters/offline/ structure
+- **D-02**: Single TrinoClient class, every public method with `sql` param calls `assert_read_only(sql)` as first line
+- **D-03**: Architectural test (TRN-05) introspects TrinoClient only, not OfflinePlanSource
+- **D-04**: Bounded `asyncio.to_thread` + semaphore via `TrinoThreadPool` in pool.py
+- **D-05**: Event-loop-lag probe in integration tests (never blocked > 100ms)
+- **D-06**: QueryHandle dataclass with QueryIdCell thread-safe single-slot holder
+- **D-07**: Cancel on timeout/tool-cancel is structural via `__aexit__`
+- **D-08**: Cancel is await-confirmed with bounded exponential backoff (100ms -> 300ms -> 900ms -> 2700ms, cap ~4s)
+- **D-09**: Timeout from settings + per-call override (default 60s, bounded 1-1800)
+- **D-10**: Timeout UX returns `TimeoutResult[T]` instead of raising
+- **D-11**: Auth mode selector with MCPTO_TRINO_* settings fields and fail-fast validator
+- **D-12**: JWT is per-call re-read from env, no caching
+- **D-13**: 401 retry-once policy
+- **D-14**: Mutually exclusive auth modes, no fallback chains
+- **D-15**: Classifier is live-adapter scoped; OfflinePlanSource is exempt
+- **D-16**: Classifier allowlist baseline (SELECT, WITH/CTE, EXPLAIN, EXPLAIN ANALYZE, SHOW variants, DESCRIBE, USE, VALUES)
+- **D-17**: Classifier unit test corpus locked in Phase 2
+- **D-18**: Capability probe scope (lazy init, not at process start)
+- **D-19**: CapabilityMatrix frozen dataclass shape
+- **D-20**: OfflinePlanSource takes raw JSON text only, bounded 1MB
+- **D-21**: Live + offline share one ExplainPlan dataclass (placeholder for Phase 3)
+- **D-22**: testcontainers + minimal Iceberg stack in .testing/docker-compose.yml
+- **D-23**: Integration mark + CI wiring (push-to-main only)
+- **D-24**: Integration test coverage targets (6 minimum areas)
+- **D-25**: Fixture setup bypass for DDL via separate test helper
+- **D-26**: Structured error taxonomy (6 exception classes)
+- **D-27**: Trino-side request context propagation (X-Trino-Source, X-Trino-Client-Tags, X-Trino-Client-Info)
+- **D-28**: Query log entry per TRN-11 (statement hash, never raw SQL)
 
 ### Claude's Discretion
-- Exact QueryHandle context manager signature (sync vs async, generator vs class)
-- Whether DELETE cancel goes through same httpx client or dedicated session
-- Exact ExplainPlan placeholder dataclass shape
-- Integration test fixture set (minimum is floor, not ceiling)
-- Lakekeeper + MinIO compose file details (env vars, healthchecks, wait conditions)
-- TrinoPoolBusyError surface (exception vs structured dataclass)
+- QueryHandle context manager exact signature (sync vs async, generator vs class)
+- Whether DELETE /v1/query/{queryId} uses same httpx client or dedicated session
+- ExplainPlan placeholder dataclass shape
+- Integration test fixture set (floor not ceiling)
+- Lakekeeper + MinIO compose details (env vars, wait conditions, healthchecks)
+- TrinoPoolBusyError surface (exception vs RejectedResult dataclass)
 - Pre-commit hook additions
-- Schema-lint additions
+- Schema-lint additions (plan_json max_length, identifier patterns)
 - Event-loop lag probe implementation approach
 
 ### Deferred Ideas (OUT OF SCOPE)
@@ -68,10 +66,10 @@ A second critical finding: sqlglot's Trino dialect parses `EXPLAIN`, `SHOW`, and
 - Query plan caching
 - Rate limiting / per-user quotas
 - Streaming result consumption
-- Retries beyond 401 retry-once
+- Retries beyond single 401 retry
 - Productized docker-compose (Phase 9)
 - Prompt-injection adversarial corpus (Phase 9)
-- CTAS/INSERT classifier exemptions
+- CTAS / INSERT INTO SELECT in offline mode
 </user_constraints>
 
 <phase_requirements>
@@ -79,61 +77,56 @@ A second critical finding: sqlglot's Trino dialect parses `EXPLAIN`, `SHOW`, and
 
 | ID | Description | Research Support |
 |----|-------------|------------------|
-| TRN-01 | HTTP REST via trino-python-client, no JDBC | trino 0.337.0 verified on PyPI; uses requests internally; DBAPI cursor pattern documented |
-| TRN-02 | asyncio.to_thread with bounded thread pool | anyio 4.13.0 available; ThreadPoolExecutor + Semaphore pattern well-established |
-| TRN-03 | No-auth, Basic, JWT bearer auth | JWTAuthentication takes static str; custom Authentication subclass needed for per-call JWT re-read |
-| TRN-04 | SqlClassifier gate via sqlglot AST | sqlglot 30.4.2 Trino dialect verified; Command catch-all for EXPLAIN/SHOW/CALL requires two-tier dispatch |
-| TRN-05 | Architectural unit test for classifier invariant | AST inspection of method bodies feasible via inspect module |
-| TRN-06 | Timeout + cancel with DELETE nextUri | Trino protocol uses DELETE to nextUri, not /v1/query/{queryId}; cursor exposes query_id; confirmation via system.runtime.queries |
-| TRN-07 | Version probe on init, capability matrix | SELECT node_version FROM system.runtime.nodes; parse version string |
-| TRN-08 | Iceberg catalog probe | SHOW CATALOGS + SHOW SCHEMAS + metadata table probe pattern documented |
-| TRN-09 | Fetch EXPLAIN JSON, ANALYZE JSON, DISTRIBUTED | These are adapter methods that compose SQL and delegate to TrinoClient |
-| TRN-10 | Read system.runtime.*, system.metadata.*, Iceberg metadata tables | Iceberg metadata tables use "table$snapshots" double-quoted syntax |
-| TRN-11 | Structured query logging with statement_hash | structlog contextvars pattern from Phase 1; SHA-256 of SQL string |
-| TRN-12 | OfflinePlanSource for pasted EXPLAIN JSON | Pure JSON parsing, no network; shares ExplainPlan return type |
-| TRN-13 | PlanSource/StatsSource/CatalogSource ports | Python Protocol classes; live and offline adapters implement same interface |
-| TRN-14 | Minimum Trino version 429, refuse older | Version string parsing from system.runtime.nodes |
-| TRN-15 | Max concurrent queries semaphore (default 4) | asyncio.Semaphore + ThreadPoolExecutor(max_workers=4) |
+| TRN-01 | HTTP REST via trino-python-client, no JDBC | trino 0.337.0 verified on PyPI; DBAPI cursor lifecycle documented |
+| TRN-02 | Every Trino call through asyncio.to_thread with bounded pool | anyio 4.4 to_thread + ThreadPoolExecutor pattern researched |
+| TRN-03 | No-auth, Basic, JWT bearer; JWT per-request | JWTAuthentication is static-only; custom wrapper needed for per-call refresh |
+| TRN-04 | SqlClassifier AST-based allowlist gate | sqlglot Trino dialect parsing verified; Command fallback for EXPLAIN/SHOW documented |
+| TRN-05 | Architectural unit test asserting classifier-first | AST introspection approach validated via sqlglot parse behavior |
+| TRN-06 | Cancel sends DELETE /v1/query/{queryId} | REST API DELETE to nextUri documented; separate httpx client for query-id-based cancel |
+| TRN-07 | Version probe via system.runtime.nodes | node_version column confirmed in system.runtime.nodes table |
+| TRN-08 | Iceberg catalog probe + capability matrix | system.metadata.table_properties and catalog probes documented |
+| TRN-09 | Fetch EXPLAIN JSON, EXPLAIN ANALYZE JSON, EXPLAIN DISTRIBUTED | Trino EXPLAIN variants confirmed; adapter constructs SQL and classifies |
+| TRN-10 | Read system.runtime.*, system.metadata.*, Iceberg metadata tables | All metadata tables ($snapshots, $files, $manifests, $partitions, $history, $refs) documented with access patterns |
+| TRN-11 | Statement logging with hash, duration, request_id | structlog pipeline from Phase 1 supports this; SHA-256 hash of SQL, never raw |
+| TRN-12 | OfflinePlanSource accepts pasted EXPLAIN JSON | Simple JSON parse + ExplainPlan construction; no network call |
+| TRN-13 | Live + offline share PlanSource/StatsSource/CatalogSource ports | Protocol-based ports; hexagonal architecture from ARCHITECTURE.md |
+| TRN-14 | Refuse Trino < 429 | Version string parsing from system.runtime.nodes probe |
+| TRN-15 | Max-concurrent-queries semaphore (default 4) | asyncio.Semaphore + ThreadPoolExecutor bounded pool pattern |
 </phase_requirements>
 
 ## Standard Stack
 
-### Core (Phase 2 additions to pyproject.toml)
+### Core
+| Library | Version | Purpose | Why Standard |
+|---------|---------|---------|--------------|
+| `trino` | `>=0.337.0` (latest: 0.337.0) | HTTP REST client for Trino DBAPI | Official trinodb client; exposes cursor.query_id, cancel(), auth classes [VERIFIED: PyPI] |
+| `sqlglot` | `>=30.4.2` (latest: 30.4.2) | SQL parsing for classifier + future rewrites | Trino dialect, AST-based classification, zero deps [VERIFIED: PyPI] |
+| `httpx` | `>=0.28.1` | Async HTTP for cancel confirmation + REST catalog probes | Already a dependency; needed for async DELETE /v1/query/{queryId} [VERIFIED: pyproject.toml] |
+| `anyio` | `>=4.4` | asyncio.to_thread bridge for sync Trino client | Already a dependency; MCP SDK is async-first [VERIFIED: pyproject.toml] |
 
-| Library | Version | Purpose | Why Standard | Confidence |
-|---------|---------|---------|--------------|------------|
-| `trino` | `>=0.337.0` | Trino HTTP REST client, DBAPI cursor, auth classes | Official trinodb client; HTTP-only, no JVM; verified on PyPI 2026-03-06 | HIGH [VERIFIED: PyPI] |
-| `sqlglot` | `>=30.4.2` | SQL parsing for classifier gate; Trino dialect | Already in venv; verified AST types for classifier via local testing | HIGH [VERIFIED: local test + PyPI] |
-| `httpx` | `>=0.28.1` | Async HTTP for cancel DELETE calls (separate from trino client's requests) | Already a dependency; needed for cancellation outside the sync trino client | HIGH [VERIFIED: installed 0.28.1] |
-| `anyio` | `>=4.4` | asyncio.to_thread bridge, concurrency primitives | Already a dependency at 4.13.0 | HIGH [VERIFIED: installed 4.13.0] |
-
-### Supporting (dev-only)
-
-| Library | Version | Purpose | When to Use | Confidence |
-|---------|---------|---------|-------------|------------|
-| `testcontainers` | `>=4.14.2` | DockerCompose wrapper for integration tests | Integration tests only; session-scoped pytest fixture | HIGH [VERIFIED: PyPI 4.14.2] |
-| `pytest-cov` | `>=5` | Coverage reporting | Already in CLAUDE.md stack | HIGH [ASSUMED] |
+### Supporting
+| Library | Version | Purpose | When to Use |
+|---------|---------|---------|-------------|
+| `tenacity` | `>=9.1.4` (latest: 9.1.4) | Retry with backoff for cancel confirmation polling | Cancel confirmation exponential backoff (D-08); alternatively use simple asyncio.sleep loop [VERIFIED: PyPI] |
+| `testcontainers[trino,minio]` | `>=4.14.2` (latest: 4.14.2) | Docker container lifecycle for integration tests | DockerCompose wrapper for Trino+Lakekeeper+MinIO+Postgres [VERIFIED: PyPI] |
 
 ### Alternatives Considered
-
 | Instead of | Could Use | Tradeoff |
 |------------|-----------|----------|
-| Separate httpx cancel client | Cursor.cancel() built-in | Built-in cancel uses next_uri internally but goes through sync requests lib; D-08 requires async cancel via httpx |
-| Custom JWT auth class | Static JWTAuthentication | Static class caches token at init; per-call re-read requires custom Authentication subclass |
-| testcontainers DockerCompose | Raw subprocess docker compose | DockerCompose handles teardown, port discovery, wait strategies automatically |
+| `tenacity` for cancel backoff | Manual `asyncio.sleep` loop | tenacity adds a dep but is cleaner for bounded retry with backoff; manual loop is ~15 lines and avoids the dep |
+| Separate `httpx` client for cancel | Trino client's built-in cancel | Built-in cancel sends DELETE to nextUri (may be gone); separate httpx client targets /v1/query/{queryId} reliably |
 
-**Installation (Phase 2 additions):**
+**Installation:**
 ```bash
 uv add trino>=0.337.0 sqlglot>=30.4.2
-uv add --dev "testcontainers[compose]>=4.14.2"
+uv add --dev testcontainers[trino,minio]>=4.14.2
+# httpx and anyio already in dependencies
+# tenacity is optional -- planner decides
 ```
-
-Note: `httpx>=0.28.1` and `anyio>=4.4` are already dependencies. `sqlglot` was installed manually but needs to be added to pyproject.toml `dependencies`.
 
 ## Architecture Patterns
 
-### Phase 2 Module Structure (from D-01)
-
+### Recommended Project Structure (Phase 2 additions)
 ```
 src/mcp_trino_optimizer/
 ├── ports/
@@ -141,472 +134,617 @@ src/mcp_trino_optimizer/
 │   ├── plan_source.py          # PlanSource Protocol
 │   ├── stats_source.py         # StatsSource Protocol
 │   └── catalog_source.py       # CatalogSource Protocol
-└── adapters/
-    ├── __init__.py
-    ├── trino/
-    │   ├── __init__.py
-    │   ├── client.py           # TrinoClient — sync wrapper + async facade
-    │   ├── auth.py             # none / basic / JWT authentication
-    │   ├── classifier.py       # SqlClassifier (AST-based allowlist)
-    │   ├── handle.py           # QueryHandle + QueryIdCell
-    │   ├── pool.py             # TrinoThreadPool (bounded to_thread)
-    │   ├── capabilities.py     # Version probe + CapabilityMatrix
-    │   ├── errors.py           # TrinoAdapterError hierarchy
-    │   ├── live_plan_source.py
-    │   ├── live_stats_source.py
-    │   └── live_catalog_source.py
-    └── offline/
-        ├── __init__.py
-        └── json_plan_source.py
+├── adapters/
+│   ├── __init__.py
+│   ├── trino/
+│   │   ├── __init__.py
+│   │   ├── client.py           # TrinoClient -- sync wrapper + async facade
+│   │   ├── auth.py             # none / basic / JWT per-call
+│   │   ├── classifier.py       # SqlClassifier (AST-based allowlist)
+│   │   ├── handle.py           # QueryHandle + QueryIdCell
+│   │   ├── pool.py             # TrinoThreadPool (bounded to_thread + semaphore)
+│   │   ├── capabilities.py     # Version probe + CapabilityMatrix
+│   │   ├── errors.py           # Exception taxonomy
+│   │   ├── live_plan_source.py # PlanSource via TrinoClient
+│   │   ├── live_stats_source.py
+│   │   └── live_catalog_source.py
+│   └── offline/
+│       ├── __init__.py
+│       └── json_plan_source.py # PlanSource from raw JSON text
+├── safety/
+│   └── schema_lint.py          # + MAX_PLAN_JSON_LEN = 1_000_000
+└── settings.py                 # + MCPTO_TRINO_* fields
+
+tests/
+├── safety/
+│   └── test_sql_classifier.py  # Locked classifier corpus (D-17)
+├── adapters/
+│   └── test_trino_client_invariant.py  # TRN-05 architectural test
+├── integration/
+│   ├── conftest.py             # testcontainers session fixture
+│   ├── fixtures.py             # DDL bypass helper (D-25)
+│   ├── test_fetch_plans.py
+│   ├── test_cancellation.py
+│   ├── test_auth.py
+│   ├── test_capabilities.py
+│   ├── test_metadata_tables.py
+│   └── test_event_loop_lag.py
+
+.testing/
+└── docker-compose.yml          # Trino 480 + Lakekeeper + Postgres + MinIO
 ```
 
-### Pattern 1: SqlClassifier Two-Tier Dispatch
+### Pattern 1: SqlClassifier -- AST-Based Allowlist
 
-**What:** sqlglot's Trino dialect parses DML/DDL into typed nodes (`Select`, `Insert`, `Delete`, `Create`, `Drop`, etc.) but parses `EXPLAIN`, `SHOW`, `CALL` as generic `Command` nodes.
+**What:** Parse SQL via `sqlglot.parse(sql, dialect="trino")`, inspect the root AST node type, and allow/reject based on a typed allowlist.
 
-**When to use:** Every call to `assert_read_only(sql)`.
+**Critical finding:** sqlglot's Trino dialect parses `EXPLAIN`, `SHOW`, and `CALL` as `Command` fallback nodes, not typed expression classes. The classifier must handle both cases. [VERIFIED: local sqlglot 30.4.2 testing]
 
-**Implementation strategy:**
+**When to use:** Every SQL string before it reaches the Trino HTTP client.
+
+**Example:**
 ```python
-# Source: verified via local sqlglot 30.4.2 testing
+# Source: verified via local sqlglot testing 2026-04-12
 import sqlglot
-from sqlglot import exp
+from sqlglot import expressions as exp
 
-def classify(sql: str) -> str:
-    """Returns classification: 'allowed', 'rejected', or raises."""
+# Typed AST nodes (direct allowlist)
+ALLOWED_TYPED = (exp.Select, exp.Describe, exp.Use, exp.Values)
+
+# Command-type keywords (EXPLAIN, SHOW fall back to Command)
+ALLOWED_COMMAND_KEYWORDS = frozenset({"EXPLAIN", "SHOW", "DESCRIBE"})
+REJECTED_COMMAND_KEYWORDS = frozenset({"CALL", "EXECUTE", "REFRESH"})
+
+def classify(sql: str) -> bool:
     stmts = sqlglot.parse(sql, dialect="trino")
 
-    # Reject empty/whitespace
-    if not stmts or all(s is None for s in stmts):
-        raise TrinoClassifierRejected("Empty statement")
+    # Reject empty, whitespace-only, multi-statement
+    valid = [s for s in stmts if s is not None]
+    if len(valid) != 1:
+        return False  # empty or multi-statement
 
-    # Reject multi-statement
-    non_none = [s for s in stmts if s is not None]
-    if len(non_none) != 1:
-        raise TrinoClassifierRejected("Multi-statement blocks rejected")
+    root = valid[0]
 
-    stmt = non_none[0]
+    # Typed expression allowlist
+    if isinstance(root, ALLOWED_TYPED):
+        return True
 
-    # Tier 1: Typed AST nodes
-    if isinstance(stmt, exp.Select):
-        return "allowed"
-    if isinstance(stmt, (exp.Insert, exp.Delete, exp.Update, exp.Merge,
-                          exp.Create, exp.Drop, exp.Alter, exp.TruncateTable,
-                          exp.Grant, exp.Set)):
-        raise TrinoClassifierRejected(f"Statement type {type(stmt).__name__} rejected")
-    if isinstance(stmt, exp.Describe):
-        return "allowed"
-    if isinstance(stmt, exp.Use):
-        return "allowed"
-    if isinstance(stmt, exp.Values):
-        return "allowed"
+    # Command fallback -- inspect keyword
+    if isinstance(root, exp.Command):
+        keyword = str(root.this).upper()
+        if keyword in ALLOWED_COMMAND_KEYWORDS:
+            # For EXPLAIN, recursively validate inner statement
+            if keyword == "EXPLAIN":
+                return _validate_explain_inner(root)
+            return True
+        if keyword in REJECTED_COMMAND_KEYWORDS:
+            return False
+        return False  # unknown Command = reject
 
-    # Tier 2: Command catch-all (EXPLAIN, SHOW, CALL, etc.)
-    if isinstance(stmt, exp.Command):
-        keyword = stmt.this.upper()  # "EXPLAIN", "SHOW", "CALL", etc.
-        if keyword == "EXPLAIN":
-            # Recursive validation of inner statement
-            inner_text = stmt.expression.this if stmt.expression else ""
-            # Strip ANALYZE, FORMAT JSON, TYPE DISTRIBUTED prefixes
-            _validate_explain_inner(inner_text)
-            return "allowed"
-        if keyword == "SHOW":
-            return "allowed"
-        if keyword in ("CALL", "EXECUTE", "REFRESH"):
-            raise TrinoClassifierRejected(f"Command '{keyword}' rejected")
-        raise TrinoClassifierRejected(f"Unknown command '{keyword}' rejected")
-
-    raise TrinoClassifierRejected(f"Unknown statement type {type(stmt).__name__}")
+    # Everything else (Insert, Update, Delete, Merge, Create, Drop,
+    # Alter, TruncateTable, Grant, Revoke, Set) = reject
+    return False
 ```
 
-**Critical detail for EXPLAIN inner validation:** The expression text for `EXPLAIN ANALYZE INSERT INTO t VALUES(1)` is `"ANALYZE INSERT INTO t VALUES(1)"`. The classifier must strip the `ANALYZE` prefix, then any `(FORMAT JSON)` or `(TYPE DISTRIBUTED)` options, then re-parse the remaining SQL to validate the inner statement is on the allowlist.
-
-[VERIFIED: local sqlglot 30.4.2 testing]
-
-### Pattern 2: sqlglot AST Types Reference
-
-Verified via local testing with sqlglot 30.4.2, Trino dialect:
-
-| SQL | AST Type | Notes |
-|-----|----------|-------|
-| `SELECT 1` | `Select` | Typed node |
-| `INSERT INTO t VALUES (1)` | `Insert` | Typed node |
-| `DELETE FROM t` | `Delete` | Typed node |
-| `UPDATE t SET x=1` | `Update` | Typed node |
-| `CREATE TABLE t (id INT)` | `Create` | Typed node |
-| `DROP TABLE t` | `Drop` | Typed node |
-| `ALTER TABLE t ADD COLUMN x INT` | `Alter` | Typed node |
-| `TRUNCATE TABLE t` | `TruncateTable` | Typed node |
-| `MERGE INTO t USING s...` | `Merge` | Typed node |
-| `GRANT SELECT ON t TO u` | `Grant` | Typed node |
-| `SET SESSION x = y` | `Set` | Typed node |
-| `DESCRIBE t` | `Describe` | Typed node |
-| `USE catalog` | `Use` | Typed node |
-| `VALUES (1,2)` | `Values` | Typed node |
-| `EXPLAIN SELECT 1` | `Command(this='EXPLAIN')` | Command catch-all |
-| `EXPLAIN ANALYZE SELECT 1` | `Command(this='EXPLAIN')` | `.expression.this='ANALYZE SELECT 1'` |
-| `EXPLAIN (FORMAT JSON) SELECT 1` | `Command(this='EXPLAIN')` | `.expression.this='(FORMAT JSON) SELECT 1'` |
-| `SHOW CATALOGS` | `Command(this='SHOW')` | Command catch-all |
-| `SHOW TABLES` | `Command(this='SHOW')` | `.expression.this='TABLES'` |
-| `SHOW CREATE TABLE t` | `Command(this='SHOW')` | `.expression.this='CREATE TABLE t'` |
-| `CALL system.sync()` | `Command(this='CALL')` | Command catch-all |
-| `SET SESSION AUTHORIZATION admin` | `Command(this='SET')` | Command (not Set node) |
-| `REFRESH MATERIALIZED VIEW v` | `Refresh` | Typed node |
-| `/* comment */ SELECT 1` | `Select` | Comments stripped by parser |
-| `''` (empty) | `None` | Returns [None] |
-| `'   '` (whitespace) | `None` | Returns [None] |
-| `SELECT 1; DROP TABLE t` | `[Select, Drop]` | Multi-statement: len > 1 |
-
-[VERIFIED: local sqlglot 30.4.2 testing on this codebase]
-
-### Pattern 3: QueryHandle Cancellation Protocol
-
-**What:** Trino cancellation uses `DELETE nextUri`, NOT `DELETE /v1/query/{queryId}`.
-
-**Key findings:**
-1. The trino-python-client `Cursor` exposes `.query_id` as a property, populated after the first HTTP response from Trino [VERIFIED: GitHub source review]
-2. `Cursor.cancel()` sends `DELETE` to `self._next_uri` (the dynamic URL from the last Trino response), NOT to a fixed `/v1/query/{queryId}` path [VERIFIED: GitHub source review]
-3. The Trino REST API protocol documents only `DELETE nextUri` for cancellation -- there is no `/v1/query/{queryId}` endpoint in the client protocol [VERIFIED: Trino 480 docs]
-4. `cursor._query.query_id` is available after the first response
-5. `cursor._query._next_uri` holds the cancellation target URL
-
-**Implementation approach (honoring D-08's intent while using correct Trino protocol):**
+**EXPLAIN inner validation (critical for TRN-04):**
 ```python
-# D-08 says use separate httpx client, not sync trino-python-client
-# The correct target is nextUri, not /v1/query/{queryId}
-# Capture both query_id (for logging/confirmation) and next_uri (for cancellation)
+# Source: verified via local sqlglot testing 2026-04-12
+def _validate_explain_inner(cmd: exp.Command) -> bool:
+    """Recursively validate the inner statement of EXPLAIN/EXPLAIN ANALYZE."""
+    expr = cmd.args.get("expression")
+    if expr is None:
+        return True  # bare EXPLAIN with no inner = safe
 
-@dataclass
+    inner_text = expr.this if hasattr(expr, "this") else str(expr)
+
+    # EXPLAIN ANALYZE -> expression.this = "ANALYZE <inner_sql>"
+    # EXPLAIN (FORMAT JSON) -> expression.this = "(FORMAT JSON) <inner_sql>"
+    # Strip ANALYZE prefix and (FORMAT ...) / (TYPE ...) options
+    text = str(inner_text)
+    if text.upper().startswith("ANALYZE "):
+        text = text[len("ANALYZE "):]
+
+    # Strip parenthesized options like (FORMAT JSON), (TYPE DISTRIBUTED)
+    import re
+    text = re.sub(r'^\(.*?\)\s*', '', text).strip()
+
+    if not text:
+        return True
+
+    # Re-parse the inner SQL and classify recursively
+    inner_stmts = sqlglot.parse(text, dialect="trino")
+    valid_inner = [s for s in inner_stmts if s is not None]
+    if len(valid_inner) != 1:
+        return False
+    return classify_single(valid_inner[0])  # must be SELECT/SHOW/DESCRIBE/VALUES
+```
+
+### Pattern 2: QueryHandle with QueryIdCell
+
+**What:** Thread-safe single-slot holder for Trino query_id, enabling cancel from async land while the sync cursor runs in a thread.
+
+**Example:**
+```python
+# Source: D-06 from CONTEXT.md + trino-python-client cursor.query_id behavior
+import threading
+from dataclasses import dataclass, field
+
 class QueryIdCell:
-    """Thread-safe single-slot holder for query metadata from worker thread."""
-    _query_id: str | None = field(default=None, init=False)
-    _next_uri: str | None = field(default=None, init=False)
-    _event: threading.Event = field(default_factory=threading.Event, init=False)
+    """Thread-safe single-write, multi-read cell for Trino query_id."""
+    def __init__(self) -> None:
+        self._value: str | None = None
+        self._event = threading.Event()
 
-    def set_once(self, query_id: str, next_uri: str) -> None:
-        self._query_id = query_id
-        self._next_uri = next_uri
+    def set_once(self, query_id: str) -> None:
+        if self._value is not None:
+            return  # idempotent
+        self._value = query_id
         self._event.set()
 
-    def wait_for(self, timeout: float) -> tuple[str | None, str | None]:
+    def wait_for(self, timeout: float) -> str | None:
         self._event.wait(timeout=timeout)
-        return self._query_id, self._next_uri
+        return self._value
+
+    @property
+    def value(self) -> str | None:
+        return self._value
 ```
 
-**Cancel confirmation:** After issuing DELETE, poll `system.runtime.queries` WHERE `query_id = '{qid}'` to verify the query has left the active set or its state is `FAILED` (cancelled queries transition to FAILED state). [ASSUMED -- verification via integration test]
+### Pattern 3: Per-Call JWT Authentication
 
-### Pattern 4: Custom JWT Authentication for Per-Call Re-Read
+**What:** Custom authentication class that re-reads the JWT from `os.environ` on every call, since trino-python-client's `JWTAuthentication` only accepts a static string. [VERIFIED: trino auth.py source on GitHub]
 
-**What:** `trino.auth.JWTAuthentication` accepts a static `str` token, not a callable. Per D-12, JWT must be re-read from env on every call.
-
-**Implementation:** Create a custom `Authentication` subclass:
+**Example:**
 ```python
-# Source: trino.auth.Authentication ABC has abstract method set_http_session
+# Source: trino auth.py (GitHub master) + D-12
 import os
 from trino.auth import Authentication
-from requests import Session
 
 class PerCallJWTAuthentication(Authentication):
-    """Re-reads JWT from env var on every HTTP session setup."""
+    """Re-reads JWT from environment on every set_http_session call."""
 
     def __init__(self, env_var: str = "MCPTO_TRINO_JWT") -> None:
         self._env_var = env_var
 
-    def set_http_session(self, http_session: Session) -> Session:
+    def set_http_session(self, http_session):
         token = os.environ.get(self._env_var, "")
         http_session.headers["Authorization"] = f"Bearer {token}"
         return http_session
 
-    def get_exceptions(self) -> tuple:
+    def get_exceptions(self):
         return ()
 ```
 
-**Key detail:** `set_http_session` is called by the trino client before each HTTP request cycle. By reading from `os.environ` inside this method, the token is fresh on every call. [VERIFIED: trino.auth.Authentication ABC confirmed via GitHub source]
+**Implementation note:** The `trino-python-client` calls `set_http_session` when creating the HTTP session for each request. For the per-call pattern to work, we need to verify whether `set_http_session` is called once per connection or once per request. If it is per-connection, we may need to create a new connection per request or use a different hook point. [ASSUMED -- needs integration test verification]
 
-### Pattern 5: Trino Query States
+**Alternative approach (safer):** Create a new `trino.dbapi.connect()` for each request, passing a freshly-read JWT. This is heavier but guarantees the token is always current. Given that Phase 2 does not implement connection pooling (deferred), this is the recommended approach.
 
-Trino queries progress through these states (from `QueryStateMachine`):
+### Pattern 4: Cancel via Separate httpx Client
 
-| State | Meaning | Terminal? |
-|-------|---------|-----------|
-| QUEUED | Accepted, awaiting execution | No |
-| DISPATCHING | Being dispatched to coordinator | No |
-| PLANNING | Query plan being generated | No |
-| STARTING | Execution starting | No |
-| RUNNING | At least one task running | No |
-| BLOCKED | Waiting for resources | No |
-| FINISHING | Committing/finalizing | No |
-| FINISHED | Completed successfully | Yes |
-| FAILED | Execution failed (includes cancelled) | Yes |
+**What:** The trino-python-client's `cursor.cancel()` sends `DELETE` to `nextUri`, which may no longer be valid if the cursor has been partially consumed or the statement has progressed. For reliable cancellation per D-08, use a separate `httpx.AsyncClient` to hit the Trino REST API directly. [VERIFIED: trino client.py source on GitHub]
 
-Cancelled queries transition to `FAILED` state. To confirm cancellation, query `system.runtime.queries` and check `state = 'FAILED'` or absence from the table (queries age out). [CITED: GitHub issues #23759, #18467; Trino Web UI docs]
+**Example:**
+```python
+# Source: Trino REST API docs + D-08
+import httpx
 
-### Pattern 6: Iceberg Metadata Table Syntax
+async def cancel_query(
+    base_url: str,
+    query_id: str,
+    auth_headers: dict[str, str],
+) -> bool:
+    """Send DELETE /v1/query/{queryId} and poll for confirmation."""
+    async with httpx.AsyncClient(base_url=base_url) as client:
+        # Step 1: DELETE the query
+        resp = await client.delete(
+            f"/v1/query/{query_id}",
+            headers=auth_headers,
+        )
+        if resp.status_code == 204:
+            return True  # Trino acknowledged
 
-```sql
--- Syntax: "catalog"."schema"."table$metadata_type"
--- The $ metadata suffix must be inside double quotes
-
-SELECT * FROM iceberg.myschema."orders$snapshots";
-SELECT * FROM iceberg.myschema."orders$files";
-SELECT * FROM iceberg.myschema."orders$manifests";
-SELECT * FROM iceberg.myschema."orders$partitions";
-SELECT * FROM iceberg.myschema."orders$history";
-SELECT * FROM iceberg.myschema."orders$refs";
+        # Step 2: Poll for state change (bounded backoff)
+        delays = [0.1, 0.3, 0.9, 2.7]  # ~4s total budget
+        for delay in delays:
+            await asyncio.sleep(delay)
+            info = await client.get(f"/v1/query/{query_id}")
+            if info.status_code == 200:
+                state = info.json().get("state", "")
+                if state in ("FINISHED", "FAILED"):
+                    return True
+            elif info.status_code == 404:
+                return True  # query already gone
+        return False  # cancel unconfirmed
 ```
 
-The double-quoting of `table$suffix` is required because `$` is not a valid unquoted identifier character. [CITED: Trino 480 Iceberg connector docs]
-
 ### Anti-Patterns to Avoid
-
-- **Anti-pattern: Logging raw SQL.** D-28 requires only SHA-256 hash of SQL. Never log the SQL text itself -- it may contain sensitive data in WHERE clauses.
-- **Anti-pattern: Blocking the event loop.** Every trino-python-client call MUST go through `asyncio.to_thread` / the bounded thread pool. The trino client is sync-only (uses `requests`). [VERIFIED: trino client uses requests, confirmed via PyPI dependency check]
-- **Anti-pattern: Using cursor.cancel() directly from async code.** The cursor's cancel() uses the sync `requests` library. For async cancel, use httpx with the captured `next_uri`. This is why D-08 specifies a separate httpx client.
-- **Anti-pattern: Fabricating /v1/query/{queryId} URL.** This endpoint is NOT part of the Trino client REST API. Cancel via `nextUri` as documented.
+- **Using cursor.cancel() for confirmed cancellation:** The trino-python-client cancel sends DELETE to nextUri which is ephemeral. Use a direct HTTP DELETE to /v1/query/{queryId} for reliability. [VERIFIED: trino client.py source]
+- **Blocking the event loop with sync Trino calls:** Every Trino operation must go through `asyncio.to_thread` / `loop.run_in_executor`. The MCP SDK is async; blocking will stall all concurrent tool calls. [CITED: PITFALLS.md #11]
+- **Logging raw SQL or JWT tokens:** SQL is logged as SHA-256 hash only (D-28). JWT values are `SecretStr` and redacted by the structlog pipeline (Phase 1 D-09). [CITED: CONTEXT.md D-28]
+- **Regex-based SQL classification:** sqlglot AST is the only safe approach. Regex cannot handle comments, Unicode escapes, or nested EXPLAIN correctly. [CITED: CLAUDE.md "What NOT to Use"]
+- **Using trino-python-client for the cancel HTTP call:** The cancel must go through httpx (async), not the sync trino client, per D-08. [CITED: CONTEXT.md D-08]
 
 ## Don't Hand-Roll
 
 | Problem | Don't Build | Use Instead | Why |
 |---------|-------------|-------------|-----|
-| SQL parsing for classification | Regex or string matching | `sqlglot.parse(sql, dialect="trino")` | AST-based classification handles comments, Unicode, CTEs, subqueries correctly |
-| HTTP Trino polling | Custom HTTP + nextUri loop | `trino.dbapi.Cursor` | Cursor handles statement lifecycle, nextUri chaining, error mapping |
-| Thread pool management | Custom threading.Thread spawner | `ThreadPoolExecutor` + `asyncio.to_thread` | Standard library; proper shutdown semantics |
-| JWT bearer header injection | Manual requests.Session header setting | Custom `Authentication` subclass | Integrates with trino client's session lifecycle |
-| Docker compose lifecycle in tests | subprocess.Popen + manual cleanup | `testcontainers.compose.DockerCompose` | Handles teardown, port discovery, wait strategies |
+| SQL parsing for classification | Regex classifier, token scanner | `sqlglot.parse(sql, dialect="trino")` | Comments, Unicode, nested EXPLAIN, CTE wrapping are all handled by the parser |
+| Trino HTTP REST protocol | Raw httpx against /v1/statement | `trino.dbapi.connect()` + cursor | Statement polling, nextUri chaining, error mapping, auth session setup |
+| Retry with backoff | Manual sleep loop with counter | `tenacity` (optional) or simple bounded loop | tenacity handles jitter, max attempts, timeout budget cleanly |
+| Thread pool management | Raw threading.Thread creation | `concurrent.futures.ThreadPoolExecutor` + `asyncio.to_thread` | Proper lifecycle, naming, bounded concurrency |
+
+**Key insight:** The trino-python-client handles the complex Trino statement lifecycle (POST -> poll nextUri -> collect results), but its cancel mechanism is insufficient for confirmed cancellation. Layer httpx on top for the cancel path only.
 
 ## Common Pitfalls
 
-### Pitfall 1: sqlglot Command Catch-All
-**What goes wrong:** EXPLAIN, SHOW, and CALL all parse as `Command` in the Trino dialect. A classifier that only checks typed nodes (`Select`, `Insert`, etc.) will miss these entirely, either allowing `CALL` (security hole) or rejecting `EXPLAIN` (broken functionality).
-**Why it happens:** sqlglot's Trino dialect does not have first-class AST types for EXPLAIN/SHOW/CALL.
-**How to avoid:** Two-tier dispatch: typed nodes first, then `Command.this` keyword inspection.
-**Warning signs:** Tests pass for SELECT/INSERT but fail for EXPLAIN/SHOW queries.
+### Pitfall 1: sqlglot Command Fallback for EXPLAIN and SHOW
+**What goes wrong:** sqlglot's Trino dialect parses `EXPLAIN`, `SHOW CATALOGS`, `SHOW TABLES`, `SHOW SCHEMAS`, `SHOW SESSION`, and `CALL` as `Command` nodes rather than typed expression classes. If the classifier only checks typed AST nodes, it will reject all EXPLAIN and SHOW statements.
+**Why it happens:** sqlglot's Trino dialect does not have first-class support for all Trino-specific statement types; unsupported syntax falls back to `Command(this=keyword, expression=Literal(rest))`.
+**How to avoid:** The classifier must handle `isinstance(root, exp.Command)` as a separate branch and inspect `root.this` (the leading keyword string) against an allowlist.
+**Warning signs:** All EXPLAIN and SHOW queries being rejected by the classifier during testing.
+[VERIFIED: local sqlglot 30.4.2 testing on 2026-04-12]
 
-### Pitfall 2: EXPLAIN Inner Statement Extraction
-**What goes wrong:** `EXPLAIN ANALYZE (FORMAT JSON) INSERT INTO t VALUES(1)` produces `Command(this='EXPLAIN', expression=Literal('ANALYZE (FORMAT JSON) INSERT INTO t VALUES(1)'))`. The inner text must be stripped of `ANALYZE`, format options, and type options before re-parsing.
-**Why it happens:** sqlglot treats everything after `EXPLAIN` as a raw literal string.
-**How to avoid:** Regex-based prefix stripping of `ANALYZE`, `(FORMAT ...)`, `(TYPE ...)` before re-parsing the inner statement.
-**Warning signs:** `EXPLAIN ANALYZE INSERT INTO t` passes the classifier (security hole).
+### Pitfall 2: EXPLAIN ANALYZE Inner Statement Extraction
+**What goes wrong:** For `EXPLAIN ANALYZE SELECT 1`, sqlglot produces `Command(this="EXPLAIN", expression=Literal(this="ANALYZE SELECT 1"))`. The inner SQL is embedded as a string literal, prefixed with "ANALYZE ". For `EXPLAIN (FORMAT JSON) SELECT 1`, the prefix is "(FORMAT JSON) ".
+**Why it happens:** The Command fallback treats everything after the keyword as a raw string.
+**How to avoid:** Strip the "ANALYZE " prefix and any parenthesized options before re-parsing the inner SQL for recursive classification.
+**Warning signs:** `EXPLAIN ANALYZE INSERT INTO t VALUES (1)` passing the classifier because only the outer EXPLAIN is checked.
+[VERIFIED: local sqlglot 30.4.2 testing on 2026-04-12]
 
-### Pitfall 3: SET vs SET SESSION AUTHORIZATION
-**What goes wrong:** `SET SESSION query_max_memory = '1GB'` parses as `exp.Set` (typed node), but `SET SESSION AUTHORIZATION admin` parses as `Command(this='SET')`. The classifier must reject the latter (privilege escalation) while potentially handling the former.
-**Why it happens:** sqlglot only has a typed node for regular SET, not for SET SESSION AUTHORIZATION.
-**How to avoid:** For `Command(this='SET')`, always reject. The classifier allowlist (D-16) does not include `SET SESSION`.
-**Warning signs:** Authorization escalation via SET SESSION AUTHORIZATION.
+### Pitfall 3: trino-python-client JWTAuthentication is Static
+**What goes wrong:** `JWTAuthentication(token="...")` stores the token as a string and sets it once on the HTTP session. If the JWT expires mid-session, all subsequent requests fail with 401.
+**Why it happens:** The client was designed for short-lived connections, not long-running servers that need per-request token refresh.
+**How to avoid:** Either (a) create a custom auth class that re-reads from env on every session setup, or (b) create a new connection for each request.
+**Warning signs:** 401 errors after token rotation when using a long-lived connection.
+[VERIFIED: trino auth.py source on GitHub]
 
-### Pitfall 4: Cancel Target is nextUri, Not /v1/query/{queryId}
-**What goes wrong:** Code sends `DELETE /v1/query/{queryId}` and gets 404 from Trino.
-**Why it happens:** CONTEXT.md D-08 references `/v1/query/{queryId}` but this is not a documented Trino client protocol endpoint. The correct cancellation target is the `nextUri` from the last query response.
-**How to avoid:** Capture `next_uri` from the cursor internals (`cursor._query._next_uri`) alongside `query_id`.
-**Warning signs:** Cancel always "fails" but queries actually do stop (because the client disconnects).
+### Pitfall 4: cursor.cancel() vs DELETE /v1/query/{queryId}
+**What goes wrong:** The trino-python-client's `cancel()` sends DELETE to `nextUri`, which is a transient URL that changes with each polling response. If the cursor has already consumed some results or the nextUri has expired, cancel is silently a no-op (nextUri is None).
+**Why it happens:** The cancel mechanism was designed for DBAPI cursor lifecycle, not for external cancel-on-timeout from a different thread/task.
+**How to avoid:** Capture the query_id from `cursor.query_id` immediately after execute, then use a separate httpx client to DELETE `/v1/query/{queryId}`.
+**Warning signs:** Orphaned queries in `system.runtime.queries` after timeout.
+[VERIFIED: trino client.py source on GitHub -- cancel() checks `if self._next_uri is None: return`]
 
-### Pitfall 5: trino-python-client Uses requests, Not httpx
-**What goes wrong:** Calling `cursor.cancel()` from async code blocks the event loop because it uses the sync `requests` library internally.
-**Why it happens:** The trino-python-client has not migrated to httpx.
-**How to avoid:** Perform cancellation via a separate `httpx.AsyncClient` call to the captured `next_uri`, as D-08 requires.
-**Warning signs:** Event-loop-lag probe test fails when cancel is invoked concurrently.
+### Pitfall 5: Multi-Statement Blocks
+**What goes wrong:** `sqlglot.parse("SELECT 1; DROP TABLE t", dialect="trino")` returns a list of 2 statements. If the classifier only checks the first, the DROP passes through.
+**Why it happens:** sqlglot splits on semicolons and returns multiple AST roots.
+**How to avoid:** Reject any input where `parse()` returns more than one non-None statement.
+**Warning signs:** Multi-statement SQL bypassing the classifier.
+[VERIFIED: local sqlglot testing -- returns [Select, Drop] for "SELECT 1; DROP TABLE t"]
 
-### Pitfall 6: Lakekeeper Warehouse Registration
-**What goes wrong:** Trino starts but cannot see any Iceberg tables; metadata queries fail.
-**Why it happens:** Lakekeeper requires explicit warehouse registration via HTTP POST before Trino can access it. The docker-compose must include a bootstrap/init service.
-**How to avoid:** Include a curl-based init container that registers the warehouse and accepts terms of use.
-**Warning signs:** `SHOW SCHEMAS IN iceberg` returns empty or errors.
+### Pitfall 6: Empty/Whitespace SQL Input
+**What goes wrong:** `parse("", dialect="trino")` returns `[None]`. `parse("   ")` returns `[None]` (falsy). The classifier must handle these edge cases.
+**Why it happens:** sqlglot returns a list with a None entry for empty input.
+**How to avoid:** Filter None values from parse results; reject if no valid statements remain.
+[VERIFIED: local sqlglot testing]
 
-### Pitfall 7: Python Version Mismatch
-**What goes wrong:** Code runs on Python 3.14 locally (current venv) but CI targets 3.11.
-**Why it happens:** The local venv was created with Python 3.14 (visible in pip output paths).
-**How to avoid:** Test with `python_version = "3.11"` in mypy; avoid 3.12+ only features unless guarded.
-**Warning signs:** Type annotations using `X | Y` syntax work in 3.14 but `from __future__ import annotations` is needed for 3.11. The project already uses `from __future__ import annotations` (confirmed in Phase 1 code).
+### Pitfall 7: Trino Version String Parsing
+**What goes wrong:** `SELECT node_version FROM system.runtime.nodes` returns a string like "480" or "480-e" (enterprise). Simple integer parsing may fail on suffixed versions.
+**Why it happens:** Trino versioning varies between OSS and commercial distributions.
+**How to avoid:** Parse the leading numeric portion only. Use regex `r"^(\d+)"` to extract the major version.
+[ASSUMED -- based on Trino documentation patterns]
+
+### Pitfall 8: testcontainers DockerCompose Session Scope
+**What goes wrong:** Using `module` scope and `function` scope in the same file causes Docker Compose to try spinning up containers twice, which fails.
+**Why it happens:** Docker Compose doesn't allow duplicate container starts.
+**How to avoid:** Use `session` scope for the compose fixture. All integration tests share one compose stack. Individual tests create/drop their own tables via the D-25 fixture bypass.
+[CITED: testcontainers-python documentation]
 
 ## Code Examples
 
-### Trino DBAPI Cursor Lifecycle
+### Trino Connection with Auth Modes
 ```python
-# Source: trino-python-client docs + GitHub source
+# Source: trino-python-client docs + D-11
 import trino
+from trino.auth import BasicAuthentication
 
+# No auth
 conn = trino.dbapi.connect(
-    host="localhost",
-    port=8080,
-    user="trino",
-    catalog="iceberg",
-    schema="default",
-    http_scheme="http",
-    # auth=trino.auth.BasicAuthentication("user", "pass"),
+    host=settings.trino_host,
+    port=settings.trino_port,
+    user="mcp-trino-optimizer",
+    catalog=settings.trino_catalog,
+    schema=settings.trino_schema,
+    source=f"mcp-trino-optimizer/{version}",
+    client_tags=[f"mcp_request_id={request_id}"],
 )
-cursor = conn.cursor()
-cursor.execute("SELECT 1")
-# cursor.query_id is available after execute()
-rows = cursor.fetchall()  # blocks until complete
 
-# Cancel:
-cursor.cancel()  # sends DELETE to next_uri internally
+# Basic auth
+conn = trino.dbapi.connect(
+    host=settings.trino_host,
+    port=settings.trino_port,
+    user=settings.trino_user,
+    auth=BasicAuthentication(settings.trino_user, settings.trino_password.get_secret_value()),
+    http_scheme="https",
+    verify=settings.trino_verify_ssl,
+)
+
+# JWT auth (per-call refresh)
+conn = trino.dbapi.connect(
+    host=settings.trino_host,
+    port=settings.trino_port,
+    user="mcp-trino-optimizer",
+    auth=PerCallJWTAuthentication(env_var="MCPTO_TRINO_JWT"),
+    http_scheme="https",
+)
 ```
 
-[VERIFIED: trino-python-client GitHub source + DBAPI docs]
-
-### Custom Authentication Subclass
+### Query ID Capture in Thread
 ```python
-# Source: trino.auth module (GitHub)
-import abc
-from requests import Session
-
-class Authentication(metaclass=abc.ABCMeta):
-    @abc.abstractmethod
-    def set_http_session(self, http_session: Session) -> Session:
-        ...
-
-    def get_exceptions(self) -> tuple:
-        return ()
+# Source: trino dbapi.py + D-06
+def _execute_in_thread(conn_factory, sql: str, handle: QueryHandle) -> list[dict]:
+    """Runs in ThreadPoolExecutor; captures query_id into handle."""
+    conn = conn_factory()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(sql)
+        # query_id available immediately after execute returns
+        if cursor.query_id:
+            handle.query_id_cell.set_once(cursor.query_id)
+        return cursor.fetchall()
+    except Exception:
+        if cursor.query_id:
+            handle.query_id_cell.set_once(cursor.query_id)
+        raise
+    finally:
+        cursor.close()
+        conn.close()
 ```
 
-[VERIFIED: trino-python-client GitHub auth.py]
-
-### testcontainers DockerCompose Pattern
+### Iceberg Metadata Table Access
 ```python
-# Source: testcontainers docs + GitHub examples
-from testcontainers.compose import DockerCompose
-import pytest
+# Source: Trino 480 Iceberg connector docs
+# Access pattern: "catalog.schema"."table_name$metadata_suffix"
 
-@pytest.fixture(scope="session")
-def compose_stack():
-    compose = DockerCompose(
-        filepath=".testing",
-        compose_file_name="docker-compose.yml",
-    )
-    compose.start()
-    compose.wait_for(
-        "http://localhost:8080/v1/info",
-        timeout=120,
-    )
-    yield compose
-    compose.stop()
+# Snapshots
+SELECT committed_at, snapshot_id, parent_id, operation, summary
+FROM "iceberg"."myschema"."mytable$snapshots"
+ORDER BY committed_at DESC;
+
+# Files (current snapshot)
+SELECT content, file_path, record_count, file_size_in_bytes, file_format
+FROM "iceberg"."myschema"."mytable$files";
+
+# Manifests
+SELECT content, path, length, partition_spec_id, added_snapshot_id
+FROM "iceberg"."myschema"."mytable$manifests";
+
+# Partitions
+SELECT partition, record_count, file_count, total_size
+FROM "iceberg"."myschema"."mytable$partitions";
+
+# History
+SELECT made_current_at, snapshot_id, parent_id, is_current_ancestor
+FROM "iceberg"."myschema"."mytable$history";
+
+# Refs (branches + tags)
+SELECT * FROM "iceberg"."myschema"."mytable$refs";
 ```
 
-[ASSUMED -- API details based on testcontainers docs; exact method signatures need verification during implementation]
+### Docker Compose for Integration Tests
+```yaml
+# Source: Lakekeeper examples/minimal + customization for testing
+# .testing/docker-compose.yml
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: lakekeeper
+      POSTGRES_PASSWORD: lakekeeper
+      POSTGRES_DB: lakekeeper
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lakekeeper"]
+      interval: 2s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "127.0.0.1:5432:5432"
 
-### asyncio.to_thread with Bounded Pool
-```python
-# Source: Python stdlib + anyio docs
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
+  minio:
+    image: minio/minio:RELEASE.2025-07-23T15-54-02Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
 
-class TrinoThreadPool:
-    def __init__(self, max_workers: int = 4) -> None:
-        self._pool = ThreadPoolExecutor(
-            max_workers=max_workers,
-            thread_name_prefix="trino-",
-        )
-        self._semaphore = asyncio.Semaphore(max_workers)
+  createbuckets:
+    image: minio/mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set myminio http://minio:9000 minioadmin minioadmin;
+      mc mb myminio/warehouse;
+      mc anonymous set public myminio/warehouse;
+      exit 0;
+      "
 
-    async def run(self, fn, *args, **kwargs):
-        if not self._semaphore.locked():
-            # Semaphore has capacity
-            pass
-        else:
-            raise TrinoPoolBusyError("All Trino worker threads busy")
+  lakekeeper:
+    image: quay.io/lakekeeper/catalog:latest-main
+    depends_on:
+      postgres:
+        condition: service_healthy
+      createbuckets:
+        condition: service_completed_successfully
+    environment:
+      LAKEKEEPER__BASE_URI: http://lakekeeper:8181
+      LAKEKEEPER__LISTEN_PORT: "8181"
+      LAKEKEEPER__PG__DATABASE_URL: postgres://lakekeeper:lakekeeper@postgres:5432/lakekeeper
+      LAKEKEEPER__PG__ENCRYPTION_KEY: deadbeefdeadbeefdeadbeefdeadbeef
+    healthcheck:
+      test: ["CMD", "/home/nonroot/lakekeeper", "healthcheck"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "127.0.0.1:8181:8181"
 
-        async with self._semaphore:
-            loop = asyncio.get_running_loop()
-            return await loop.run_in_executor(self._pool, lambda: fn(*args, **kwargs))
+  # Lakekeeper needs migration + bootstrap
+  migrate:
+    image: quay.io/lakekeeper/catalog:latest-main
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: migrate
+    environment:
+      LAKEKEEPER__PG__DATABASE_URL: postgres://lakekeeper:lakekeeper@postgres:5432/lakekeeper
+      LAKEKEEPER__PG__ENCRYPTION_KEY: deadbeefdeadbeefdeadbeefdeadbeef
+
+  bootstrap:
+    image: curlimages/curl
+    depends_on:
+      lakekeeper:
+        condition: service_healthy
+    command: >
+      -X POST http://lakekeeper:8181/management/v1/bootstrap
+      -H "Content-Type: application/json"
+      -d '{"accept-terms": true}'
+
+  initwarehouse:
+    image: curlimages/curl
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+    command: >
+      -X POST http://lakekeeper:8181/management/v1/warehouse
+      -H "Content-Type: application/json"
+      -d '{"warehouse-name":"test","project-id":"00000000-0000-0000-0000-000000000000","storage-profile":{"type":"s3","bucket":"warehouse","endpoint":"http://minio:9000","region":"us-east-1","path-style-access":true,"flavor":"minio","sts-enabled":false},"storage-credential":{"type":"s3","credential-type":"access-key","aws-access-key-id":"minioadmin","aws-secret-access-key":"minioadmin"}}'
+
+  trino:
+    image: trinodb/trino:480
+    depends_on:
+      initwarehouse:
+        condition: service_completed_successfully
+    ports:
+      - "127.0.0.1:8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/v1/info | grep -q '\"starting\":false'"]
+      interval: 5s
+      timeout: 10s
+      retries: 30
+    volumes:
+      - ./trino/etc/catalog/iceberg.properties:/etc/trino/catalog/iceberg.properties:ro
+
+networks:
+  default:
+    name: mcp-trino-test
 ```
-
-[VERIFIED: Python stdlib ThreadPoolExecutor + asyncio.Semaphore API]
 
 ## State of the Art
 
 | Old Approach | Current Approach | When Changed | Impact |
 |--------------|------------------|--------------|--------|
-| HTTP+SSE transport | Streamable HTTP | MCP spec 2025-03-26 | Phase 1 already handles this |
-| `requests` in trino client | Still `requests` (not migrated) | N/A | Must use asyncio.to_thread; cancel via httpx |
-| `/v1/query/{queryId}` cancel | `DELETE nextUri` | Always was nextUri in protocol | D-08 references must target nextUri |
+| `JWTAuthentication(static_token)` | Custom per-call auth or new connection per request | Current | Required for D-12 per-request JWT refresh |
+| `cursor.cancel()` for query termination | Direct `DELETE /v1/query/{queryId}` via httpx | Current | Reliable confirmed cancellation per D-08 |
+| `pytest-docker-compose` | `testcontainers[compose]` DockerCompose | 2024+ | `pytest-docker-compose` is stale; testcontainers actively maintained |
+| `docker-compose` (v1 binary) | `docker compose` (v2 plugin) | 2023+ | testcontainers uses Compose v2; ensure `docker compose` (space) works |
 
 ## Assumptions Log
 
 | # | Claim | Section | Risk if Wrong |
 |---|-------|---------|---------------|
-| A1 | Cancelled queries transition to FAILED state in system.runtime.queries | Trino Query States | Cancel confirmation logic would need different state check; LOW risk -- verifiable via integration test |
-| A2 | testcontainers DockerCompose has wait_for() method with URL parameter | Code Examples | May need different wait strategy API; LOW risk -- fallback to manual healthcheck polling |
-| A3 | Lakekeeper requires explicit warehouse registration POST before Trino can use it | Pitfall 6 | Init container may not be needed if auto-registration exists; LOW risk -- verifiable during compose setup |
-| A4 | TrinoPoolBusyError should be raised before acquiring semaphore (backpressure) | Code Examples | Could alternatively queue with timeout; MEDIUM risk -- D-04 says "reject with backpressure" |
+| A1 | `set_http_session` is called per-connection, not per-request, in trino-python-client | Pattern 3 (Per-Call JWT) | If per-connection, the custom auth class won't refresh per-call; would need new connection per request instead |
+| A2 | Trino version string from `system.runtime.nodes` is always numeric-prefixed (e.g., "480", "480-e") | Pitfall 7 | Version parsing regex may fail on unexpected formats |
+| A3 | Lakekeeper bootstrap API at `/management/v1/bootstrap` + `/management/v1/warehouse` | Docker Compose example | If API paths changed, init containers fail; verify against actual Lakekeeper version |
+| A4 | `DELETE /v1/query/{queryId}` returns 204 on success | Cancel pattern | If Trino returns different status codes, cancel confirmation logic needs adjustment |
+| A5 | `GET /v1/query/{queryId}` returns query info with state field | Cancel polling | If endpoint doesn't exist or returns different shape, polling fails |
 
 ## Open Questions
 
-1. **nextUri vs /v1/query/{queryId} for cancellation**
-   - What we know: The Trino client protocol documents only `DELETE nextUri`. CONTEXT.md D-08 references `/v1/query/{queryId}`.
-   - What's unclear: Whether the CONTEXT.md reference was aspirational or reflects an undocumented internal API.
-   - Recommendation: Use `DELETE nextUri` via httpx (correct protocol), capture `query_id` for logging/confirmation only. The D-08 intent (async cancel via httpx, not sync trino client) is honored; only the URL target changes.
+1. **set_http_session call frequency in trino-python-client**
+   - What we know: JWTAuthentication.set_http_session sets auth on the HTTP session
+   - What's unclear: Is this called once per connection or once per request?
+   - Recommendation: Integration test with a short-lived JWT token to verify; fallback to new-connection-per-request if needed
 
-2. **QueryIdCell.next_uri capture timing**
-   - What we know: `cursor._query._next_uri` is set after the first response and changes with each poll. Cancel needs the current `next_uri`, not the initial one.
-   - What's unclear: Whether capturing `next_uri` from a different thread while the cursor is polling is thread-safe.
-   - Recommendation: The worker thread should update `QueryIdCell.next_uri` on each poll cycle, or the cancel path should call `cursor.cancel()` in the worker thread via a threading.Event signal rather than issuing DELETE from async land.
+2. **Trino 480 DELETE /v1/query/{queryId} exact behavior**
+   - What we know: REST docs say "DELETE to nextUri terminates a running query"
+   - What's unclear: Whether DELETE to /v1/query/{queryId} (not nextUri) also works
+   - Recommendation: Test in integration against Trino 480; if /v1/query/{queryId} doesn't work, fall back to storing and deleting the last-known nextUri
 
-3. **testcontainers DockerCompose exact API**
-   - What we know: DockerCompose exists in `testcontainers.compose`, has start/stop lifecycle.
-   - What's unclear: Exact constructor parameters, wait strategy API, port mapping discovery.
-   - Recommendation: Verify API during implementation; fall back to raw `subprocess` + `docker compose` if needed.
+3. **Lakekeeper healthcheck binary path**
+   - What we know: Lakekeeper docs show a healthcheck command
+   - What's unclear: Exact binary path inside the container image
+   - Recommendation: Verify with `docker run --rm quay.io/lakekeeper/catalog:latest-main ls /home/nonroot/`
 
 ## Environment Availability
 
 | Dependency | Required By | Available | Version | Fallback |
 |------------|------------|-----------|---------|----------|
-| Docker Engine | Integration tests | Yes | 29.3.1 | Skip integration tests |
+| Docker Engine | Integration tests | Yes | 29.3.1 | -- |
 | Docker Compose v2 | Integration tests | Yes | 5.1.1 | -- |
-| Python 3.11+ | Runtime | Yes (3.14) | 3.14.3 | Need 3.11 in CI matrix |
-| trino (PyPI) | Trino adapter | No (not installed) | 0.337.0 available | Install via uv add |
-| sqlglot (PyPI) | SqlClassifier | Yes (manual install) | 30.4.2 | Add to pyproject.toml |
-| testcontainers (PyPI) | Integration tests | No (not installed) | 4.14.2 available | Install via uv add --dev |
-| httpx | Cancel client | Yes | 0.28.1 | Already a dependency |
-| anyio | Thread pool bridge | Yes | 4.13.0 | Already a dependency |
+| Python 3.11+ | Runtime | Yes (3.14.3 via uv) | 3.14.3 | -- |
+| uv | Package management | Yes | 0.11.6 | -- |
+| Trino 480 (via Docker) | Integration tests | Pullable | -- | -- |
+| Lakekeeper (via Docker) | Integration tests | Pullable | -- | -- |
+| MinIO (via Docker) | Integration tests | Pullable | -- | -- |
+| PostgreSQL 16 (via Docker) | Lakekeeper backend | Pullable | -- | -- |
 
-**Missing dependencies with no fallback:** None -- all are installable.
+**Missing dependencies with no fallback:** None.
 
-**Missing dependencies with fallback:** None -- all are available.
+**Missing dependencies with fallback:** None.
 
 ## Validation Architecture
 
 ### Test Framework
 | Property | Value |
 |----------|-------|
-| Framework | pytest 8.3+ with pytest-asyncio 1.3.0 |
-| Config file | `pyproject.toml` [tool.pytest.ini_options] |
+| Framework | pytest 8.x + pytest-asyncio 1.3.x |
+| Config file | pyproject.toml `[tool.pytest.ini_options]` |
 | Quick run command | `uv run pytest -m "not integration" -x` |
 | Full suite command | `uv run pytest -x` |
 
 ### Phase Requirements -> Test Map
 | Req ID | Behavior | Test Type | Automated Command | File Exists? |
 |--------|----------|-----------|-------------------|-------------|
-| TRN-04 | SqlClassifier rejects DML/DDL, allows SELECT/EXPLAIN/SHOW | unit | `uv run pytest tests/safety/test_sql_classifier.py -x` | Wave 0 |
-| TRN-05 | Architectural test: every TrinoClient method with sql param calls assert_read_only first | unit | `uv run pytest tests/safety/test_classifier_invariant.py -x` | Wave 0 |
-| TRN-02/15 | ThreadPool bounded, semaphore enforced, event loop not blocked | unit+integration | `uv run pytest tests/test_trino_pool.py -x` | Wave 0 |
-| TRN-01/09 | fetch_plan, fetch_analyze_plan, fetch_distributed_plan work | integration | `uv run pytest tests/integration/test_trino_adapter.py -x -m integration` | Wave 0 |
-| TRN-03 | No-auth, Basic, JWT all work | integration | `uv run pytest tests/integration/test_trino_auth.py -x -m integration` | Wave 0 |
-| TRN-06 | Cancel via DELETE nextUri, query leaves runtime.queries | integration | `uv run pytest tests/integration/test_trino_cancel.py -x -m integration` | Wave 0 |
-| TRN-07/08/14 | Capability probe: version, catalog, refuse < 429 | unit+integration | `uv run pytest tests/test_capabilities.py -x` | Wave 0 |
-| TRN-10 | system.runtime.*, Iceberg metadata tables read | integration | `uv run pytest tests/integration/test_metadata_tables.py -x -m integration` | Wave 0 |
-| TRN-11 | Structured query log with statement_hash | unit | `uv run pytest tests/test_query_logging.py -x` | Wave 0 |
-| TRN-12/13 | OfflinePlanSource parses JSON, returns same type as live | unit | `uv run pytest tests/test_offline_plan_source.py -x` | Wave 0 |
+| TRN-01 | HTTP REST via trino-python-client | integration | `uv run pytest tests/integration/test_fetch_plans.py -x` | No -- Wave 0 |
+| TRN-02 | asyncio.to_thread bounded pool | unit + integration | `uv run pytest tests/adapters/test_pool.py tests/integration/test_event_loop_lag.py -x` | No -- Wave 0 |
+| TRN-03 | No-auth, Basic, JWT auth | unit + integration | `uv run pytest tests/adapters/test_auth.py tests/integration/test_auth.py -x` | No -- Wave 0 |
+| TRN-04 | SqlClassifier AST allowlist | unit | `uv run pytest tests/safety/test_sql_classifier.py -x` | No -- Wave 0 |
+| TRN-05 | Architectural invariant test | unit | `uv run pytest tests/adapters/test_trino_client_invariant.py -x` | No -- Wave 0 |
+| TRN-06 | Cancel sends DELETE + confirms | integration | `uv run pytest tests/integration/test_cancellation.py -x` | No -- Wave 0 |
+| TRN-07 | Version probe + refuse < 429 | unit + integration | `uv run pytest tests/adapters/test_capabilities.py tests/integration/test_capabilities.py -x` | No -- Wave 0 |
+| TRN-08 | Iceberg catalog probe | integration | `uv run pytest tests/integration/test_capabilities.py -x` | No -- Wave 0 |
+| TRN-09 | Fetch EXPLAIN variants | integration | `uv run pytest tests/integration/test_fetch_plans.py -x` | No -- Wave 0 |
+| TRN-10 | system.runtime.* + Iceberg metadata | integration | `uv run pytest tests/integration/test_metadata_tables.py -x` | No -- Wave 0 |
+| TRN-11 | Statement logging with hash | unit | `uv run pytest tests/adapters/test_query_logging.py -x` | No -- Wave 0 |
+| TRN-12 | OfflinePlanSource | unit | `uv run pytest tests/adapters/test_offline_plan_source.py -x` | No -- Wave 0 |
+| TRN-13 | Live + offline share ports | unit | `uv run pytest tests/adapters/test_port_conformance.py -x` | No -- Wave 0 |
+| TRN-14 | Refuse Trino < 429 | unit | `uv run pytest tests/adapters/test_capabilities.py -x` | No -- Wave 0 |
+| TRN-15 | Semaphore (max 4 concurrent) | unit | `uv run pytest tests/adapters/test_pool.py -x` | No -- Wave 0 |
 
 ### Sampling Rate
 - **Per task commit:** `uv run pytest -m "not integration" -x`
-- **Per wave merge:** `uv run pytest -x` (full suite including integration if Docker available)
-- **Phase gate:** Full suite green before `/gsd-verify-work`
+- **Per wave merge:** `uv run pytest -x` (includes integration if Docker available)
+- **Phase gate:** Full suite green before /gsd-verify-work
 
 ### Wave 0 Gaps
-- [ ] `tests/safety/test_sql_classifier.py` -- covers TRN-04
-- [ ] `tests/safety/test_classifier_invariant.py` -- covers TRN-05
-- [ ] `tests/test_trino_pool.py` -- covers TRN-02, TRN-15
-- [ ] `tests/test_capabilities.py` -- covers TRN-07, TRN-08, TRN-14
-- [ ] `tests/test_query_logging.py` -- covers TRN-11
-- [ ] `tests/test_offline_plan_source.py` -- covers TRN-12, TRN-13
+- [ ] `tests/safety/test_sql_classifier.py` -- TRN-04, TRN-05 classifier corpus
+- [ ] `tests/adapters/test_trino_client_invariant.py` -- TRN-05 architectural invariant
+- [ ] `tests/adapters/test_pool.py` -- TRN-02, TRN-15 thread pool + semaphore
+- [ ] `tests/adapters/test_auth.py` -- TRN-03 auth mode construction
+- [ ] `tests/adapters/test_capabilities.py` -- TRN-07, TRN-14 version parsing
+- [ ] `tests/adapters/test_query_logging.py` -- TRN-11 statement logging
+- [ ] `tests/adapters/test_offline_plan_source.py` -- TRN-12 offline mode
+- [ ] `tests/adapters/test_port_conformance.py` -- TRN-13 port protocol check
 - [ ] `tests/integration/conftest.py` -- session-scoped compose fixture
-- [ ] `tests/integration/fixtures.py` -- DDL bypass helper (D-25)
-- [ ] `tests/integration/test_trino_adapter.py` -- covers TRN-01, TRN-09
-- [ ] `tests/integration/test_trino_auth.py` -- covers TRN-03
-- [ ] `tests/integration/test_trino_cancel.py` -- covers TRN-06
-- [ ] `tests/integration/test_metadata_tables.py` -- covers TRN-10
-- [ ] `.testing/docker-compose.yml` -- Trino 480 + Lakekeeper + MinIO + Postgres
+- [ ] `tests/integration/fixtures.py` -- DDL bypass helper
+- [ ] `tests/integration/test_fetch_plans.py` -- TRN-01, TRN-09
+- [ ] `tests/integration/test_cancellation.py` -- TRN-06
+- [ ] `tests/integration/test_auth.py` -- TRN-03 live auth
+- [ ] `tests/integration/test_capabilities.py` -- TRN-07, TRN-08
+- [ ] `tests/integration/test_metadata_tables.py` -- TRN-10
+- [ ] `tests/integration/test_event_loop_lag.py` -- TRN-02 event loop probe
+- [ ] `.testing/docker-compose.yml` -- integration stack
+- [ ] `.testing/trino/etc/catalog/iceberg.properties` -- Trino catalog config
 
 ## Security Domain
 
@@ -614,53 +752,57 @@ class TrinoThreadPool:
 
 | ASVS Category | Applies | Standard Control |
 |---------------|---------|-----------------|
-| V2 Authentication | Yes | Custom `PerCallJWTAuthentication`; `BasicAuthentication` from trino client; `SecretStr` for credentials |
-| V3 Session Management | No | No HTTP sessions -- each Trino statement is independent |
-| V4 Access Control | Yes | SqlClassifier allowlist gate -- defense in depth against SQL injection |
-| V5 Input Validation | Yes | sqlglot AST parsing (not regex); schema_lint maxLength bounds |
-| V6 Cryptography | No | TLS termination delegated to reverse proxy |
+| V2 Authentication | Yes | `trino.auth.BasicAuthentication` / custom JWT; `SecretStr` for sensitive fields |
+| V3 Session Management | No | No web sessions; stateless per-request |
+| V4 Access Control | Yes | `SqlClassifier` read-only gate; bounded thread pool prevents resource exhaustion |
+| V5 Input Validation | Yes | `sqlglot.parse` for SQL; `pydantic` for all Settings; `MAX_PLAN_JSON_LEN` for offline input |
+| V6 Cryptography | No | No custom crypto; TLS handled by httpx/trino client `verify=True` |
 
 ### Known Threat Patterns for Trino Adapter
 
 | Pattern | STRIDE | Standard Mitigation |
 |---------|--------|---------------------|
-| SQL injection via tool input | Tampering | SqlClassifier AST-based allowlist; reject anything not SELECT/EXPLAIN/SHOW |
-| DDL/DML bypass via comments | Tampering | sqlglot parser strips comments before AST classification |
-| DDL/DML bypass via Unicode escapes | Tampering | sqlglot normalizes Unicode during tokenization |
-| Multi-statement injection | Tampering | Reject when `sqlglot.parse()` returns > 1 statement |
-| EXPLAIN ANALYZE wrapping DML | Tampering | Recursive inner-statement validation |
-| Credential leak in logs | Info Disclosure | structlog redaction denylist; JWT as SecretStr; SQL logged as hash only |
-| Orphaned long-running queries | Denial of Service | Cancel-on-timeout with confirmed deletion; bounded concurrency semaphore |
-| Token replay via log scraping | Info Disclosure | JWT never cached in memory beyond single call; never logged |
+| SQL injection via classifier bypass | Tampering | AST-based allowlist (not regex); reject multi-statement; reject Command nodes not in allowlist |
+| Comment-wrapped DDL (`/* DROP */ SELECT 1`) | Tampering | sqlglot strips comments during parsing; AST contains only semantic content |
+| Unicode escape tricks (`SELECT\u002A`) | Tampering | sqlglot normalizes Unicode during tokenization; classifier sees AST, not raw text |
+| EXPLAIN ANALYZE wrapping dangerous SQL | Tampering | Recursive validation of inner statement extracted from Command expression |
+| JWT token leakage via logs | Information Disclosure | `SecretStr`, structlog redaction denylist, statement hash instead of raw SQL |
+| Orphaned queries on Trino cluster | Denial of Service | Confirmed cancellation via DELETE + polling; bounded timeout; semaphore limits concurrency |
+| Thread pool exhaustion | Denial of Service | Bounded `ThreadPoolExecutor(max_workers=4)` + `asyncio.Semaphore(4)` + `TrinoPoolBusyError` |
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- sqlglot 30.4.2 local testing -- AST types for all SQL statement categories [VERIFIED: local Python execution]
-- [trino-python-client GitHub source (client.py)](https://github.com/trinodb/trino-python-client/blob/master/trino/client.py) -- cancel(), query_id, next_uri mechanics [VERIFIED: WebFetch]
-- [trino-python-client GitHub source (auth.py)](https://github.com/trinodb/trino-python-client/blob/master/trino/auth.py) -- Authentication ABC, JWTAuthentication(token: str) [VERIFIED: WebFetch]
-- [trino-python-client GitHub source (dbapi.py)](https://github.com/trinodb/trino-python-client/blob/master/trino/dbapi.py) -- Cursor.cancel(), Cursor.query_id [VERIFIED: WebFetch]
-- [Trino 480 client REST API docs](https://trino.io/docs/current/develop/client-protocol.html) -- DELETE nextUri for cancellation [VERIFIED: WebFetch]
-- [Trino 480 Iceberg connector docs](https://trino.io/docs/current/connector/iceberg.html) -- metadata table syntax [CITED]
-- [trino PyPI 0.337.0](https://pypi.org/project/trino/) -- latest version [VERIFIED: PyPI API]
-- [testcontainers PyPI 4.14.2](https://pypi.org/project/testcontainers/) -- latest version [VERIFIED: PyPI API]
-- [sqlglot PyPI 30.4.2](https://pypi.org/project/sqlglot/) -- installed and tested [VERIFIED: local install]
+- [trino 0.337.0 on PyPI](https://pypi.org/project/trino/) -- version verified 2026-04-12
+- [sqlglot 30.4.2 on PyPI](https://pypi.org/project/sqlglot/) -- version verified 2026-04-12
+- [testcontainers 4.14.2 on PyPI](https://pypi.org/project/testcontainers/) -- version verified 2026-04-12
+- [tenacity 9.1.4 on PyPI](https://pypi.org/project/tenacity/) -- version verified 2026-04-12
+- Local sqlglot 30.4.2 testing -- Command fallback, EXPLAIN parsing, multi-statement behavior verified
+- [trino-python-client dbapi.py on GitHub](https://github.com/trinodb/trino-python-client/blob/master/trino/dbapi.py) -- cursor.query_id, cancel(), close()
+- [trino-python-client client.py on GitHub](https://github.com/trinodb/trino-python-client/blob/master/trino/client.py) -- TrinoQuery.cancel() sends DELETE to nextUri
+- [trino-python-client auth.py on GitHub](https://github.com/trinodb/trino-python-client/blob/master/trino/auth.py) -- JWTAuthentication is static string only
+- [Trino 480 REST API docs](https://trino.io/docs/current/develop/client-protocol.html) -- DELETE to nextUri terminates query
+- [Trino 480 Iceberg connector docs](https://trino.io/docs/current/connector/iceberg.html) -- metadata tables ($snapshots, $files, etc.)
+- [Trino 480 System connector docs](https://trino.io/docs/current/connector/system.html) -- system.runtime.* and system.metadata.* tables
+- [trino-python-client Issue #84](https://github.com/trinodb/trino-python-client/issues/84) -- cursor close cancellation fix (resolved via PR #195)
 
 ### Secondary (MEDIUM confidence)
-- [Trino query states](https://github.com/trinodb/trino/issues/23759) -- QUEUED/RUNNING/FINISHING/FINISHED/FAILED lifecycle [CITED: GitHub issues]
-- [Lakekeeper minimal docker-compose](https://github.com/lakekeeper/lakekeeper/blob/main/examples/minimal/docker-compose.yaml) -- compose structure with Trino + Lakekeeper + MinIO + Postgres [CITED: GitHub]
-- [testcontainers-python docs](https://testcontainers-python.readthedocs.io/) -- DockerCompose API [CITED: ReadTheDocs]
+- [Lakekeeper minimal docker-compose example](https://github.com/lakekeeper/lakekeeper/tree/main/examples/minimal) -- service topology and bootstrap pattern
+- [Lakekeeper getting-started docs](https://docs.lakekeeper.io/getting-started/) -- deployment overview
+- [testcontainers-python DockerCompose docs](https://testcontainers-python.readthedocs.io/en/latest/core/README.html) -- session scope guidance
 
 ### Tertiary (LOW confidence)
-- testcontainers DockerCompose exact API (wait_for, get_service_port) -- needs implementation-time verification [ASSUMED]
+- Trino query state values (QUEUED, PLANNING, STARTING, RUNNING, BLOCKED, FINISHING, FINISHED, FAILED) -- from web search, not directly from official schema docs
+- DELETE /v1/query/{queryId} endpoint behavior -- inferred from REST API docs mentioning nextUri DELETE; direct query-id-based DELETE needs integration verification
 
 ## Metadata
 
 **Confidence breakdown:**
-- Standard stack: HIGH -- all packages verified on PyPI with correct versions
-- Architecture: HIGH -- sqlglot AST types verified via local execution; cancel mechanics verified via source review
-- Pitfalls: HIGH -- critical pitfalls (Command catch-all, nextUri vs query_id) verified by testing
-- Integration testing: MEDIUM -- testcontainers API details need implementation-time verification
+- Standard stack: HIGH -- all versions verified on PyPI, trino-python-client source inspected
+- Architecture: HIGH -- patterns verified via local sqlglot testing and GitHub source review
+- Pitfalls: HIGH -- all critical pitfalls verified empirically (sqlglot Command fallback, multi-statement, cancel mechanics)
+- Integration test harness: MEDIUM -- Lakekeeper compose topology from examples, exact API paths assumed
+- Cancel confirmation protocol: MEDIUM -- DELETE /v1/query/{queryId} behavior inferred, needs integration verification
 
 **Research date:** 2026-04-12
-**Valid until:** 2026-05-12 (30 days -- stable ecosystem, pinned versions)
+**Valid until:** 2026-05-12 (stable domain -- trino-python-client and sqlglot release cadence is ~monthly)
