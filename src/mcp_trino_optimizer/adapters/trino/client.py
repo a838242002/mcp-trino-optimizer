@@ -115,7 +115,7 @@ class TrinoClient:
         timeout: float | None = None,
     ) -> ExplainPlan | TimeoutResult[ExplainPlan]:
         self._classifier.assert_read_only(sql)
-        explain_sql = f"EXPLAIN ANALYZE (FORMAT JSON) {sql}"
+        explain_sql = f"EXPLAIN ANALYZE {sql}"
         return await self._execute_explain(explain_sql, "executed", timeout=timeout)
 
     async def fetch_distributed_plan(
@@ -205,7 +205,7 @@ class TrinoClient:
 
     def _make_connection(self) -> Any:  # trino.dbapi is untyped
         """Create a new Trino connection per request (ensures fresh JWT per D-12)."""
-        http_scheme = "https" if self._settings.trino_auth_mode != "none" else "http"
+        http_scheme = "https" if self._settings.trino_verify_ssl else "http"
         return trino.dbapi.connect(  # type: ignore[no-untyped-call]
             host=self._settings.trino_host or "localhost",
             port=self._settings.trino_port,
@@ -279,6 +279,14 @@ class TrinoClient:
 
         try:
             result = await self._pool.run(self._run_in_thread, sql, handle)
+        except trino.exceptions.HttpError as exc:
+            # Trino raises HttpError (not TrinoExternalError) for protocol-level
+            # 401s such as "Password not allowed for insecure authentication".
+            raise TrinoAuthError(
+                f"Authentication failed: {exc}",
+                request_id=handle.request_id,
+                query_id=handle.query_id or "",
+            ) from exc
         except trino.exceptions.TrinoExternalError as exc:
             if not _is_401_error(exc):
                 raise

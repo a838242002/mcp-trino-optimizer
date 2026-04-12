@@ -41,7 +41,7 @@ def compose_stack() -> Generator["DockerCompose", None, None]:
         return  # unreachable but satisfies type checker
 
     compose = DockerCompose(
-        filepath=_get_testing_dir(),
+        context=_get_testing_dir(),
         compose_file_name="docker-compose.yml",
     )
     compose.start()
