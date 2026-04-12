@@ -34,6 +34,7 @@ from mcp_trino_optimizer._context import (
     bind_trino_query_id,
     current_request_id,
 )
+from mcp_trino_optimizer.adapters.trino._explain_plan import ExplainPlan
 from mcp_trino_optimizer.adapters.trino.auth import build_authentication
 from mcp_trino_optimizer.adapters.trino.classifier import SqlClassifier
 from mcp_trino_optimizer.adapters.trino.errors import TrinoAuthError, TrinoClassifierRejected
@@ -42,7 +43,6 @@ from mcp_trino_optimizer.adapters.trino.handle import (
     QueryIdCell,
     TimeoutResult,
 )
-from mcp_trino_optimizer.adapters.trino._explain_plan import ExplainPlan
 from mcp_trino_optimizer.adapters.trino.pool import TrinoThreadPool
 from mcp_trino_optimizer.logging_setup import get_logger
 from mcp_trino_optimizer.settings import Settings

@@ -26,24 +26,24 @@ SCAN_FILTER_AND_PROJECT = "ScanFilterAndProject"
 # NOTE: bare "=" is too broad — it also appears in "table = schema.name" descriptor entries.
 # We check for WHERE keyword, filterPredicate key, SQL predicate keywords, and
 # comparison operators other than plain "=" (e.g. !=, <>, >=, <=, >, <).
-_FILTER_KEYWORDS = frozenset({
-    "WHERE",
-    "FILTERPREDICATE",   # Trino detail line key (case-insensitive match used below)
-    "BETWEEN",
-    "LIKE",
-    "IS NULL",
-    "IS NOT NULL",
-    "IS DISTINCT",
-    "NOT IN",
-})
+_FILTER_KEYWORDS = frozenset(
+    {
+        "WHERE",
+        "FILTERPREDICATE",  # Trino detail line key (case-insensitive match used below)
+        "BETWEEN",
+        "LIKE",
+        "IS NULL",
+        "IS NOT NULL",
+        "IS DISTINCT",
+        "NOT IN",
+    }
+)
 
 # Comparison operators that definitively indicate a predicate (not a descriptor key=value)
 _COMPARISON_OPS_RE = re.compile(r"(?:!=|<>|>=|<=|(?<![=<>!])[><](?![=]))")
 
 
-def normalize_plan_tree(
-    root: PlanNode, warnings: list[SchemaDriftWarning]
-) -> PlanNode:
+def normalize_plan_tree(root: PlanNode, warnings: list[SchemaDriftWarning]) -> PlanNode:
     """Normalize the plan tree, decomposing fused operators.
 
     Performs bottom-up (children-first) transformation so that nested
@@ -59,19 +59,14 @@ def normalize_plan_tree(
     return _normalize_node(root, "root", warnings)
 
 
-def _normalize_node(
-    node: PlanNode, path: str, warnings: list[SchemaDriftWarning]
-) -> PlanNode:
+def _normalize_node(node: PlanNode, path: str, warnings: list[SchemaDriftWarning]) -> PlanNode:
     """Recursively normalize a single node and its children.
 
     Children are normalized first (bottom-up) so that nested fused nodes
     inside subtrees are handled before the parent.
     """
     # First, normalize all children recursively (bottom-up)
-    new_children = [
-        _normalize_node(child, f"{path}.children[{i}]", warnings)
-        for i, child in enumerate(node.children)
-    ]
+    new_children = [_normalize_node(child, f"{path}.children[{i}]", warnings) for i, child in enumerate(node.children)]
 
     # Rebuild node with normalized children if any changed
     if new_children != list(node.children):
@@ -109,9 +104,7 @@ def _get_estimate(estimates: list[CostEstimate], index: int) -> list[CostEstimat
     return []
 
 
-def _decompose_scan_filter_and_project(
-    node: PlanNode, path: str, warnings: list[SchemaDriftWarning]
-) -> PlanNode:
+def _decompose_scan_filter_and_project(node: PlanNode, path: str, warnings: list[SchemaDriftWarning]) -> PlanNode:
     """Decompose a ScanFilterAndProject node into TableScan + Filter + Project.
 
     Per 03-RESEARCH.md Pattern 5:

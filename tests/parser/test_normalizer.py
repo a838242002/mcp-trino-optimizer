@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from mcp_trino_optimizer.parser.models import CostEstimate, OutputSymbol, PlanNode
+
 
 def _make_scan_filter_and_project(
     node_id: str = "1",
     with_filter: bool = True,
     children: list | None = None,
-) -> "PlanNode":  # type: ignore[name-defined]
-    from mcp_trino_optimizer.parser.models import CostEstimate, OutputSymbol, PlanNode
+) -> PlanNode:
 
     details = []
     if with_filter:
@@ -24,8 +25,8 @@ def _make_scan_filter_and_project(
         details=details,
         estimates=[
             CostEstimate(output_row_count=1000.0, cpu_cost=100.0),  # scan
-            CostEstimate(output_row_count=100.0, cpu_cost=50.0),    # filter
-            CostEstimate(output_row_count=100.0, cpu_cost=10.0),    # project
+            CostEstimate(output_row_count=100.0, cpu_cost=50.0),  # filter
+            CostEstimate(output_row_count=100.0, cpu_cost=10.0),  # project
         ],
         children=children or [],
     )

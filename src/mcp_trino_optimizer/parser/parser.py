@@ -55,9 +55,7 @@ def parse_estimated_plan(json_text: str, trino_version: str | None = None) -> Es
         raise ParseError(f"Invalid JSON: {exc}") from exc
 
     if not isinstance(data, dict):
-        raise ParseError(
-            f"Expected a JSON object (dict) at the top level, got {type(data).__name__}"
-        )
+        raise ParseError(f"Expected a JSON object (dict) at the top level, got {type(data).__name__}")
 
     warnings: list[SchemaDriftWarning] = []
     root = _build_node(data, "root", warnings, depth=0)
@@ -372,9 +370,7 @@ def _get_indent_depth(line: str) -> int:
     return len(line) - len(line.lstrip())
 
 
-def _parse_explain_analyze_text(
-    text: str, warnings: list[SchemaDriftWarning]
-) -> PlanNode:
+def _parse_explain_analyze_text(text: str, warnings: list[SchemaDriftWarning]) -> PlanNode:
     """Parse EXPLAIN ANALYZE text into a PlanNode tree.
 
     Strategy: Identify operator lines by their CamelCase names at various
@@ -407,14 +403,21 @@ def _parse_explain_analyze_text(
         # An operator line has a CamelCase name and typically follows tree structure
         # It should NOT start with metric keywords
         metric_keywords = {
-            "CPU:", "Scheduled:", "Blocked:", "Output:", "Input:", "Peak", "Input",
-            "Layout:", "Estimates:", "Distribution:", "Physical",
+            "CPU:",
+            "Scheduled:",
+            "Blocked:",
+            "Output:",
+            "Input:",
+            "Peak",
+            "Input",
+            "Layout:",
+            "Estimates:",
+            "Distribution:",
+            "Physical",
         }
         stripped_for_keyword = line.lstrip()
         is_metric_line = any(
-            stripped_for_keyword.startswith(kw) or
-            stripped_for_keyword.startswith(kw.lower())
-            for kw in metric_keywords
+            stripped_for_keyword.startswith(kw) or stripped_for_keyword.startswith(kw.lower()) for kw in metric_keywords
         )
         # Also catch lines like "Files read: N"
         is_metric_line = is_metric_line or bool(_FILES_READ_RE.search(line))
@@ -463,9 +466,7 @@ def _parse_explain_analyze_text(
     return _build_tree_from_operators(operators, warnings)
 
 
-def _extract_metrics_from_line(
-    line: str, op: dict[str, Any], warnings: list[SchemaDriftWarning]
-) -> None:
+def _extract_metrics_from_line(line: str, op: dict[str, Any], warnings: list[SchemaDriftWarning]) -> None:
     """Extract runtime metrics from a metric line and update the operator dict."""
     # CPU time
     cpu_m = _CPU_LINE_RE.search(line)
@@ -475,16 +476,12 @@ def _extract_metrics_from_line(
     # Wall/scheduled time
     sched_m = _SCHEDULED_LINE_RE.search(line)
     if sched_m:
-        op["wall_time_ms"] = _parse_duration_to_ms(
-            sched_m.group("sched_val"), sched_m.group("sched_unit")
-        )
+        op["wall_time_ms"] = _parse_duration_to_ms(sched_m.group("sched_val"), sched_m.group("sched_unit"))
 
     # Blocked time
     blocked_m = _BLOCKED_LINE_RE.search(line)
     if blocked_m:
-        op["blocked_time_ms"] = _parse_duration_to_ms(
-            blocked_m.group("blocked_val"), blocked_m.group("blocked_unit")
-        )
+        op["blocked_time_ms"] = _parse_duration_to_ms(blocked_m.group("blocked_val"), blocked_m.group("blocked_unit"))
 
     # Output rows/bytes
     output_m = _OUTPUT_LINE_RE.search(line)
@@ -503,9 +500,7 @@ def _extract_metrics_from_line(
     # Peak memory
     peak_m = _PEAK_MEMORY_RE.search(line)
     if peak_m:
-        op["peak_memory_bytes"] = _parse_size_to_bytes(
-            peak_m.group("size"), peak_m.group("unit")
-        )
+        op["peak_memory_bytes"] = _parse_size_to_bytes(peak_m.group("size"), peak_m.group("unit"))
 
     # Files read (Iceberg)
     files_m = _FILES_READ_RE.search(line)
@@ -513,9 +508,7 @@ def _extract_metrics_from_line(
         op["iceberg_file_count"] = int(files_m.group("count"))
 
 
-def _build_tree_from_operators(
-    operators: list[dict[str, Any]], warnings: list[SchemaDriftWarning]
-) -> PlanNode:
+def _build_tree_from_operators(operators: list[dict[str, Any]], warnings: list[SchemaDriftWarning]) -> PlanNode:
     """Reconstruct a PlanNode tree from a flat list of operators with indent levels.
 
     Uses a stack to track the current parent chain. An operator at indent level N

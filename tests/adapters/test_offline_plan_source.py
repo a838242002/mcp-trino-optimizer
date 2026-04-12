@@ -10,6 +10,8 @@ import json
 
 import pytest
 
+from mcp_trino_optimizer.parser.models import ParseError
+
 VALID_ESTIMATED_PLAN = json.dumps(
     {
         "id": "0",
@@ -88,7 +90,7 @@ class TestFetchPlan:
         from mcp_trino_optimizer.adapters.offline.json_plan_source import OfflinePlanSource
 
         source = OfflinePlanSource()
-        with pytest.raises(Exception):
+        with pytest.raises(ParseError):
             await source.fetch_plan("not valid json {{{")
 
     async def test_empty_string_raises_value_error(self) -> None:
@@ -96,7 +98,7 @@ class TestFetchPlan:
         from mcp_trino_optimizer.adapters.offline.json_plan_source import OfflinePlanSource
 
         source = OfflinePlanSource()
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="empty"):
             await source.fetch_plan("")
 
     async def test_plan_exceeding_1mb_raises_value_error(self) -> None:
@@ -171,7 +173,7 @@ class TestFetchDistributedPlan:
         from mcp_trino_optimizer.adapters.offline.json_plan_source import OfflinePlanSource
 
         source = OfflinePlanSource()
-        with pytest.raises(Exception):
+        with pytest.raises(ParseError):
             await source.fetch_distributed_plan("bad json")
 
 
