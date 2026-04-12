@@ -116,7 +116,10 @@ Requirements cluster naturally into 9 functional areas that map one-to-one onto 
   3. Recommendation narrative is composed entirely from templates keyed by `rule_id` that live in source control; a unit test injects a user-origin SQL string containing a prompt-injection attempt and asserts that string never appears verbatim in any recommendation body — only templated references to plan operator IDs and rule-declared evidence fields do. (REC-03)
   4. When a rule's fix is a Trino session property, the recommendation embeds the exact `SET SESSION` statement using the property name read from the `trino_session_properties` resource; a test with a stub resource that omits a property name asserts the recommendation falls back to an advisory-only message rather than fabricating a property name. (REC-05)
   5. For any analysis that touches an Iceberg table, the recommender emits an Iceberg table health summary with snapshot count, small-file ratio, delete-file ratio, partition spec evolution state, and last compaction reference, plus an operator-level bottleneck ranking with a templated natural-language narrative for the top N operators — both rendered from structured evidence with no free-form text. (REC-06, REC-07)
-**Plans**: *(Not yet planned — run `/gsd-plan-phase 5` to generate plans)*
+**Plans**: 3 plans across 3 waves
+  - [ ] 05-01-models-scoring-impact-PLAN.md — Wave 1: Recommendation models, priority scoring formula, impact extractors for all 14 rules
+  - [ ] 05-02-conflicts-templates-session-PLAN.md — Wave 2: Conflict resolution, audited narrative templates, session property data module, RecommendationEngine
+  - [ ] 05-03-health-bottleneck-integration-PLAN.md — Wave 3: Iceberg table health aggregator, operator bottleneck ranking, full pipeline integration
 **UI hint**: no
 **Needs research**: no
 
