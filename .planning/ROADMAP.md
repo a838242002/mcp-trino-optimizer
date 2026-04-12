@@ -23,7 +23,7 @@ Requirements cluster naturally into 9 functional areas that map one-to-one onto 
 - [x] **Phase 1: Skeleton & Safety Foundation** - Server boots on stdio and Streamable HTTP, answers `initialize`, exposes `mcp_selftest`, ships via uv/uvx/pip/Docker; all critical safety foundations (stdio discipline, redaction, untrusted envelope, strict schemas) in place
 - [x] **Phase 2: Trino Adapter & Read-Only Gate** - Live Trino client with AST-based read-only classifier, cancel/timeout propagation, async wrapper, version + capability probes, offline plan source; no plan parsing yet (completed 2026-04-12)
 - [x] **Phase 3: Plan Parser & Normalizer** - Typed `EstimatedPlan` / `ExecutedPlan` from `EXPLAIN (FORMAT JSON)` and `EXPLAIN ANALYZE`, tolerant-tree with `raw` bags, multi-version Trino fixture corpus parses clean (completed 2026-04-12)
-- [ ] **Phase 4: Rule Engine & 13 Deterministic Rules** - Plugin registry, prefetch + isolated-failure engine, all table-stakes rules (R1-R9 + I1/I3/I6/I8 + D11) producing `RuleFinding` with evidence
+- [x] **Phase 4: Rule Engine & 13 Deterministic Rules** - Plugin registry, prefetch + isolated-failure engine, all table-stakes rules (R1-R9 + I1/I3/I6/I8 + D11) producing `RuleFinding` with evidence (completed 2026-04-13)
 - [ ] **Phase 5: Recommendation Engine** - Scored, prioritized `Recommendation` objects with conflict resolution, audited rule-ID-keyed templates, session-property grounding, Iceberg table health summary, operator bottleneck ranking
 - [ ] **Phase 6: Safe SQL Rewrite Engine** - sqlglot-AST whitelist rewrites (projection pruning, function-wrapped predicate unwrap, partition-transform-aligned rewrite) with preconditions, diff, and round-trip validation
 - [ ] **Phase 7: Comparison Engine** - CPU-time-primary before/after `ComparisonReport` with N=5 paired alternation, snapshot pinning, correctness-delta check, HIGH/MEDIUM/LOW confidence classifier
@@ -99,10 +99,10 @@ Requirements cluster naturally into 9 functional areas that map one-to-one onto 
   4. Every rule ships with three fixture classes: a synthetic-minimum unit fixture, a realistic-from-compose fixture (captured via the Phase 3 multi-version corpus), and a negative-control fixture that the rule must NOT trigger on; the negative-control tests serve as regression guards against false positives and are part of CI. (RUL-06)
   5. Every rule threshold is declared in a config-overridable constants file with a sourced citation comment (no magic numbers); changing a threshold via config re-runs the fixture tests and at least one negative-control starts or stops triggering — verified by a parameterized test that proves the thresholds are actually data-driven. (RUL-21)
 **Plans**: 4 plans across 4 waves
-  - [ ] 04-01-rule-infrastructure-PLAN.md — Wave 1: walk() WR-01 fix + findings + evidence + base + registry + thresholds + engine + all test stubs
-  - [ ] 04-02-general-rules-r1-r4-PLAN.md — Wave 2: R1 missing stats, R2 partition pruning, R3 predicate pushdown, R4 dynamic filtering
-  - [ ] 04-03-general-rules-r5-r9-d11-PLAN.md — Wave 3: R5 broadcast, R6 join order, R7 skew, R8 exchange, R9 low selectivity, D11 cost vs actual
-  - [ ] 04-04-iceberg-rules-i1-i3-i6-i8-PLAN.md — Wave 4: I1 small files, I3 delete files, I6 stale snapshots, I8 partition transform
+  - [x] 04-01-rule-infrastructure-PLAN.md — Wave 1: walk() WR-01 fix + findings + evidence + base + registry + thresholds + engine + all test stubs
+  - [x] 04-02-general-rules-r1-r4-PLAN.md — Wave 2: R1 missing stats, R2 partition pruning, R3 predicate pushdown, R4 dynamic filtering
+  - [x] 04-03-general-rules-r5-r9-d11-PLAN.md — Wave 3: R5 broadcast, R6 join order, R7 skew, R8 exchange, R9 low selectivity, D11 cost vs actual
+  - [x] 04-04-iceberg-rules-i1-i3-i6-i8-PLAN.md — Wave 4: I1 small files, I3 delete files, I6 stale snapshots, I8 partition transform
 **UI hint**: no
 **Needs research**: done — see 04-RESEARCH.md
 

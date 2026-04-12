@@ -3,18 +3,18 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-04-12T23:59:00.000Z"
+last_updated: "2026-04-13T00:00:00.000Z"
 progress:
   total_phases: 9
-  completed_phases: 3
-  total_plans: 16
-  completed_plans: 14
-  percent: 33
+  completed_phases: 4
+  total_plans: 22
+  completed_plans: 18
+  percent: 44
 ---
 
 # Project State: mcp-trino-optimizer
 
-**Last updated:** 2026-04-12
+**Last updated:** 2026-04-13
 
 ## Project Reference
 
@@ -27,24 +27,24 @@ progress:
 
 ## Current Position
 
-Phase: 04 (rule-engine-deterministic-rules) — NOT STARTED
-Plan: N/A
+Phase: 05 (recommendation-engine) — NOT STARTED
 
 - **Milestone:** v1
 - **Phase 1:** Skeleton & Safety Foundation ✅ COMPLETE (2026-04-12)
 - **Phase 2:** Trino Adapter & Read-Only Gate ✅ COMPLETE (2026-04-12)
 - **Phase 3:** Plan Parser & Normalizer ✅ COMPLETE (2026-04-12)
-- **Status:** Ready to plan Phase 4
-- **Progress:** [███░░░░░░] 3 / 9 phases complete
+- **Phase 4:** Rule Engine & 13 Deterministic Rules ✅ COMPLETE (2026-04-13)
+- **Status:** Ready to plan Phase 5
+- **Progress:** [████░░░░░] 4 / 9 phases complete
 
 ## Performance Metrics
 
 | Metric | Value |
 |--------|-------|
-| Phases complete | 3 / 9 |
-| Plans complete | 14 / 14 (Phases 1–3) |
-| Requirements delivered | ~35 / 102 (PLAT-01–13, TRN-01–15, PLN-01–07) |
-| Rule-engine rules shipped | 0 / 13 (target in Phase 4) |
+| Phases complete | 4 / 9 |
+| Plans complete | 18 / 18 (Phases 1–4) |
+| Requirements delivered | ~56 / 102 (PLAT-01–13, TRN-01–15, PLN-01–07, RUL-01–21) |
+| Rule-engine rules shipped | 14 / 14 (R1–R9, I1/I3/I6/I8, D11) |
 | MCP tools shipped | 1 / 8 (mcp_selftest) |
 | MCP resources shipped | 0 / 4 (target in Phase 8) |
 | MCP prompts shipped | 0 / 3 (target in Phase 8) |
@@ -76,10 +76,8 @@ Binding decisions from PROJECT.md + research SUMMARY §2. Treat as non-negotiabl
 
 ### Open TODOs
 
-- Plan Phase 4 via `/gsd-plan-phase 4` (needs research — Phase 4 is in the research-needed list)
-- Phases 4, 6, 9 still require research before planning (see ROADMAP.md Research-Needed Phases table)
+- Phases 6, 9 still require research before planning (see ROADMAP.md Research-Needed Phases table)
 - Code review WR-01–04 findings from Phase 3 are non-blocking warnings (see `03-REVIEW.md`)
-- Security gate not yet run for Phase 3 — run `/gsd-secure-phase 3` if desired
 
 ### Blockers
 
@@ -89,19 +87,18 @@ None.
 
 ### Last session
 
-- **Date:** 2026-04-12
-- **Actions:** `/gsd-plan-phase 3` + `/gsd-execute-phase 3` → typed plan parser, normalizer, multi-version fixture corpus, syrupy snapshot tests complete. Gap closure plan 03-03 fixed `iceberg_split_count` always-None bug. 363 tests passing. Phase 3 COMPLETE.
-- **Key findings:** Real Trino EXPLAIN JSON uses fragment-keyed format `{"0": root, "1": ...}` — added `_unwrap_fragment_map()` to parser. EXPLAIN ANALYZE is text-only (Trino issue #5786) — dual-path parser architecture. Trino 480+ emits `Splits: N` (not `N splits`) on the Input summary line; column-assignment lines (`:=`) must be excluded from operator detection.
+- **Date:** 2026-04-13
+- **Actions:** `/gsd-discuss-phase 4` + `/gsd-plan-phase 4` + `/gsd-execute-phase 4` → rule engine infrastructure (findings, evidence, registry, thresholds, engine), all 14 rules (R1–R9, I1/I3/I6/I8, D11) implemented with 3-fixture-class coverage each, 559 tests passing. Phase 4 COMPLETE.
+- **Key findings:** Trino issue #19266 (partial partition pruning) closed Jan 2025 — I8 confidence=0.6 due to plan-only signal. Trino issue #28910 (OPEN) — $partitions does not expose delete metrics; I3 uses `$files WHERE content IN (1,2)` workaround. D11 divergence_factor stored as magnitude ≥1.0. R7/D11 require ExecutedPlan (PLAN_WITH_METRICS evidence); all others work on EstimatedPlan.
 
 ### Next session
 
 Resume by reading:
 
 1. `.planning/STATE.md` (this file)
-2. `.planning/ROADMAP.md` — Phase 4 detail (Rule Engine & 13 Deterministic Rules)
-3. `.planning/phases/03-plan-parser-normalizer/03-REVIEW.md` — 4 warnings to address in Phase 4 or later
+2. `.planning/ROADMAP.md` — Phase 5 detail (Recommendation Engine)
 
-Then run `/gsd-plan-phase 4` to plan the Rule Engine phase.
+Then run `/gsd-plan-phase 5` to plan the Recommendation Engine phase.
 
 ---
 
