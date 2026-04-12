@@ -358,10 +358,14 @@ class TrinoClient:
             # row is dict[str, Any] — get the single column value
             plan_text = str(next(iter(row.values()), ""))
 
-        try:
-            plan_json = _json.loads(plan_text) if plan_text else {}
-        except _json.JSONDecodeError:
-            plan_json = {"raw": plan_text}
+        # EXPLAIN ANALYZE returns plain text, not JSON — skip JSON parsing for executed plans
+        if plan_type == "executed":
+            plan_json: dict = {}
+        else:
+            try:
+                plan_json = _json.loads(plan_text) if plan_text else {}
+            except _json.JSONDecodeError:
+                plan_json = {"raw": plan_text}
 
         return ExplainPlan(
             plan_json=plan_json,

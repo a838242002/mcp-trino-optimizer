@@ -100,8 +100,11 @@ def _connect(host: str, port: int) -> trino.dbapi.Connection:
 def _execute_query(conn: trino.dbapi.Connection, sql: str) -> list[list]:
     """Execute a SQL statement and return all rows."""
     cursor = conn.cursor()
-    cursor.execute(sql)
-    return cursor.fetchall()
+    try:
+        cursor.execute(sql)
+        return cursor.fetchall()
+    finally:
+        cursor.close()
 
 
 def _detect_version(conn: trino.dbapi.Connection) -> str:

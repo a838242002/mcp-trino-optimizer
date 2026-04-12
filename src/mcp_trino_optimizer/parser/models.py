@@ -163,9 +163,9 @@ class BasePlan(BaseModel):
         """
         stack = [self.root]
         while stack:
-            node = stack.pop(0)
+            node = stack.pop()
             yield node
-            stack = list(node.children) + stack
+            stack.extend(reversed(node.children))
 
     def find_nodes_by_type(self, operator_type: str) -> list[PlanNode]:
         """Return all nodes with the given operator_type (name).
