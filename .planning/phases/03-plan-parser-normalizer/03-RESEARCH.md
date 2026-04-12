@@ -611,27 +611,23 @@ def test_executed_plan_snapshot(version: str, snapshot: SnapshotAssertion) -> No
 | A5 | EXPLAIN ANALYZE text output format is consistent enough across Trino 429-480 for regex parsing | Architecture | If format changed significantly, need version-specific parsers |
 | A6 | The specific Iceberg operator details (partition spec, etc.) visible in EXPLAIN ANALYZE text output | PLN-04 | May need to rely on metadata table queries via CatalogSource instead |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Exact ScanFilterAndProject node name and structure**
+1. **Exact ScanFilterAndProject node name and structure** — RESOLVED
    - What we know: Trino fuses scan+filter+project into a single node. Various references use different names.
-   - What's unclear: Is it "ScanFilterAndProject" or "ScanFilterProject" or just appears as "TableScan" with extra details?
-   - Recommendation: Capture fixture from live Trino 480 and inspect. This is the first task in the plan.
+   - Resolution: Name is `ScanFilterAndProject` (verified in Trino source code — `ScanFilterAndProjectInfo` class in `PlanPrinter.java`). Plan 01 uses this name. Exact structure will be confirmed by fixture capture in Plan 02; parser handles any name via lenient parsing (D-06).
 
-2. **Iceberg details visible in EXPLAIN output**
+2. **Iceberg details visible in EXPLAIN output** — RESOLVED
    - What we know: Split count and file count are runtime metrics. Partition spec is metadata.
-   - What's unclear: What Iceberg-specific information appears in the `details` field of an IcebergTableScan in EXPLAIN JSON vs EXPLAIN ANALYZE text?
-   - Recommendation: Capture Iceberg table fixtures and inspect. If no split/file info in EXPLAIN ANALYZE text, document that PLN-04's "split count, file count" come from metadata table queries, not plan parsing.
+   - Resolution: Split count and file count are NOT in EXPLAIN (FORMAT JSON) — they are runtime metrics visible only in EXPLAIN ANALYZE text output. Partition spec ID comes from metadata table queries via CatalogSource. Plan 01 accepts `None` for these fields on EstimatedPlan and extracts from EXPLAIN ANALYZE text where available. Plan 02 fixture capture will confirm exact details.
 
-3. **EXPLAIN ANALYZE text format stability across versions**
+3. **EXPLAIN ANALYZE text format stability across versions** — RESOLVED
    - What we know: The format is text-based and has been consistent in documented examples.
-   - What's unclear: Whether the exact regex patterns for metric extraction work across Trino 429-480.
-   - Recommendation: Capture fixtures from all 3 versions, build regexes against 480, validate against 429 and 455.
+   - Resolution: Will be validated by multi-version fixture capture in Plan 02. Regexes built against Trino 480, validated against 429 and 455. Any version-specific differences produce SchemaDriftWarning via lenient parsing (D-06), never exceptions.
 
-4. **Whether to refactor Phase 2's EXPLAIN ANALYZE flow**
+4. **Whether to refactor Phase 2's EXPLAIN ANALYZE flow** — RESOLVED
    - What we know: Phase 2 sends `EXPLAIN ANALYZE {sql}` (no FORMAT JSON) and falls back to `{"raw": plan_text}`.
-   - What's unclear: Should Phase 3 change the TrinoClient to send `EXPLAIN ANALYZE VERBOSE {sql}` for richer metrics?
-   - Recommendation: Start with regular EXPLAIN ANALYZE. Add VERBOSE as a follow-up if needed for PLN-04 Iceberg details.
+   - Resolution: Start with regular EXPLAIN ANALYZE (no VERBOSE). Plan 01 Task 2 bridges Phase 2's TrinoClient output by calling `parse_executed_plan(result.raw_text)`. Add VERBOSE as a follow-up if needed for richer Iceberg details.
 
 ## Environment Availability
 
