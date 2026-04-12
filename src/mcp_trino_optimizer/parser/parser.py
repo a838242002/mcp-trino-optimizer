@@ -58,6 +58,13 @@ def parse_estimated_plan(json_text: str, trino_version: str | None = None) -> Es
         raise ParseError(f"Expected a JSON object (dict) at the top level, got {type(data).__name__}")
 
     warnings: list[SchemaDriftWarning] = []
+
+    # Real Trino EXPLAIN (FORMAT JSON) wraps fragment root nodes in a top-level
+    # dict keyed by fragment ID: {"0": {<root node>}, "1": {<fragment 2 root>}}.
+    # Fragment "0" is the top-level output fragment.
+    # Detect this format and unwrap to the root node.
+    data = _unwrap_fragment_map(data, warnings)
+
     root = _build_node(data, "root", warnings, depth=0)
 
     # Normalize the tree (decompose ScanFilterAndProject etc.)
@@ -121,6 +128,69 @@ def parse_executed_plan(text: str, trino_version: str | None = None) -> Executed
 
 
 # ── Private: EXPLAIN JSON parsing ─────────────────────────────────────────────
+
+
+def _unwrap_fragment_map(
+    data: dict[str, Any],
+    warnings: list[SchemaDriftWarning],
+) -> dict[str, Any]:
+    """Unwrap the real Trino EXPLAIN (FORMAT JSON) fragment-keyed format.
+
+    Real Trino EXPLAIN JSON output wraps fragment root nodes in a top-level dict
+    keyed by fragment ID (string integers): {"0": {<root node>}, "1": {<fragment>}}.
+    Fragment "0" is always the top-level output fragment.
+
+    A direct node dict has "id" and "name" keys. A fragment map has integer string
+    keys ("0", "1", etc.) mapping to node dicts.
+
+    Args:
+        data: The top-level dict from orjson.loads.
+        warnings: Mutable list to append SchemaDriftWarning entries to.
+
+    Returns:
+        The root node dict (fragment "0") if fragment map, otherwise data unchanged.
+    """
+    # Direct node format: has "id" or "name" keys (used in tests)
+    if "id" in data or "name" in data:
+        return data
+
+    # Check if all keys are string integers — fragment map format
+    if all(k.isdigit() for k in data.keys()):
+        # Fragment "0" is the top-level output fragment (the query root)
+        if "0" in data and isinstance(data["0"], dict):
+            if len(data) > 1:
+                # Multi-fragment plan: document the extra fragments as drift info
+                # (Phase 4 distributed plan parsing may want them, but Phase 3 ignores them)
+                warnings.append(
+                    SchemaDriftWarning(
+                        node_path="root",
+                        description=(
+                            f"EXPLAIN JSON has {len(data)} fragments "
+                            f"(keys: {sorted(data.keys())}). "
+                            "Parsing fragment '0' (output fragment) as the plan root. "
+                            "Other fragments are available in the raw fixture for distributed plan analysis."
+                        ),
+                        severity="info",
+                    )
+                )
+            return data["0"]  # type: ignore[return-value]
+        else:
+            warnings.append(
+                SchemaDriftWarning(
+                    node_path="root",
+                    description=(
+                        f"Fragment map lacks key '0'; keys are {sorted(data.keys())}. "
+                        "Using first available fragment as root."
+                    ),
+                    severity="warning",
+                )
+            )
+            # Use lexicographically first key as fallback
+            first_key = sorted(data.keys())[0]
+            if isinstance(data[first_key], dict):
+                return data[first_key]  # type: ignore[return-value]
+
+    return data
 
 
 def _build_node(
