@@ -158,7 +158,6 @@ def aggregate_iceberg_health(
         partition_spec_evolution: str | None = None
         for f in findings_by_rule.get("I8", []):
             col = f.evidence.get("constraint_column", "unknown")
-            is_day = f.evidence.get("is_day_aligned", True)
             is_hour = f.evidence.get("is_hour_aligned", False)
             alignment = "hour-aligned" if is_hour else "sub-hour"
             partition_spec_evolution = (

@@ -1,7 +1,8 @@
 """RecommendationEngine -- orchestrates the full recommendation pipeline.
 
 Pipeline: findings -> scoring -> conflict resolution -> templates
--> session properties -> sorted RecommendationReport.
+-> session properties -> health aggregation -> bottleneck ranking
+-> sorted RecommendationReport.
 
 This is the main entry point for the suggest_optimizations tool (Phase 8).
 """
@@ -10,7 +11,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from mcp_trino_optimizer.parser.models import BasePlan
+from mcp_trino_optimizer.recommender.bottleneck import rank_bottlenecks
 from mcp_trino_optimizer.recommender.conflicts import ScoredFinding, resolve_conflicts
+from mcp_trino_optimizer.recommender.health import aggregate_iceberg_health
 from mcp_trino_optimizer.recommender.impact import get_impact
 from mcp_trino_optimizer.recommender.models import (
     Recommendation,
@@ -31,15 +35,19 @@ class RecommendationEngine:
     Args:
         capability_matrix: Live Trino capabilities, or None for offline mode.
         settings: Application settings for tier thresholds. Defaults used if None.
+        plan: Optional BasePlan for bottleneck ranking. Must be ExecutedPlan
+            for bottleneck analysis; EstimatedPlan produces None.
     """
 
     def __init__(
         self,
         capability_matrix: Any | None = None,
         settings: Settings | None = None,
+        plan: BasePlan | None = None,
     ) -> None:
         self._capability_matrix = capability_matrix
         self._settings = settings
+        self._plan = plan
 
     def _get_thresholds(self) -> tuple[float, float, float]:
         """Get tier thresholds from settings or defaults."""
@@ -121,9 +129,22 @@ class RecommendationEngine:
         # Step j: Sort by priority_score descending
         recommendations.sort(key=lambda r: r.priority_score, reverse=True)
 
-        # Step k: Build report
+        # Step k: Iceberg table health aggregation
+        iceberg_health = aggregate_iceberg_health(findings)
+
+        # Step l: Bottleneck ranking (requires ExecutedPlan)
+        bottleneck = None
+        if self._plan is not None:
+            top_n = 5
+            if self._settings is not None:
+                top_n = self._settings.recommender_top_n_bottleneck
+            bottleneck = rank_bottlenecks(self._plan, findings, top_n)
+
+        # Step m: Build report
         return RecommendationReport(
             recommendations=recommendations,
+            iceberg_health=iceberg_health,
+            bottleneck_ranking=bottleneck,
             considered_but_rejected=rejected,
         )
 

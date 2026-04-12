@@ -13,7 +13,6 @@ from mcp_trino_optimizer.recommender.health import (
     ICEBERG_RULES,
     aggregate_iceberg_health,
 )
-from mcp_trino_optimizer.recommender.models import IcebergTableHealth
 from mcp_trino_optimizer.rules.findings import RuleFinding
 
 
@@ -291,4 +290,4 @@ class TestIcebergRulesConstant:
     """Tests for ICEBERG_RULES constant."""
 
     def test_contains_expected_rules(self) -> None:
-        assert ICEBERG_RULES == {"I1", "I3", "I6", "I8"}
+        assert {"I1", "I3", "I6", "I8"} == ICEBERG_RULES
