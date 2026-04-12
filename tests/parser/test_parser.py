@@ -322,6 +322,53 @@ class TestParseExecutedPlan:
         assert len(scan_nodes) > 0
         assert scan_nodes[0].iceberg_file_count == 3
 
+    def test_executed_plan_extracts_wall_time(self) -> None:
+        """parse_executed_plan extracts wall_time_ms (Scheduled:) per operator (PLN-03)."""
+        from mcp_trino_optimizer.parser import parse_executed_plan
+
+        plan = parse_executed_plan(EXPLAIN_ANALYZE_TEXT)
+
+        nodes = list(plan.walk())
+        scan_nodes = [n for n in nodes if n.name == "TableScan"]
+        assert scan_nodes, "Expected a TableScan node"
+        assert scan_nodes[0].wall_time_ms == 150.0
+
+    def test_executed_plan_extracts_output_bytes(self) -> None:
+        """parse_executed_plan extracts output_bytes per operator (PLN-03)."""
+        from mcp_trino_optimizer.parser import parse_executed_plan
+
+        plan = parse_executed_plan(EXPLAIN_ANALYZE_TEXT)
+
+        nodes = list(plan.walk())
+        scan_nodes = [n for n in nodes if n.name == "TableScan"]
+        assert scan_nodes, "Expected a TableScan node"
+        assert scan_nodes[0].output_bytes is not None
+        assert scan_nodes[0].output_bytes > 0
+
+    def test_executed_plan_extracts_input_bytes(self) -> None:
+        """parse_executed_plan extracts input_bytes per operator (PLN-03)."""
+        from mcp_trino_optimizer.parser import parse_executed_plan
+
+        plan = parse_executed_plan(EXPLAIN_ANALYZE_TEXT)
+
+        nodes = list(plan.walk())
+        scan_nodes = [n for n in nodes if n.name == "TableScan"]
+        assert scan_nodes, "Expected a TableScan node"
+        assert scan_nodes[0].input_bytes is not None
+        assert scan_nodes[0].input_bytes > 0
+
+    def test_executed_plan_extracts_peak_memory(self) -> None:
+        """parse_executed_plan extracts peak_memory_bytes per operator (PLN-03)."""
+        from mcp_trino_optimizer.parser import parse_executed_plan
+
+        plan = parse_executed_plan(EXPLAIN_ANALYZE_TEXT)
+
+        nodes = list(plan.walk())
+        scan_nodes = [n for n in nodes if n.name == "TableScan"]
+        assert scan_nodes, "Expected a TableScan node"
+        assert scan_nodes[0].peak_memory_bytes is not None
+        assert scan_nodes[0].peak_memory_bytes > 0
+
     def test_malformed_text_line_produces_schema_drift_warning(self) -> None:
         """parse_executed_plan with malformed text records SchemaDriftWarning, does not raise."""
         from mcp_trino_optimizer.parser import parse_executed_plan
