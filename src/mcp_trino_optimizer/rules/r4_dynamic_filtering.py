@@ -76,10 +76,7 @@ def _has_equality_condition(node: PlanNode) -> bool:
     if "=" in criteria:
         return True
     # Check details strings
-    for line in node.details:
-        if _EQUALITY_PATTERN.search(line):
-            return True
-    return False
+    return any(_EQUALITY_PATTERN.search(line) for line in node.details)
 
 
 class R4DynamicFiltering(Rule):
@@ -93,7 +90,7 @@ class R4DynamicFiltering(Rule):
     rule_id = "R4"
     evidence_requirement = EvidenceRequirement.PLAN_ONLY
 
-    def check(self, plan: BasePlan, evidence: EvidenceBundle) -> list[RuleFinding]:  # noqa: ARG002
+    def check(self, plan: BasePlan, evidence: EvidenceBundle) -> list[RuleFinding]:
         """Detect join nodes missing dynamic filter pushdown."""
         findings: list[RuleFinding] = []
 

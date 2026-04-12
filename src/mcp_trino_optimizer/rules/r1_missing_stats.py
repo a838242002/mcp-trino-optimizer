@@ -17,8 +17,6 @@ Evidence: TABLE_STATS — requires a SHOW STATS response to cross-check.
 
 from __future__ import annotations
 
-import math
-
 from mcp_trino_optimizer.parser.models import BasePlan, PlanNode
 from mcp_trino_optimizer.rules.base import Rule
 from mcp_trino_optimizer.rules.evidence import EvidenceBundle, EvidenceRequirement, safe_float
@@ -55,7 +53,7 @@ class R1MissingStats(Rule):
     rule_id = "R1"
     evidence_requirement = EvidenceRequirement.TABLE_STATS
 
-    def check(self, plan: BasePlan, evidence: EvidenceBundle) -> list[RuleFinding]:  # noqa: ARG002
+    def check(self, plan: BasePlan, evidence: EvidenceBundle) -> list[RuleFinding]:
         """Detect scan nodes missing reliable row count statistics."""
         findings: list[RuleFinding] = []
 
@@ -85,10 +83,11 @@ class R1MissingStats(Rule):
             # Determine confidence
             # High confidence (0.9) when SHOW STATS confirms no row_count
             # Lower confidence (0.7) when only the CBO estimate is NaN
-            if evidence.table_stats is None or evidence.table_stats.get("row_count") is None:
-                confidence = 0.9
-            else:
-                confidence = 0.7
+            confidence = (
+                0.9
+                if evidence.table_stats is None or evidence.table_stats.get("row_count") is None
+                else 0.7
+            )
 
             findings.append(
                 RuleFinding(
