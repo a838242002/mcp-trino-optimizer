@@ -361,6 +361,10 @@ _INPUT_LINE_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Trino 480+ emits "Splits: N" (not "N splits") on the Input summary line.
+# Example: "Input: 10 rows (533B), Physical input: 996B, ..., Splits: 1, ..."
+_SPLITS_RE = re.compile(r"Splits:\s*(?P<splits>\d+)", re.IGNORECASE)
+
 _PEAK_MEMORY_RE = re.compile(
     r"Peak\s*[Mm]emory(?:\s+[Uu]sage)?:\s*(?P<size>[\d.]+)(?P<unit>[kKmMgGtT]?B)",
     re.IGNORECASE,
@@ -492,6 +496,8 @@ def _parse_explain_analyze_text(text: str, warnings: list[SchemaDriftWarning]) -
         # Also catch lines like "Files read: N"
         is_metric_line = is_metric_line or bool(_FILES_READ_RE.search(line))
         is_metric_line = is_metric_line or bool(_CPU_LINE_RE.search(line) and "CPU:" in line)
+        # Column assignment lines like "status := 5:status:varchar" are detail lines, not operators
+        is_metric_line = is_metric_line or ":=" in stripped_for_keyword
 
         if op_name and not is_metric_line:
             # Looks like an operator line
@@ -564,8 +570,14 @@ def _extract_metrics_from_line(line: str, op: dict[str, Any], warnings: list[Sch
     if input_m and "Input:" in line:
         op["input_rows"] = _parse_int_with_commas(input_m.group("rows"))
         op["input_bytes"] = _parse_size_to_bytes(input_m.group("size"), input_m.group("size_unit"))
+        # Legacy format: "Input: N rows (XB), M splits"
         if input_m.group("splits"):
             op["iceberg_split_count"] = int(input_m.group("splits"))
+        # Trino 480+ format: "Input: N rows (XB), ..., Splits: M, ..."
+        elif op["iceberg_split_count"] is None:
+            splits_m = _SPLITS_RE.search(line)
+            if splits_m:
+                op["iceberg_split_count"] = int(splits_m.group("splits"))
 
     # Peak memory
     peak_m = _PEAK_MEMORY_RE.search(line)

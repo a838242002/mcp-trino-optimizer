@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -385,3 +386,43 @@ class TestParseExecutedPlan:
 
         plan = parse_executed_plan("")
         assert isinstance(plan, ExecutedPlan)
+
+    def test_iceberg_split_count_extracted_from_executed_plan(self) -> None:
+        """iceberg_split_count must be parsed from 'Splits: N' in the Input line (PLN-04)."""
+        from mcp_trino_optimizer.parser import parse_executed_plan
+
+        raw = (Path(__file__).parent.parent / "fixtures/explain/480/iceberg_partition_filter_analyze.txt").read_text()
+        plan = parse_executed_plan(raw)
+
+        def find_scan(node):  # type: ignore[no-untyped-def]
+            if "scan" in node.name.lower():
+                return node
+            for child in node.children:
+                result = find_scan(child)
+                if result:
+                    return result
+            return None
+
+        scan = find_scan(plan.root)
+        assert scan is not None, "No scan node found"
+        assert scan.iceberg_split_count == 1, f"Expected 1, got {scan.iceberg_split_count}"
+
+    def test_iceberg_split_count_none_for_estimated_plan(self) -> None:
+        """iceberg_split_count must be None for EstimatedPlan — not a runtime metric (PLN-04)."""
+        from mcp_trino_optimizer.parser import parse_estimated_plan
+
+        raw = (Path(__file__).parent.parent / "fixtures/explain/480/iceberg_partition_filter.json").read_text()
+        plan = parse_estimated_plan(raw)
+
+        def find_scan(node):  # type: ignore[no-untyped-def]
+            if "scan" in node.name.lower():
+                return node
+            for child in node.children:
+                result = find_scan(child)
+                if result:
+                    return result
+            return None
+
+        scan = find_scan(plan.root)
+        assert scan is not None, "No scan node found"
+        assert scan.iceberg_split_count is None
