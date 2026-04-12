@@ -53,9 +53,7 @@ class RuleEngine:
         self._thresholds = thresholds or RuleThresholds()
         self._registry = registry or _default_registry
 
-    async def run(
-        self, plan: BasePlan, table: str | None = None
-    ) -> list[EngineResult]:
+    async def run(self, plan: BasePlan, table: str | None = None) -> list[EngineResult]:
         """Run all registered rules against the plan.
 
         Prefetches evidence once, then iterates all rules in registration order.
@@ -87,10 +85,7 @@ class RuleEngine:
                 )
                 continue
 
-            if (
-                req == EvidenceRequirement.ICEBERG_METADATA
-                and self._catalog_source is None
-            ):
+            if req == EvidenceRequirement.ICEBERG_METADATA and self._catalog_source is None:
                 results.append(
                     RuleSkipped(
                         rule_id=rule.rule_id,
@@ -124,9 +119,7 @@ class RuleEngine:
 
         return results
 
-    async def _prefetch_evidence(
-        self, plan: BasePlan, table: str | None
-    ) -> EvidenceBundle:
+    async def _prefetch_evidence(self, plan: BasePlan, table: str | None) -> EvidenceBundle:
         """Fetch all required evidence exactly once.
 
         Collects the union of evidence requirements from registered rules,
@@ -135,9 +128,7 @@ class RuleEngine:
         bundle = EvidenceBundle(plan=plan)
 
         # Collect all evidence requirements from registered rules
-        requirements = {
-            rule_cls.evidence_requirement for rule_cls in self._registry.all_rules()
-        }
+        requirements = {rule_cls.evidence_requirement for rule_cls in self._registry.all_rules()}
 
         # Resolve table reference
         resolved_table = table or self._extract_table_from_plan(plan)
@@ -150,9 +141,7 @@ class RuleEngine:
         ):
             catalog, schema, tbl = self._parse_table_ref(resolved_table)
             if catalog and schema and tbl:
-                bundle.table_stats = await self._stats_source.fetch_table_stats(
-                    catalog, schema, tbl
-                )
+                bundle.table_stats = await self._stats_source.fetch_table_stats(catalog, schema, tbl)
 
         # Prefetch Iceberg metadata (once, even if multiple rules need it)
         if (
@@ -162,15 +151,11 @@ class RuleEngine:
         ):
             catalog, schema, tbl = self._parse_table_ref(resolved_table)
             if catalog and schema and tbl:
-                raw_files = await self._catalog_source.fetch_iceberg_metadata(
-                    catalog, schema, tbl, "files"
-                )
+                raw_files = await self._catalog_source.fetch_iceberg_metadata(catalog, schema, tbl, "files")
                 # Cap rows to prevent OOM on wide tables (Pitfall 7 / T-04-03)
                 bundle.iceberg_files = raw_files[: self._thresholds.max_metadata_rows]
-                bundle.iceberg_snapshots = (
-                    await self._catalog_source.fetch_iceberg_metadata(
-                        catalog, schema, tbl, "snapshots"
-                    )
+                bundle.iceberg_snapshots = await self._catalog_source.fetch_iceberg_metadata(
+                    catalog, schema, tbl, "snapshots"
                 )
 
         return bundle
@@ -184,9 +169,7 @@ class RuleEngine:
                     return table_str
         return None
 
-    def _parse_table_ref(
-        self, table_str: str
-    ) -> tuple[str | None, str | None, str | None]:
+    def _parse_table_ref(self, table_str: str) -> tuple[str | None, str | None, str | None]:
         """Parse a Trino table descriptor string into (catalog, schema, table).
 
         Handles formats like:

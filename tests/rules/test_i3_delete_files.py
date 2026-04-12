@@ -12,7 +12,6 @@ from mcp_trino_optimizer.parser.models import BasePlan, EstimatedPlan, PlanNode
 from mcp_trino_optimizer.rules.evidence import EvidenceBundle
 from mcp_trino_optimizer.rules.i3_delete_files import I3DeleteFiles
 
-
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 

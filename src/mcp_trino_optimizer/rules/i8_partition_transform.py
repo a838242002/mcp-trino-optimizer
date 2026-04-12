@@ -50,9 +50,7 @@ _DETAIL_MAX_LEN = 1000
 # Regex to extract the lower bound timestamp from a Trino constraint range detail line.
 # Pattern: [[YYYY-MM-DD HH:MM:SS[.ffffff] UTC, ...]
 # Uses a bounded non-backtracking pattern: explicit character classes, no .*
-_LOWER_BOUND_RE = re.compile(
-    r"\[\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)? UTC)"
-)
+_LOWER_BOUND_RE = re.compile(r"\[\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:\.\d+)? UTC)")
 
 # Regex to extract constraint column name from descriptor["table"]
 _CONSTRAINT_COL_RE = re.compile(r"constraint on \[([^\]]+)\]")

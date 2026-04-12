@@ -72,7 +72,9 @@ def _find_function_wrapped_columns_ast(
     for node in parsed.walk():
         if isinstance(node, _FUNCTION_EXPRESSION_TYPES):
             # Check if any direct or indirect argument is a Column
-            has_column = any(isinstance(arg, exp.Column) for arg in node.args.values() if isinstance(arg, exp.Expression))
+            has_column = any(
+                isinstance(arg, exp.Column) for arg in node.args.values() if isinstance(arg, exp.Expression)
+            )
             if not has_column:
                 # Also check args as lists
                 for arg in node.args.values():

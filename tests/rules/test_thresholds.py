@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 import pytest
 
 from mcp_trino_optimizer.parser.models import CostEstimate, EstimatedPlan, ExecutedPlan, PlanNode
-from mcp_trino_optimizer.rules.d11_cost_vs_actual import D11CostVsActual
 from mcp_trino_optimizer.rules.evidence import EvidenceBundle
 from mcp_trino_optimizer.rules.r5_broadcast_too_big import R5BroadcastTooBig
 from mcp_trino_optimizer.rules.r7_cpu_skew import R7CpuSkew
@@ -57,7 +56,7 @@ def test_env_override_max_metadata_rows(monkeypatch: pytest.MonkeyPatch) -> None
 
 
 @pytest.mark.parametrize(
-    "field_name, expected_default, citation_keyword",
+    ("field_name", "expected_default", "citation_keyword"),
     [
         # spot-check 3 thresholds against their documented citation values
         ("skew_ratio", 5.0, "empirical"),
@@ -65,15 +64,11 @@ def test_env_override_max_metadata_rows(monkeypatch: pytest.MonkeyPatch) -> None
         ("delete_ratio_threshold", 0.10, "0.10"),
     ],
 )
-def test_threshold_defaults_match_citations(
-    field_name: str, expected_default: float, citation_keyword: str
-) -> None:
+def test_threshold_defaults_match_citations(field_name: str, expected_default: float, citation_keyword: str) -> None:
     """Spot-check that default values match their documented citation defaults."""
     t = RuleThresholds()
     actual = getattr(t, field_name)
-    assert actual == pytest.approx(expected_default), (
-        f"{field_name}: expected {expected_default}, got {actual}"
-    )
+    assert actual == pytest.approx(expected_default), f"{field_name}: expected {expected_default}, got {actual}"
 
 
 # ---------------------------------------------------------------------------
@@ -131,14 +126,14 @@ def _make_borderline_skew_plan() -> ExecutedPlan:
 
 
 @pytest.mark.parametrize(
-    "threshold_name,rule_cls,below_val,above_val,make_plan",
+    ("threshold_name", "rule_cls", "below_val", "above_val", "make_plan"),
     [
         # R9: scan selectivity — ratio 0.08 sits between 0.05 and 0.20
         (
             "scan_selectivity_threshold",
             R9LowSelectivity,
-            0.05,   # below threshold: 0.08 >= 0.05  -> does NOT fire
-            0.20,   # above threshold: 0.08 <  0.20  -> DOES fire
+            0.05,  # below threshold: 0.08 >= 0.05  -> does NOT fire
+            0.20,  # above threshold: 0.08 <  0.20  -> DOES fire
             _make_borderline_scan_plan,
         ),
         # R5: broadcast join size — build side 150 MB sits between 50 MB and 200 MB
@@ -146,15 +141,15 @@ def _make_borderline_skew_plan() -> ExecutedPlan:
             "broadcast_max_bytes",
             R5BroadcastTooBig,
             200 * 1024 * 1024,  # below threshold: 150MB < 200MB -> does NOT fire
-            50 * 1024 * 1024,   # above threshold: 150MB > 50MB  -> DOES fire
+            50 * 1024 * 1024,  # above threshold: 150MB > 50MB  -> DOES fire
             _make_borderline_broadcast_plan,
         ),
         # R7: cpu skew — ratio 7.0 sits between 5.0 and 10.0
         (
             "skew_ratio",
             R7CpuSkew,
-            10.0,   # below threshold: 7.0 < 10.0  -> does NOT fire
-            5.0,    # above threshold: 7.0 >= 5.0  -> DOES fire
+            10.0,  # below threshold: 7.0 < 10.0  -> does NOT fire
+            5.0,  # above threshold: 7.0 >= 5.0  -> DOES fire
             _make_borderline_skew_plan,
         ),
     ],

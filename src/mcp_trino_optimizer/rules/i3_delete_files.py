@@ -66,12 +66,8 @@ class I3DeleteFiles(Rule):
         delete_files = [f for f in files if f.get("content") in _DELETE_CONTENT_VALUES]
         data_files = [f for f in files if f.get("content") == _CONTENT_DATA]
 
-        pos_delete_count = sum(
-            1 for f in delete_files if f.get("content") == _CONTENT_POSITION_DELETES
-        )
-        eq_delete_count = sum(
-            1 for f in delete_files if f.get("content") == _CONTENT_EQUALITY_DELETES
-        )
+        pos_delete_count = sum(1 for f in delete_files if f.get("content") == _CONTENT_POSITION_DELETES)
+        eq_delete_count = sum(1 for f in delete_files if f.get("content") == _CONTENT_EQUALITY_DELETES)
         delete_file_count = len(delete_files)
         data_file_count = len(data_files)
 

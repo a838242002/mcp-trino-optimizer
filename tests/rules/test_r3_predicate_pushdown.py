@@ -11,8 +11,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 from mcp_trino_optimizer.parser.models import EstimatedPlan, PlanNode
 from mcp_trino_optimizer.parser.parser import parse_estimated_plan
 from mcp_trino_optimizer.rules.evidence import EvidenceBundle
@@ -50,7 +48,7 @@ class TestR3SyntheticMinimum:
 
     def test_date_function_wrap_fires(self) -> None:
         """date(ts) = '2025-01-15' → R3 fires."""
-        node = _scan_filter_node('("date"(ts) = DATE \'2025-01-15\')')
+        node = _scan_filter_node("(\"date\"(ts) = DATE '2025-01-15')")
         plan = _make_plan(node)
         bundle = EvidenceBundle(plan=plan)
 
@@ -201,7 +199,7 @@ class TestR3NegativeControl:
 
     def test_simple_equality_no_function_no_finding(self) -> None:
         """id = 42 — direct column equality → R3 does not fire."""
-        node = _scan_filter_node('("id" = BIGINT \'42\')')
+        node = _scan_filter_node("(\"id\" = BIGINT '42')")
         plan = _make_plan(node)
         bundle = EvidenceBundle(plan=plan)
 

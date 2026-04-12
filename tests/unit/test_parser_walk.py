@@ -34,9 +34,7 @@ def test_walk_dfs_order() -> None:
 
     plan = EstimatedPlan(root=root)
     order = [node.id for node in plan.walk()]
-    assert order == ["root", "A", "C", "B"], (
-        f"Expected DFS pre-order ['root', 'A', 'C', 'B'], got {order}"
-    )
+    assert order == ["root", "A", "C", "B"], f"Expected DFS pre-order ['root', 'A', 'C', 'B'], got {order}"
 
 
 def test_walk_100_node_chain() -> None:

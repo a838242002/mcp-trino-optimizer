@@ -206,10 +206,7 @@ class TestR7RealisticFromCompose:
         plan = self._load_compose_plan()
         bundle = EvidenceBundle(plan=plan)
         findings = R7CpuSkew().check(plan, bundle)
-        assert findings == [], (
-            "Unmodified compose fixture should not trigger R7 "
-            "(cpu times are within normal variance)"
-        )
+        assert findings == [], "Unmodified compose fixture should not trigger R7 (cpu times are within normal variance)"
 
     def test_compose_plan_with_injected_skew_fires(self) -> None:
         """Re-build the compose plan with one node's cpu_time_ms set to 500x the median.

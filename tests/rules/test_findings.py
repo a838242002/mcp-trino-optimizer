@@ -98,8 +98,15 @@ def test_discriminated_union_list_deserialization() -> None:
     """A mixed list of finding/error/skipped dicts deserializes via discriminator."""
     list_adapter: TypeAdapter[list[EngineResult]] = TypeAdapter(list[EngineResult])  # type: ignore[type-arg]
     raw = [
-        {"kind": "finding", "rule_id": "R1", "severity": "high", "confidence": 0.8,
-         "message": "m", "evidence": {}, "operator_ids": []},
+        {
+            "kind": "finding",
+            "rule_id": "R1",
+            "severity": "high",
+            "confidence": 0.8,
+            "message": "m",
+            "evidence": {},
+            "operator_ids": [],
+        },
         {"kind": "error", "rule_id": "R7", "error_type": "KeyError", "message": "k"},
         {"kind": "skipped", "rule_id": "I3", "reason": "offline_mode_no_catalog_source"},
     ]

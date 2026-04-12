@@ -15,7 +15,6 @@ from mcp_trino_optimizer.rules.evidence import EvidenceBundle
 from mcp_trino_optimizer.rules.i6_stale_snapshots import I6StaleSnapshots
 from mcp_trino_optimizer.rules.thresholds import RuleThresholds
 
-
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 
@@ -74,7 +73,7 @@ def test_fires_on_oldest_snapshot_age() -> None:
     plan = _make_plan()
     # 9 recent + 1 old
     snapshots = [_snapshot(i) for i in range(9)]  # 0-8 days ago
-    snapshots.append(_snapshot(40))               # 40 days ago
+    snapshots.append(_snapshot(40))  # 40 days ago
     bundle = _bundle(plan, snapshots)
 
     rule = I6StaleSnapshots()
@@ -89,7 +88,7 @@ def test_both_conditions_fire_separate_findings() -> None:
     """60 snapshots AND oldest > 30 days — both findings emitted."""
     plan = _make_plan()
     snapshots = [_snapshot(i * 0.5) for i in range(59)]  # 0-29.5 days
-    snapshots.append(_snapshot(45))                       # 45 days ago
+    snapshots.append(_snapshot(45))  # 45 days ago
     bundle = _bundle(plan, snapshots)
 
     rule = I6StaleSnapshots()
@@ -146,9 +145,9 @@ def test_negative_exactly_at_count_threshold() -> None:
     findings = rule.check(plan, bundle)
 
     count_findings = [
-        f for f in findings
-        if f.evidence.get("snapshot_count") == 50
-        and f.evidence.get("oldest_snapshot_age_days", 999) <= 30
+        f
+        for f in findings
+        if f.evidence.get("snapshot_count") == 50 and f.evidence.get("oldest_snapshot_age_days", 999) <= 30
     ]
     assert len(count_findings) == 0
 
@@ -196,7 +195,7 @@ def test_malformed_committed_at_skipped() -> None:
     plan = _make_plan()
     bad_snap: dict = {"committed_at": "NOT-A-TIMESTAMP", "snapshot_id": 1}  # type: ignore[type-arg]
     good_snaps = [_snapshot(i * 0.5) for i in range(60)]
-    bundle = _bundle(plan, [bad_snap] + good_snaps)
+    bundle = _bundle(plan, [bad_snap, *good_snaps])
 
     rule = I6StaleSnapshots()
     # Should not raise; bad row skipped; 60 good rows trigger count threshold

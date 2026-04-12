@@ -83,11 +83,7 @@ class R1MissingStats(Rule):
             # Determine confidence
             # High confidence (0.9) when SHOW STATS confirms no row_count
             # Lower confidence (0.7) when only the CBO estimate is NaN
-            confidence = (
-                0.9
-                if evidence.table_stats is None or evidence.table_stats.get("row_count") is None
-                else 0.7
-            )
+            confidence = 0.9 if evidence.table_stats is None or evidence.table_stats.get("row_count") is None else 0.7
 
             findings.append(
                 RuleFinding(

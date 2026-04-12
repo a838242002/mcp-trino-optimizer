@@ -55,10 +55,7 @@ class R6JoinOrderInversion(Rule):
         findings: list[RuleFinding] = []
 
         # Check if stats are available — suppress R6 when stats present
-        stats_available = (
-            evidence.table_stats is not None
-            and evidence.table_stats.get("row_count") is not None
-        )
+        stats_available = evidence.table_stats is not None and evidence.table_stats.get("row_count") is not None
 
         for node in plan.walk():
             if node.operator_type not in _JOIN_TYPES:

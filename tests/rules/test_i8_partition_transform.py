@@ -16,7 +16,6 @@ from mcp_trino_optimizer.parser.models import EstimatedPlan, PlanNode
 from mcp_trino_optimizer.rules.evidence import EvidenceBundle
 from mcp_trino_optimizer.rules.i8_partition_transform import I8PartitionTransform
 
-
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 

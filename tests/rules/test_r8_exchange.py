@@ -137,9 +137,7 @@ class TestR8SyntheticMinimum:
 
         # 400MB exchange vs 100MB scan -> fires
         assert len(findings) == 1
-        assert findings[0].evidence["total_exchange_bytes"] == pytest.approx(
-            _200MB + _200MB
-        )
+        assert findings[0].evidence["total_exchange_bytes"] == pytest.approx(_200MB + _200MB)
 
 
 # ---------------------------------------------------------------------------

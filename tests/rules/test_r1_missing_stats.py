@@ -8,8 +8,6 @@ Three fixture classes:
 
 from __future__ import annotations
 
-import json
-import math
 from pathlib import Path
 
 import pytest
@@ -35,10 +33,7 @@ def _make_scan_node(
     node_id: str = "0",
 ) -> PlanNode:
     """Build a scan PlanNode with the given estimate."""
-    if output_row_count is None:
-        estimates = []
-    else:
-        estimates = [CostEstimate(outputRowCount=output_row_count)]
+    estimates = [] if output_row_count is None else [CostEstimate(outputRowCount=output_row_count)]
     return PlanNode(id=node_id, name=name, estimates=estimates)
 
 

@@ -107,8 +107,8 @@ class I1SmallFiles(Rule):
                         confidence=0.95,
                         message=(
                             f"Iceberg table has {len(data_files):,} data files with median "
-                            f"size {median / (1024*1024):.1f} MB — below the "
-                            f"{self._thresholds.small_file_bytes // (1024*1024)} MB threshold. "
+                            f"size {median / (1024 * 1024):.1f} MB — below the "
+                            f"{self._thresholds.small_file_bytes // (1024 * 1024)} MB threshold. "
                             "Run OPTIMIZE or Iceberg rewrite_data_files() to compact."
                         ),
                         evidence={

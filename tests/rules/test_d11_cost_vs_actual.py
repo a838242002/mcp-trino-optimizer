@@ -9,7 +9,6 @@ Four fixture classes:
 
 from __future__ import annotations
 
-import math
 from pathlib import Path
 
 import pytest
@@ -244,8 +243,7 @@ class TestD11RealisticFromCompose:
         bundle = EvidenceBundle(plan=plan)
         findings = D11CostVsActual().check(plan, bundle)
         assert findings == [], (
-            "Unmodified compose fixture should not trigger D11 "
-            "(CBO estimates are within 5x of actual rows)"
+            "Unmodified compose fixture should not trigger D11 (CBO estimates are within 5x of actual rows)"
         )
 
     def test_compose_scan_with_injected_divergence_fires(self) -> None:
@@ -265,7 +263,8 @@ class TestD11RealisticFromCompose:
         )
         assert scan_node is not None, "need a scan node with output_rows from compose fixture"
         actual_rows = scan_node.output_rows
-        assert actual_rows is not None and actual_rows > 0
+        assert actual_rows is not None
+        assert actual_rows > 0
 
         # Build a replacement plan with an absurdly wrong CBO estimate
         diverged_node = PlanNode(
