@@ -1,0 +1,43 @@
+Trino version: 455
+Queued: 150.96us, Analysis: 5.20ms, Planning: 14.47ms, Execution: 190.64ms
+Fragment 1 [HASH]
+    CPU: 6.39ms, Scheduled: 9.90ms, Blocked 917.12ms (Input: 455.47ms, Output: 0.00ns), Input: 13 rows (420B); per task: avg.: 13.00 std.dev.: 0.00, Output: 3 rows (110B)
+    Output layout: [status, count, sum]
+    Output partitioning: SINGLE []
+    Aggregate[type = FINAL, keys = [status]]
+    │   Layout: [status:varchar, count:bigint, sum:decimal(38,2)]
+    │   Estimates: {rows: 3 (231B), cpu: 2.25k, memory: 231B, network: 0B}
+    │   CPU: 2.00ms (4.88%), Scheduled: 2.00ms (2.30%), Blocked: 0.00ns (0.00%), Output: 3 rows (110B)
+    │   Input avg.: 0.81 rows, Input std.dev.: 286.07%
+    │   count := count(count_0)
+    │   sum := sum(sum_1)
+    └─ LocalExchange[partitioning = HASH, arguments = [status::varchar]]
+       │   Layout: [status:varchar, count_0:bigint, sum_1:varbinary]
+       │   Estimates: {rows: 20 (2.25kB), cpu: 2.25k, memory: 0B, network: 0B}
+       │   CPU: 0.00ns (0.00%), Scheduled: 0.00ns (0.00%), Blocked: 457.00ms (50.11%), Output: 13 rows (420B)
+       │   Input avg.: 0.81 rows, Input std.dev.: 190.76%
+       └─ RemoteSource[sourceFragmentIds = [2]]
+              Layout: [status:varchar, count_0:bigint, sum_1:varbinary]
+              CPU: 0.00ns (0.00%), Scheduled: 1.00ms (1.15%), Blocked: 455.00ms (49.89%), Output: 13 rows (420B)
+              Input avg.: 0.81 rows, Input std.dev.: 190.76%
+
+Fragment 2 [SOURCE]
+    CPU: 40.28ms, Scheduled: 83.41ms, Blocked 0.00ns (Input: 0.00ns, Output: 0.00ns), Input: 20 rows (411B); per task: avg.: 20.00 std.dev.: 0.00, Output: 13 rows (420B)
+    Output layout: [status, count_0, sum_1]
+    Output partitioning: HASH [status]
+    Aggregate[type = PARTIAL, keys = [status]]
+    │   Layout: [status:varchar, count_0:bigint, sum_1:varbinary]
+    │   Estimates: {rows: 20 (2.25kB), cpu: ?, memory: ?, network: ?}
+    │   CPU: 21.00ms (51.22%), Scheduled: 58.00ms (66.67%), Blocked: 0.00ns (0.00%), Output: 13 rows (420B)
+    │   Input avg.: 3.33 rows, Input std.dev.: 89.44%
+    │   count_0 := count(*)
+    │   sum_1 := sum(amount)
+    └─ TableScan[table = iceberg:test_fixtures.orders$data@7192078785404198795]
+           Layout: [amount:decimal(10,2), status:varchar]
+           Estimates: {rows: 20 (1.17kB), cpu: 1.17k, memory: 0B, network: 0B}
+           CPU: 18.00ms (43.90%), Scheduled: 26.00ms (29.89%), Blocked: 0.00ns (0.00%), Output: 20 rows (411B)
+           Input avg.: 3.33 rows, Input std.dev.: 89.44%
+           amount := 3:amount:decimal(10,2)
+           status := 5:status:varchar
+           Input: 20 rows (411B), Physical input: 4.78kB, Physical input time: 48.25us
+

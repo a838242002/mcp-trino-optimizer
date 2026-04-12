@@ -1,0 +1,19 @@
+Trino version: 480
+Queued: 160.71us, Analysis: 6.28ms, Planning: 16.53ms, Execution: 146.36ms, Finishing: 0.00ns
+Fragment 1 [SOURCE]
+    CPU: 15.00ms, Scheduled: 16.28ms, Blocked 0.00ns (Input: 0.00ns, Output: 0.00ns), Input: 20 rows (1.01kB); per task: avg.: 20.00 std.dev.: 0.00, Output: 20 rows (1.01kB)
+    Peak Memory: 4.66kB, Tasks count: 1; per task: max: 4.66kB
+    Output layout: [id, name, amount, ts, status]
+    Output partitioning: SINGLE []
+    TableScan[table = iceberg:test_fixtures.orders$data@7192078785404198795]
+        Layout: [id:bigint, name:varchar, amount:decimal(10,2), ts:timestamp(6) with time zone, status:varchar]
+        Estimates: {rows: 20 (2.59kB), cpu: 2.59k, memory: 0B, network: 0B}
+        CPU: 14.00ms (100.00%), Scheduled: 17.00ms (100.00%), Blocked: 0.00ns (?%), Output: 20 rows (1.01kB)
+        Input avg.: 3.33 rows, Input std.dev.: 89.44%
+        status := 5:status:varchar
+        ts := 4:ts:timestamp(6) with time zone
+        id := 1:id:bigint
+        name := 2:name:varchar
+        amount := 3:amount:decimal(10,2)
+        Input: 20 rows (1.01kB), Physical input: 4.78kB, Physical input time: 26.79us, Splits: 6, Splits generation wait time: 14.47ms
+

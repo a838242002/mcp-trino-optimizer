@@ -1,0 +1,70 @@
+{
+  "0": {
+    "id": "6",
+    "name": "Output",
+    "descriptor": {
+      "columnNames": "[id, name]"
+    },
+    "outputs": [
+      {
+        "type": "bigint",
+        "name": "id"
+      },
+      {
+        "type": "varchar",
+        "name": "name"
+      }
+    ],
+    "details": [],
+    "estimates": [
+      {
+        "outputRowCount": 10.0,
+        "outputSizeInBytes": 401.0,
+        "cpuCost": 0.0,
+        "memoryCost": 0.0,
+        "networkCost": 0.0
+      }
+    ],
+    "children": [
+      {
+        "id": "1",
+        "name": "ScanFilter",
+        "descriptor": {
+          "table": "iceberg:test_fixtures.orders$data@7192078785404198795",
+          "filterPredicate": "(id > bigint '10')"
+        },
+        "outputs": [
+          {
+            "type": "bigint",
+            "name": "id"
+          },
+          {
+            "type": "varchar",
+            "name": "name"
+          }
+        ],
+        "details": [
+          "id := 1:id:bigint",
+          "name := 2:name:varchar"
+        ],
+        "estimates": [
+          {
+            "outputRowCount": 10.0,
+            "outputSizeInBytes": 401.0,
+            "cpuCost": 401.0,
+            "memoryCost": 0.0,
+            "networkCost": 0.0
+          },
+          {
+            "outputRowCount": 10.0,
+            "outputSizeInBytes": 401.0,
+            "cpuCost": 401.0,
+            "memoryCost": 0.0,
+            "networkCost": 0.0
+          }
+        ],
+        "children": []
+      }
+    ]
+  }
+}

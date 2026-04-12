@@ -1,0 +1,15 @@
+Trino version: 455
+Queued: 148.17us, Analysis: 4.61ms, Planning: 14.66ms, Execution: 254.81ms
+Fragment 1 [SOURCE]
+    CPU: 68.87ms, Scheduled: 95.48ms, Blocked 0.00ns (Input: 0.00ns, Output: 0.00ns), Input: 10 rows (173B); per task: avg.: 10.00 std.dev.: 0.00, Output: 10 rows (173B)
+    Output layout: [id, name]
+    Output partitioning: SINGLE []
+    ScanFilter[table = iceberg:test_fixtures.orders$data@7192078785404198795, filterPredicate = (id > bigint '10')]
+        Layout: [id:bigint, name:varchar]
+        Estimates: {rows: 10 (401B), cpu: 401, memory: 0B, network: 0B}/{rows: 10 (401B), cpu: 401, memory: 0B, network: 0B}
+        CPU: 69.00ms (100.00%), Scheduled: 95.00ms (100.00%), Blocked: 0.00ns (?%), Output: 10 rows (173B)
+        Input avg.: 10.00 rows, Input std.dev.: 0.00%
+        id := 1:id:bigint
+        name := 2:name:varchar
+        Input: 10 rows (173B), Filtered: 0.00%, Physical input: 996B, Physical input time: 95.71us
+
