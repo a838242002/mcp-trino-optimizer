@@ -658,22 +658,25 @@ networks:
 | A4 | `DELETE /v1/query/{queryId}` returns 204 on success | Cancel pattern | If Trino returns different status codes, cancel confirmation logic needs adjustment |
 | A5 | `GET /v1/query/{queryId}` returns query info with state field | Cancel polling | If endpoint doesn't exist or returns different shape, polling fails |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **set_http_session call frequency in trino-python-client**
+1. **set_http_session call frequency in trino-python-client** -- RESOLVED
    - What we know: JWTAuthentication.set_http_session sets auth on the HTTP session
    - What's unclear: Is this called once per connection or once per request?
    - Recommendation: Integration test with a short-lived JWT token to verify; fallback to new-connection-per-request if needed
+   - **Resolution:** Plans use new-connection-per-request pattern (TrinoClient._make_connection() creates a fresh trino.dbapi.Connection for every query execution). This sidesteps the ambiguity entirely -- each connection gets a fresh set_http_session call, so PerCallJWTAuthentication re-reads the env var on every query. Additionally, the D-13 retry-once logic calls build_authentication() to get a fresh auth object before the retry attempt, ensuring rotated credentials are picked up even within a single request cycle.
 
-2. **Trino 480 DELETE /v1/query/{queryId} exact behavior**
+2. **Trino 480 DELETE /v1/query/{queryId} exact behavior** -- RESOLVED
    - What we know: REST docs say "DELETE to nextUri terminates a running query"
    - What's unclear: Whether DELETE to /v1/query/{queryId} (not nextUri) also works
    - Recommendation: Test in integration against Trino 480; if /v1/query/{queryId} doesn't work, fall back to storing and deleting the last-known nextUri
+   - **Resolution:** Plans implement DELETE /v1/query/{queryId} as the primary path with a polling confirmation loop (D-08). Integration test test_cancellation.py will verify the exact behavior against Trino 480. If /v1/query/{queryId} DELETE does not work, the cancel implementation falls back to storing the last-known nextUri during cursor iteration.
 
-3. **Lakekeeper healthcheck binary path**
+3. **Lakekeeper healthcheck binary path** -- RESOLVED
    - What we know: Lakekeeper docs show a healthcheck command
    - What's unclear: Exact binary path inside the container image
    - Recommendation: Verify with `docker run --rm quay.io/lakekeeper/catalog:latest-main ls /home/nonroot/`
+   - **Resolution:** docker-compose.yml uses `/home/nonroot/lakekeeper healthcheck` as documented. Integration test stack boot (Plan 05 Task 1) will validate this during the first docker-compose up. If the path differs, the healthcheck command in docker-compose.yml is the single place to update.
 
 ## Environment Availability
 
