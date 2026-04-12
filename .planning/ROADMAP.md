@@ -62,9 +62,14 @@ Requirements cluster naturally into 9 functional areas that map one-to-one onto 
   3. An integration test starts a long-running Trino query, cancels it via the adapter's cancel API, and verifies the corresponding `DELETE /v1/query/{queryId}` call was observed by a recording Trino fixture; no query remains in `system.runtime.queries` after the cancel. All Trino calls occur via `asyncio.to_thread` with a bounded 4-worker thread pool and the MCP event loop never blocks (verified via an event-loop-lag probe in tests). (TRN-02, TRN-06, TRN-15 — §6.2 safety items 6 and 7)
   4. On adapter init, the server probes `SELECT node_version FROM system.runtime.nodes` and the Iceberg catalog config, records a capability matrix, and refuses to initialize against Trino < 429 with a structured error; a rule requiring a newer Trino reports `rule_skipped: requires_trino >= X` as a structured finding, never an exception. (TRN-07, TRN-08, TRN-14 — §6.2 safety item 7)
   5. The adapter can read `system.runtime.*`, `system.metadata.*`, and Iceberg metadata tables (`$snapshots`, `$files`, `$manifests`, `$partitions`, `$history`, `$refs`) for a user-supplied table via the `StatsSource`/`CatalogSource` ports; the `OfflinePlanSource` accepts a pasted `EXPLAIN (FORMAT JSON)` text payload and produces output indistinguishable by the downstream pipeline from the live-mode output (same port, same return type). (TRN-10, TRN-12, TRN-13)
-**Plans**: TBD
+**Plans**: 5 plans across 3 waves
+  - [ ] 02-01-PLAN.md — Wave 1: SqlClassifier + error taxonomy + auth builder + settings extension
+  - [ ] 02-02-PLAN.md — Wave 1: Hexagonal ports (PlanSource/StatsSource/CatalogSource) + OfflinePlanSource
+  - [ ] 02-03-PLAN.md — Wave 2: TrinoClient + QueryHandle + pool + cancel + logging + architectural invariant test
+  - [ ] 02-04-PLAN.md — Wave 2: CapabilityMatrix + version probe + live port adapters
+  - [ ] 02-05-PLAN.md — Wave 3: Integration test harness (docker-compose + testcontainers) + CI wiring
 **UI hint**: no
-**Needs research**: yes — trino-python-client cancellation mechanics (reliable query-id capture under concurrency + `DELETE /v1/query/{queryId}` via the sync client), JWT refresh hooks, Lakekeeper `/v1/config` endpoint shape. Trigger `/gsd-research-phase` before planning.
+**Needs research**: done — see 02-RESEARCH.md
 
 ### Phase 3: Plan Parser & Normalizer
 **Goal**: Raw Trino `EXPLAIN` JSON is converted into two distinct typed plan classes (`EstimatedPlan` from `EXPLAIN`, `ExecutedPlan` from `EXPLAIN ANALYZE`) that tolerate version drift via per-node `raw` dict bags, normalize common operator variants (`ScanFilterProject`, `Project` wrappers), and expose Iceberg operator details (split count, file count, partition spec id). The multi-version fixture corpus that every rule will depend on is captured and snapshot-gated.
