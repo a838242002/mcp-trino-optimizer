@@ -1,0 +1,161 @@
+version: "3.9"
+
+# Integration test stack: Trino 480 + Lakekeeper (REST Iceberg catalog) + Postgres + MinIO
+# Ports bound to 127.0.0.1 only — local-dev and CI only, not production (T-02-17)
+
+networks:
+  mcp-trino-test:
+    driver: bridge
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: lakekeeper
+      POSTGRES_PASSWORD: lakekeeper
+      POSTGRES_DB: lakekeeper
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lakekeeper"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "127.0.0.1:5432:5432"
+    networks:
+      - mcp-trino-test
+
+  minio:
+    image: minio/minio:RELEASE.2025-07-23T15-54-02Z
+    command: server /data --console-address :9001
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    networks:
+      - mcp-trino-test
+
+  createbuckets:
+    image: minio/mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+        mc alias set local http://minio:9000 minioadmin minioadmin &&
+        mc mb local/warehouse --ignore-existing &&
+        mc anonymous set public local/warehouse &&
+        echo 'Bucket ready.'
+      "
+    networks:
+      - mcp-trino-test
+
+  migrate:
+    image: quay.io/lakekeeper/catalog:latest-main
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: migrate
+    environment:
+      LAKEKEEPER__PG_ENCRYPTION_KEY: "0123456789abcdef0123456789abcdef"
+      LAKEKEEPER__PG_DATABASE_URL_READ: "postgresql://lakekeeper:lakekeeper@postgres:5432/lakekeeper"
+      LAKEKEEPER__PG_DATABASE_URL_WRITE: "postgresql://lakekeeper:lakekeeper@postgres:5432/lakekeeper"
+    networks:
+      - mcp-trino-test
+
+  lakekeeper:
+    image: quay.io/lakekeeper/catalog:latest-main
+    depends_on:
+      postgres:
+        condition: service_healthy
+      createbuckets:
+        condition: service_completed_successfully
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      LAKEKEEPER__BASE_URI: "http://lakekeeper:8181"
+      LAKEKEEPER__LISTEN_PORT: "8181"
+      LAKEKEEPER__PG_ENCRYPTION_KEY: "0123456789abcdef0123456789abcdef"
+      LAKEKEEPER__PG_DATABASE_URL_READ: "postgresql://lakekeeper:lakekeeper@postgres:5432/lakekeeper"
+      LAKEKEEPER__PG_DATABASE_URL_WRITE: "postgresql://lakekeeper:lakekeeper@postgres:5432/lakekeeper"
+    healthcheck:
+      test: ["/home/nonroot/lakekeeper", "healthcheck"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+    ports:
+      - "127.0.0.1:8181:8181"
+    networks:
+      - mcp-trino-test
+
+  bootstrap:
+    image: curlimages/curl:latest
+    depends_on:
+      lakekeeper:
+        condition: service_healthy
+    entrypoint: >
+      sh -c "
+        curl -sf -X POST http://lakekeeper:8181/management/v1/bootstrap \
+          -H 'Content-Type: application/json' \
+          -d '{\"accept-terms\": true}' &&
+        echo 'Bootstrap done.'
+      "
+    networks:
+      - mcp-trino-test
+
+  initwarehouse:
+    image: curlimages/curl:latest
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+    entrypoint: >
+      sh -c "
+        curl -sf -X POST http://lakekeeper:8181/management/v1/warehouse \
+          -H 'Content-Type: application/json' \
+          -d '{
+            \"warehouse-name\": \"test\",
+            \"project-id\": \"00000000-0000-0000-0000-000000000000\",
+            \"storage-profile\": {
+              \"type\": \"s3\",
+              \"bucket\": \"warehouse\",
+              \"endpoint\": \"http://minio:9000\",
+              \"region\": \"us-east-1\",
+              \"path-style-access\": true,
+              \"flavor\": \"minio\",
+              \"sts-enabled\": false
+            },
+            \"storage-credential\": {
+              \"type\": \"s3\",
+              \"credential-type\": \"access-key\",
+              \"aws-access-key-id\": \"minioadmin\",
+              \"aws-secret-access-key\": \"minioadmin\"
+            }
+          }' &&
+        echo 'Warehouse initialized.'
+      "
+    networks:
+      - mcp-trino-test
+
+  trino:
+    image: trinodb/trino:480
+    depends_on:
+      initwarehouse:
+        condition: service_completed_successfully
+    ports:
+      - "127.0.0.1:8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/v1/info"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
+    volumes:
+      - ./trino/etc/catalog:/etc/trino/catalog
+    networks:
+      - mcp-trino-test
