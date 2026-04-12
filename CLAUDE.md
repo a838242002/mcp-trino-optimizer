@@ -216,7 +216,20 @@ A Model Context Protocol (MCP) server that helps Claude Code (and other MCP-comp
 <!-- GSD:conventions-start source:CONVENTIONS.md -->
 ## Conventions
 
-Conventions not yet established. Will populate as patterns emerge during development.
+### Plan File Naming
+
+Plan files must include a descriptive topic slug in the filename:
+
+```
+{phase}-{seq}-{topic}-PLAN.md
+```
+
+Examples from Phase 1 (the reference pattern):
+- `01-01-test-harness-scaffold-PLAN.md`
+- `01-02-safety-primitives-PLAN.md`
+- `01-03-settings-logging-runtime-PLAN.md`
+
+The topic slug should be 2–5 kebab-case words describing what the plan builds. Generic names like `02-01-PLAN.md` are not acceptable.
 <!-- GSD:conventions-end -->
 
 <!-- GSD:architecture-start source:ARCHITECTURE.md -->
