@@ -61,9 +61,7 @@ _ALL_FIXTURES = _collect_fixtures()
     _ALL_FIXTURES,
     ids=_fixture_id,
 )
-def test_fixture_parses_without_error(
-    version: str, name: str, path: Path, plan_type: str
-) -> None:
+def test_fixture_parses_without_error(version: str, name: str, path: Path, plan_type: str) -> None:
     """Every fixture file must parse without raising any exception.
 
     Verifies:
@@ -92,9 +90,7 @@ def test_fixture_parses_without_error(
     _ALL_FIXTURES,
     ids=_fixture_id,
 )
-def test_fixture_no_parse_error(
-    version: str, name: str, path: Path, plan_type: str
-) -> None:
+def test_fixture_no_parse_error(version: str, name: str, path: Path, plan_type: str) -> None:
     """No fixture should raise ParseError.
 
     ParseError is reserved for completely unparseable input (invalid JSON,
@@ -118,9 +114,7 @@ def test_fixture_no_parse_error(
     _ALL_FIXTURES,
     ids=_fixture_id,
 )
-def test_fixture_schema_drift_warnings_captured(
-    version: str, name: str, path: Path, plan_type: str
-) -> None:
+def test_fixture_schema_drift_warnings_captured(version: str, name: str, path: Path, plan_type: str) -> None:
     """Schema drift warnings must be captured in the plan object, not raised.
 
     Any warnings (unexpected fields, missing fields) must be in
@@ -134,9 +128,7 @@ def test_fixture_schema_drift_warnings_captured(
         plan = parse_executed_plan(text, trino_version=version)
 
     # schema_drift_warnings must be a list (possibly empty)
-    assert isinstance(plan.schema_drift_warnings, list), (
-        f"schema_drift_warnings is not a list for {version}/{name}"
-    )
+    assert isinstance(plan.schema_drift_warnings, list), f"schema_drift_warnings is not a list for {version}/{name}"
     # Each warning must have the mandatory fields
     for w in plan.schema_drift_warnings:
         assert hasattr(w, "node_path"), "SchemaDriftWarning missing node_path"
@@ -149,9 +141,7 @@ def test_fixture_schema_drift_warnings_captured(
     [f for f in _ALL_FIXTURES if f[1] in ("simple_select", "aggregate")],
     ids=_fixture_id,
 )
-def test_estimated_fixture_has_typed_cost_estimates(
-    version: str, name: str, path: Path, plan_type: str
-) -> None:
+def test_estimated_fixture_has_typed_cost_estimates(version: str, name: str, path: Path, plan_type: str) -> None:
     """EXPLAIN JSON fixtures (estimated plans) should have CostEstimate entries.
 
     Simple select and aggregate queries produce cost estimates for all nodes.
@@ -166,8 +156,7 @@ def test_estimated_fixture_has_typed_cost_estimates(
     all_nodes = list(plan.walk())
     nodes_with_estimates = [n for n in all_nodes if len(n.estimates) > 0]
     assert len(nodes_with_estimates) > 0, (
-        f"No nodes with CostEstimate in {version}/{name} — "
-        "expected cost estimates in EXPLAIN JSON output"
+        f"No nodes with CostEstimate in {version}/{name} — expected cost estimates in EXPLAIN JSON output"
     )
 
 
@@ -176,9 +165,7 @@ def test_estimated_fixture_has_typed_cost_estimates(
     [f for f in _ALL_FIXTURES if f[1] in ("simple_select", "aggregate")],
     ids=_fixture_id,
 )
-def test_executed_fixture_has_runtime_metrics(
-    version: str, name: str, path: Path, plan_type: str
-) -> None:
+def test_executed_fixture_has_runtime_metrics(version: str, name: str, path: Path, plan_type: str) -> None:
     """EXPLAIN ANALYZE fixtures (executed plans) should have runtime metrics.
 
     Simple select and aggregate queries should have CPU time and output rows
@@ -195,25 +182,22 @@ def test_executed_fixture_has_runtime_metrics(
     nodes_with_output_rows = [n for n in all_nodes if n.output_rows is not None]
 
     assert len(nodes_with_cpu) > 0, (
-        f"No nodes with cpu_time_ms in {version}/{name} — "
-        "expected runtime metrics in EXPLAIN ANALYZE output"
+        f"No nodes with cpu_time_ms in {version}/{name} — expected runtime metrics in EXPLAIN ANALYZE output"
     )
     assert len(nodes_with_output_rows) > 0, (
-        f"No nodes with output_rows in {version}/{name} — "
-        "expected runtime metrics in EXPLAIN ANALYZE output"
+        f"No nodes with output_rows in {version}/{name} — expected runtime metrics in EXPLAIN ANALYZE output"
     )
 
 
 # ── Snapshot tests ────────────────────────────────────────────────────────────
+
 
 @pytest.mark.parametrize(
     ("version", "name", "path", "plan_type"),
     _ALL_FIXTURES,
     ids=_fixture_id,
 )
-def test_fixture_snapshot(
-    version: str, name: str, path: Path, plan_type: str, snapshot: SnapshotAssertion
-) -> None:
+def test_fixture_snapshot(version: str, name: str, path: Path, plan_type: str, snapshot: SnapshotAssertion) -> None:
     """Parsed plan must match the stored syrupy snapshot.
 
     When Trino adds or renames a field, this test fails with a clean diff

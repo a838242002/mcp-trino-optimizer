@@ -173,7 +173,7 @@ def _unwrap_fragment_map(
                         severity="info",
                     )
                 )
-            return data["0"]  # type: ignore[return-value]
+            return data["0"]
         else:
             warnings.append(
                 SchemaDriftWarning(
@@ -188,7 +188,7 @@ def _unwrap_fragment_map(
             # Use lexicographically first key as fallback
             first_key = sorted(data.keys())[0]
             if isinstance(data[first_key], dict):
-                return data[first_key]  # type: ignore[return-value]
+                return data[first_key]  # type: ignore[no-any-return]
 
     return data
 

@@ -16,7 +16,6 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-import time
 from pathlib import Path
 
 import trino
@@ -59,16 +58,9 @@ INSERT_ROWS_TEMPLATE = """INSERT INTO iceberg.test_fixtures.orders VALUES
 """
 
 QUERIES: dict[str, str] = {
-    "simple_select": (
-        "SELECT id, name FROM iceberg.test_fixtures.orders WHERE id > 10"
-    ),
-    "full_scan": (
-        "SELECT * FROM iceberg.test_fixtures.orders"
-    ),
-    "aggregate": (
-        "SELECT status, COUNT(*), SUM(amount) "
-        "FROM iceberg.test_fixtures.orders GROUP BY status"
-    ),
+    "simple_select": ("SELECT id, name FROM iceberg.test_fixtures.orders WHERE id > 10"),
+    "full_scan": ("SELECT * FROM iceberg.test_fixtures.orders"),
+    "aggregate": ("SELECT status, COUNT(*), SUM(amount) FROM iceberg.test_fixtures.orders GROUP BY status"),
     "join": (
         "SELECT a.id, a.name, b.status "
         "FROM iceberg.test_fixtures.orders a "
@@ -195,10 +187,9 @@ def capture_version(
         print(f"  Connection failed: {e}", file=sys.stderr)
         return 0
 
-    if not skip_setup:
-        if not _setup_test_table(conn):
-            print("  Skipping fixture capture (table setup failed).", file=sys.stderr)
-            return 0
+    if not skip_setup and not _setup_test_table(conn):
+        print("  Skipping fixture capture (table setup failed).", file=sys.stderr)
+        return 0
 
     captured = 0
     for query_name, sql in queries.items():
@@ -233,9 +224,7 @@ def capture_version(
 
 def main() -> None:
     """Entry point for the fixture capture script."""
-    parser = argparse.ArgumentParser(
-        description="Capture Trino EXPLAIN fixture corpus for multi-version testing."
-    )
+    parser = argparse.ArgumentParser(description="Capture Trino EXPLAIN fixture corpus for multi-version testing.")
     parser.add_argument("--host", default="localhost", help="Trino host (default: localhost)")
     parser.add_argument("--port", type=int, default=8080, help="Trino port (default: 8080)")
     parser.add_argument(

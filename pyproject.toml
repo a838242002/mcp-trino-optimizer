@@ -99,6 +99,7 @@ ignore = ["E501"]  # line length enforced by formatter
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["T20"]  # tests may print during debug
+"scripts/**/*.py" = ["T20"]  # dev scripts use print for user-facing output
 "src/mcp_trino_optimizer/safety/stdout_guard.py" = ["T20"]  # may touch sys.stdout
 "src/mcp_trino_optimizer/adapters/trino/client.py" = ["ASYNC109"]  # timeout param is domain-level budget, not asyncio.timeout pattern
 "src/mcp_trino_optimizer/adapters/trino/errors.py" = ["N818"]  # established public API names; renaming breaks tests

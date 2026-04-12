@@ -42,9 +42,7 @@ _FILTER_KEYWORDS = frozenset(
 # Comparison operators that definitively indicate a predicate (not a descriptor key=value).
 # Also matches = followed by a quoted string or numeric literal to catch bare equality
 # predicates like `status = 'open'` or `id = 42` without false-positives on `table = schema.name`.
-_COMPARISON_OPS_RE = re.compile(
-    r"(?:!=|<>|>=|<=|(?<![=<>!])[><](?![=])|(?<![=<>!])=\s*(?:'[^']*'|\d))"
-)
+_COMPARISON_OPS_RE = re.compile(r"(?:!=|<>|>=|<=|(?<![=<>!])[><](?![=])|(?<![=<>!])=\s*(?:'[^']*'|\d))")
 
 
 def normalize_plan_tree(root: PlanNode, warnings: list[SchemaDriftWarning]) -> PlanNode:

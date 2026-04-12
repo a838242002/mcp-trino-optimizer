@@ -360,7 +360,7 @@ class TrinoClient:
 
         # EXPLAIN ANALYZE returns plain text, not JSON — skip JSON parsing for executed plans
         if plan_type == "executed":
-            plan_json: dict = {}
+            plan_json: dict[str, Any] = {}
         else:
             try:
                 plan_json = _json.loads(plan_text) if plan_text else {}
