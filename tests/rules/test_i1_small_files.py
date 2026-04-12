@@ -8,13 +8,10 @@ Three fixture classes:
 
 from __future__ import annotations
 
-import pytest
-
 from mcp_trino_optimizer.parser.models import BasePlan, EstimatedPlan, ExecutedPlan, PlanNode
 from mcp_trino_optimizer.rules.evidence import EvidenceBundle
 from mcp_trino_optimizer.rules.i1_small_files import I1SmallFiles
 from mcp_trino_optimizer.rules.thresholds import RuleThresholds
-
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 

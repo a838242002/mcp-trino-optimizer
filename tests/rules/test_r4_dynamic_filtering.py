@@ -10,8 +10,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 from mcp_trino_optimizer.parser.models import EstimatedPlan, PlanNode
 from mcp_trino_optimizer.parser.parser import parse_estimated_plan
 from mcp_trino_optimizer.rules.evidence import EvidenceBundle

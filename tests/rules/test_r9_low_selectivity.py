@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from mcp_trino_optimizer.parser.models import CostEstimate, EstimatedPlan, ExecutedPlan, PlanNode
+from mcp_trino_optimizer.parser.models import ExecutedPlan, PlanNode
 from mcp_trino_optimizer.parser.parser import parse_estimated_plan
 from mcp_trino_optimizer.rules.evidence import EvidenceBundle
 from mcp_trino_optimizer.rules.r9_low_selectivity import R9LowSelectivity

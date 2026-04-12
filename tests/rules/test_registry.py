@@ -2,11 +2,11 @@
 
 from typing import ClassVar
 
+from mcp_trino_optimizer.parser.models import BasePlan
 from mcp_trino_optimizer.rules.base import Rule
 from mcp_trino_optimizer.rules.evidence import EvidenceBundle, EvidenceRequirement
 from mcp_trino_optimizer.rules.findings import RuleFinding
 from mcp_trino_optimizer.rules.registry import RuleRegistry
-from mcp_trino_optimizer.parser.models import BasePlan
 
 
 class _FakeRule(Rule):
