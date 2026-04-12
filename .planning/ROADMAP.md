@@ -22,7 +22,7 @@ Requirements cluster naturally into 9 functional areas that map one-to-one onto 
 
 - [x] **Phase 1: Skeleton & Safety Foundation** - Server boots on stdio and Streamable HTTP, answers `initialize`, exposes `mcp_selftest`, ships via uv/uvx/pip/Docker; all critical safety foundations (stdio discipline, redaction, untrusted envelope, strict schemas) in place
 - [ ] **Phase 2: Trino Adapter & Read-Only Gate** - Live Trino client with AST-based read-only classifier, cancel/timeout propagation, async wrapper, version + capability probes, offline plan source; no plan parsing yet
-- [ ] **Phase 3: Plan Parser & Normalizer** - Typed `EstimatedPlan` / `ExecutedPlan` from `EXPLAIN (FORMAT JSON)` and `EXPLAIN ANALYZE`, tolerant-tree with `raw` bags, multi-version Trino fixture corpus parses clean
+- [x] **Phase 3: Plan Parser & Normalizer** - Typed `EstimatedPlan` / `ExecutedPlan` from `EXPLAIN (FORMAT JSON)` and `EXPLAIN ANALYZE`, tolerant-tree with `raw` bags, multi-version Trino fixture corpus parses clean (completed 2026-04-12)
 - [ ] **Phase 4: Rule Engine & 13 Deterministic Rules** - Plugin registry, prefetch + isolated-failure engine, all table-stakes rules (R1-R9 + I1/I3/I6/I8 + D11) producing `RuleFinding` with evidence
 - [ ] **Phase 5: Recommendation Engine** - Scored, prioritized `Recommendation` objects with conflict resolution, audited rule-ID-keyed templates, session-property grounding, Iceberg table health summary, operator bottleneck ranking
 - [ ] **Phase 6: Safe SQL Rewrite Engine** - sqlglot-AST whitelist rewrites (projection pruning, function-wrapped predicate unwrap, partition-transform-aligned rewrite) with preconditions, diff, and round-trip validation
@@ -82,8 +82,8 @@ Requirements cluster naturally into 9 functional areas that map one-to-one onto 
   4. A plan shape containing `ScanFilterProject` is normalized by the parser into the equivalent `TableScan + filter + projection` structure before any consumer sees it; a test fixture with a `Project` wrapper around a scan can be found by a "find scan under this subtree" walk without special-casing. (PLN-05)
   5. The multi-version fixture corpus (at least one `EXPLAIN` + one `EXPLAIN ANALYZE` per version × three versions) is stored in the repo, is gated by a `syrupy` snapshot test in CI, and every fixture parses without error; when a future Trino version adds a field, the snapshot test surfaces it as a diff rather than a crash. (PLN-06)
 **Plans**: 2 plans across 2 waves
-  - [ ] 03-01-parser-models-normalizer-PLAN.md — Wave 1: PlanNode models, dual-path parser (JSON + text), normalizer, port/adapter migration
-  - [ ] 03-02-fixture-corpus-snapshots-PLAN.md — Wave 2: Multi-version fixture capture script + corpus, syrupy snapshot tests
+  - [x] 03-01-parser-models-normalizer-PLAN.md — Wave 1: PlanNode models, dual-path parser (JSON + text), normalizer, port/adapter migration
+  - [x] 03-02-fixture-corpus-snapshots-PLAN.md — Wave 2: Multi-version fixture capture script + corpus, syrupy snapshot tests
 **UI hint**: no
 **Needs research**: done — see 03-RESEARCH.md
 
@@ -189,7 +189,7 @@ Requirements cluster naturally into 9 functional areas that map one-to-one onto 
 |-------|----------------|--------|-----------|
 | 1. Skeleton & Safety Foundation | 0/? | Not started | - |
 | 2. Trino Adapter & Read-Only Gate | 0/? | Not started | - |
-| 3. Plan Parser & Normalizer | 0/? | Not started | - |
+| 3. Plan Parser & Normalizer | 2/2 | Complete   | 2026-04-12 |
 | 4. Rule Engine & 13 Deterministic Rules | 0/? | Not started | - |
 | 5. Recommendation Engine | 0/? | Not started | - |
 | 6. Safe SQL Rewrite Engine | 0/? | Not started | - |

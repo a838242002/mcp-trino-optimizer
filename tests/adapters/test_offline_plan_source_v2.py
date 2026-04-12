@@ -10,7 +10,6 @@ import json
 
 import pytest
 
-
 VALID_ESTIMATED_JSON = json.dumps(
     {
         "id": "0",

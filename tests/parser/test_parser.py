@@ -6,7 +6,6 @@ import json
 
 import pytest
 
-
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
 SIMPLE_EXPLAIN_JSON = json.dumps(
