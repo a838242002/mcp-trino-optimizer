@@ -57,7 +57,7 @@ _ALL_FIXTURES = _collect_fixtures()
 
 
 @pytest.mark.parametrize(
-    "version,name,path,plan_type",
+    ("version", "name", "path", "plan_type"),
     _ALL_FIXTURES,
     ids=_fixture_id,
 )
@@ -88,7 +88,7 @@ def test_fixture_parses_without_error(
 
 
 @pytest.mark.parametrize(
-    "version,name,path,plan_type",
+    ("version", "name", "path", "plan_type"),
     _ALL_FIXTURES,
     ids=_fixture_id,
 )
@@ -114,7 +114,7 @@ def test_fixture_no_parse_error(
 
 
 @pytest.mark.parametrize(
-    "version,name,path,plan_type",
+    ("version", "name", "path", "plan_type"),
     _ALL_FIXTURES,
     ids=_fixture_id,
 )
@@ -145,7 +145,7 @@ def test_fixture_schema_drift_warnings_captured(
 
 
 @pytest.mark.parametrize(
-    "version,name,path,plan_type",
+    ("version", "name", "path", "plan_type"),
     [f for f in _ALL_FIXTURES if f[1] in ("simple_select", "aggregate")],
     ids=_fixture_id,
 )
@@ -172,7 +172,7 @@ def test_estimated_fixture_has_typed_cost_estimates(
 
 
 @pytest.mark.parametrize(
-    "version,name,path,plan_type",
+    ("version", "name", "path", "plan_type"),
     [f for f in _ALL_FIXTURES if f[1] in ("simple_select", "aggregate")],
     ids=_fixture_id,
 )
@@ -207,7 +207,7 @@ def test_executed_fixture_has_runtime_metrics(
 # ── Snapshot tests ────────────────────────────────────────────────────────────
 
 @pytest.mark.parametrize(
-    "version,name,path,plan_type",
+    ("version", "name", "path", "plan_type"),
     _ALL_FIXTURES,
     ids=_fixture_id,
 )

@@ -155,7 +155,7 @@ def _unwrap_fragment_map(
         return data
 
     # Check if all keys are string integers — fragment map format
-    if all(k.isdigit() for k in data.keys()):
+    if all(k.isdigit() for k in data):
         # Fragment "0" is the top-level output fragment (the query root)
         if "0" in data and isinstance(data["0"], dict):
             if len(data) > 1:
