@@ -9,7 +9,8 @@ from __future__ import annotations
 import pytest
 
 from mcp_trino_optimizer.adapters.trino.client import TrinoClient
-from mcp_trino_optimizer.ports.plan_source import ExplainPlan
+from mcp_trino_optimizer.adapters.trino.handle import TimeoutResult
+from mcp_trino_optimizer.parser.models import EstimatedPlan, ExecutedPlan
 
 
 @pytest.mark.integration
@@ -17,29 +18,29 @@ class TestFetchPlans:
     """EXPLAIN plan fetching via TrinoClient against real Trino 480."""
 
     async def test_fetch_plan_select_one(self, trino_client: TrinoClient) -> None:
-        """EXPLAIN (FORMAT JSON) SELECT 1 returns an estimated ExplainPlan."""
+        """EXPLAIN (FORMAT JSON) SELECT 1 returns an EstimatedPlan."""
         result = await trino_client.fetch_plan("SELECT 1")
-        assert isinstance(result, ExplainPlan), f"Expected ExplainPlan, got {type(result)}"
+        assert isinstance(result, EstimatedPlan), f"Expected EstimatedPlan, got {type(result)}"
         assert result.plan_type == "estimated"
-        assert result.plan_json is not None
+        assert result.root is not None
 
     async def test_fetch_analyze_plan_select_one(self, trino_client: TrinoClient) -> None:
-        """EXPLAIN ANALYZE (FORMAT JSON) SELECT 1 returns an executed ExplainPlan."""
+        """EXPLAIN ANALYZE SELECT 1 returns an ExecutedPlan (or TimeoutResult on slow CI)."""
         result = await trino_client.fetch_analyze_plan("SELECT 1")
-        assert isinstance(result, ExplainPlan), f"Expected ExplainPlan, got {type(result)}"
+        assert not isinstance(result, TimeoutResult), "Unexpected timeout on SELECT 1"
+        assert isinstance(result, ExecutedPlan), f"Expected ExecutedPlan, got {type(result)}"
         assert result.plan_type == "executed"
-        assert result.plan_json is not None
+        assert result.root is not None
 
     async def test_fetch_distributed_plan(self, trino_client: TrinoClient) -> None:
-        """EXPLAIN (TYPE DISTRIBUTED) SELECT 1 returns a distributed ExplainPlan."""
+        """EXPLAIN (TYPE DISTRIBUTED) SELECT 1 returns an EstimatedPlan."""
         result = await trino_client.fetch_distributed_plan("SELECT 1")
-        assert isinstance(result, ExplainPlan), f"Expected ExplainPlan, got {type(result)}"
-        assert result.plan_type == "distributed"
+        assert isinstance(result, EstimatedPlan), f"Expected EstimatedPlan, got {type(result)}"
+        assert result.plan_type == "estimated"
 
     async def test_fetch_plan_iceberg_table(self, trino_client: TrinoClient, seeded_stack: tuple[str, int]) -> None:
-        """EXPLAIN plan for a real Iceberg table query returns a populated ExplainPlan."""
+        """EXPLAIN plan for a real Iceberg table query returns a populated EstimatedPlan."""
         result = await trino_client.fetch_plan("SELECT * FROM iceberg.test_schema.test_table")
-        assert isinstance(result, ExplainPlan), f"Expected ExplainPlan, got {type(result)}"
+        assert isinstance(result, EstimatedPlan), f"Expected EstimatedPlan, got {type(result)}"
         assert result.plan_type == "estimated"
-        # The plan JSON should have content for a real table scan
-        assert result.plan_json is not None
+        assert result.root is not None

@@ -15,7 +15,7 @@ import time
 import pytest
 
 from mcp_trino_optimizer.adapters.trino.client import TrinoClient
-from mcp_trino_optimizer.ports.plan_source import ExplainPlan
+from mcp_trino_optimizer.parser.models import EstimatedPlan
 
 
 @pytest.mark.integration
@@ -59,7 +59,7 @@ class TestEventLoopLag:
 
         # Verify all queries returned valid plans
         for result in results:
-            assert isinstance(result, ExplainPlan), f"Expected ExplainPlan, got {type(result)}"
+            assert isinstance(result, EstimatedPlan), f"Expected EstimatedPlan, got {type(result)}"
 
         # Verify event-loop was never blocked > 100ms
         if len(tick_timestamps) < 2:

@@ -12,7 +12,7 @@ import pytest
 
 from mcp_trino_optimizer.adapters.trino.client import TrinoClient
 from mcp_trino_optimizer.adapters.trino.handle import TimeoutResult
-from mcp_trino_optimizer.ports.plan_source import ExplainPlan
+from mcp_trino_optimizer.parser.models import EstimatedPlan, ExecutedPlan
 
 
 @pytest.mark.integration
@@ -40,7 +40,7 @@ class TestCancellation:
         else:
             # Query completed before timeout — this can happen on fast machines.
             # Still verify we got a valid result.
-            assert isinstance(result, ExplainPlan)
+            assert isinstance(result, ExecutedPlan)
 
     async def test_cancel_query_returns_bool(self, trino_client: TrinoClient) -> None:
         """cancel_query on a completed or unknown query_id returns a bool without error.
@@ -65,4 +65,4 @@ class TestCancellation:
         ]
         results = await asyncio.gather(*tasks)
         for result in results:
-            assert isinstance(result, ExplainPlan)
+            assert isinstance(result, EstimatedPlan)
