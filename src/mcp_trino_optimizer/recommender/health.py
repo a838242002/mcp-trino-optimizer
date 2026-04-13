@@ -160,9 +160,7 @@ def aggregate_iceberg_health(
             col = f.evidence.get("constraint_column", "unknown")
             is_hour = f.evidence.get("is_hour_aligned", False)
             alignment = "hour-aligned" if is_hour else "sub-hour"
-            partition_spec_evolution = (
-                f"Column '{col}' constraint is {alignment}, not day-aligned"
-            )
+            partition_spec_evolution = f"Column '{col}' constraint is {alignment}, not day-aligned"
             break
 
         health_score = _compute_health_score(table_findings)

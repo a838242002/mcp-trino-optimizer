@@ -103,7 +103,9 @@ class TestEngineBottleneckIntegration:
     def test_executed_plan_produces_bottleneck(self) -> None:
         """Findings + ExecutedPlan -> bottleneck_ranking populated."""
         root = _make_node(
-            "n1", cpu_time_ms=100.0, wall_time_ms=100.0,
+            "n1",
+            cpu_time_ms=100.0,
+            wall_time_ms=100.0,
             children=[_make_node("n2", cpu_time_ms=50.0, wall_time_ms=50.0)],
         )
         plan = ExecutedPlan(root=root)

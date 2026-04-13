@@ -12,8 +12,20 @@ from mcp_trino_optimizer.recommender.templates import (
 )
 
 ALL_RULE_IDS = [
-    "R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9",
-    "I1", "I3", "I6", "I8", "D11",
+    "R1",
+    "R2",
+    "R3",
+    "R4",
+    "R5",
+    "R6",
+    "R7",
+    "R8",
+    "R9",
+    "I1",
+    "I3",
+    "I6",
+    "I8",
+    "D11",
 ]
 
 
@@ -34,9 +46,7 @@ class TestRenderRecommendation:
     """render_recommendation produces valid output for all rules."""
 
     def test_r1_basic_render(self) -> None:
-        result = render_recommendation(
-            "R1", {"operator_id": "0", "table_name": "orders"}
-        )
+        result = render_recommendation("R1", {"operator_id": "0", "table_name": "orders"})
         assert result["reasoning"]
         assert result["expected_impact"]
         assert result["validation_steps"]
@@ -108,6 +118,4 @@ class TestPromptInjectionDefense:
         for rule_id in ALL_RULE_IDS:
             result = render_recommendation(rule_id, evidence)
             for key in ("reasoning", "expected_impact", "validation_steps"):
-                assert "DROP TABLE" not in result[key], (
-                    f"Injection leaked in {rule_id}.{key}"
-                )
+                assert "DROP TABLE" not in result[key], f"Injection leaked in {rule_id}.{key}"

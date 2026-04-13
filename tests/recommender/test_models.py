@@ -54,9 +54,7 @@ class TestRecommendationModel:
             evidence_summary={},
             session_property_statements=["SET SESSION join_distribution_type = 'PARTITIONED'"],
         )
-        assert rec.session_property_statements == [
-            "SET SESSION join_distribution_type = 'PARTITIONED'"
-        ]
+        assert rec.session_property_statements == ["SET SESSION join_distribution_type = 'PARTITIONED'"]
         assert rec.considered_but_rejected == []
 
     def test_recommendation_invalid_confidence(self) -> None:

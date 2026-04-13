@@ -222,10 +222,7 @@ TEMPLATES: dict[str, dict[str, str]] = {
             "snapshots increase metadata size and slow down table operations "
             "like planning and file listing."
         ),
-        "expected_impact": (
-            "Expiring old snapshots will reduce metadata table size and "
-            "improve query planning time."
-        ),
+        "expected_impact": ("Expiring old snapshots will reduce metadata table size and improve query planning time."),
         "validation_steps": (
             "1. Run ALTER TABLE {table_name} EXECUTE expire_snapshots. "
             "2. Verify snapshot count via metadata tables. "

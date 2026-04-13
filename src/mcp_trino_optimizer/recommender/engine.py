@@ -75,9 +75,7 @@ class RecommendationEngine:
             conflict resolution audit trail.
         """
         # Step a: Filter to only RuleFinding objects
-        findings: list[RuleFinding] = [
-            r for r in engine_results if isinstance(r, RuleFinding)
-        ]
+        findings: list[RuleFinding] = [r for r in engine_results if isinstance(r, RuleFinding)]
 
         if not findings:
             return RecommendationReport(recommendations=[], considered_but_rejected=[])
@@ -105,9 +103,7 @@ class RecommendationEngine:
             narrative = render_recommendation(finding.rule_id, finding.evidence)
 
             # Build session property statements
-            session_stmts = build_set_session_statements(
-                finding.rule_id, self._capability_matrix
-            )
+            session_stmts = build_set_session_statements(finding.rule_id, self._capability_matrix)
 
             recommendations.append(
                 Recommendation(

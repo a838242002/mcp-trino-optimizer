@@ -10,9 +10,7 @@ from mcp_trino_optimizer.rules.findings import RuleFinding, Severity
 
 
 @pytest.fixture
-def sample_finding_factory() -> (
-    type[_SampleFindingFactory]
-):
+def sample_finding_factory() -> type[_SampleFindingFactory]:
     """Factory fixture that builds RuleFinding instances with sensible defaults."""
     return _SampleFindingFactory
 
@@ -39,18 +37,27 @@ class _SampleFindingFactory:
 
 
 ALL_RULE_IDS = [
-    "R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9",
-    "I1", "I3", "I6", "I8", "D11",
+    "R1",
+    "R2",
+    "R3",
+    "R4",
+    "R5",
+    "R6",
+    "R7",
+    "R8",
+    "R9",
+    "I1",
+    "I3",
+    "I6",
+    "I8",
+    "D11",
 ]
 
 
 @pytest.fixture
 def sample_findings_all_rules() -> list[RuleFinding]:
     """One finding per rule_id for full coverage."""
-    return [
-        _SampleFindingFactory.create(rule_id=rid)
-        for rid in ALL_RULE_IDS
-    ]
+    return [_SampleFindingFactory.create(rule_id=rid) for rid in ALL_RULE_IDS]
 
 
 @pytest.fixture

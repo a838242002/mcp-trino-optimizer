@@ -16,8 +16,7 @@ from mcp_trino_optimizer.recommender.models import BottleneckEntry, BottleneckRa
 from mcp_trino_optimizer.rules.findings import RuleFinding
 
 BOTTLENECK_NARRATIVE = (
-    "Operator {operator_id} ({operator_type}) consumed {cpu_pct:.1f}% of total CPU "
-    "({cpu_time_ms:.0f}ms). {detail}"
+    "Operator {operator_id} ({operator_type}) consumed {cpu_pct:.1f}% of total CPU ({cpu_time_ms:.0f}ms). {detail}"
 )
 """Template for bottleneck narrative. Uses only typed PlanNode fields."""
 

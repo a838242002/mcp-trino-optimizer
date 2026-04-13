@@ -270,7 +270,19 @@ class TestRegistryCompleteness:
         from mcp_trino_optimizer.recommender.impact import _IMPACT_EXTRACTORS
 
         expected_rules = {
-            "R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9",
-            "I1", "I3", "I6", "I8", "D11",
+            "R1",
+            "R2",
+            "R3",
+            "R4",
+            "R5",
+            "R6",
+            "R7",
+            "R8",
+            "R9",
+            "I1",
+            "I3",
+            "I6",
+            "I8",
+            "D11",
         }
         assert set(_IMPACT_EXTRACTORS.keys()) == expected_rules
