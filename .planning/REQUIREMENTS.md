@@ -85,13 +85,13 @@ Requirements for the initial v1 release. Each maps to exactly one roadmap phase.
 
 ### Recommendation Engine (REC) — Scoring, Prioritization, Narrative
 
-- [ ] **REC-01**: The recommender converts a set of `RuleFinding` objects into a prioritized list of `Recommendation` objects; priority = severity × impact × confidence
-- [ ] **REC-02**: Each `Recommendation` includes: reasoning, expected impact, risk level, validation steps the user can run, and confidence level
-- [ ] **REC-03**: Recommendation narrative is produced from audited templates keyed by `rule_id`; free-form user-origin text never flows through to recommendation body
-- [ ] **REC-04**: When two rules attach to the same operator with conflicting recommendations, the higher-confidence one wins and the other is demoted to "considered but rejected" with explicit reasoning
-- [ ] **REC-05**: When a rule's fix is a Trino session property, the recommendation includes the exact `SET SESSION` statement using the session-property name from the `trino_session_properties` resource (no hallucinated property names) (D2)
-- [ ] **REC-06**: The recommender produces an **Iceberg table health summary** per scanned table: snapshot count, small-file ratio, delete-file ratio, partition spec evolution state, last compaction reference (D5)
-- [ ] **REC-07**: The recommender produces an **operator-level bottleneck ranking** with a grounded natural-language narrative per top-N operator, referencing plan evidence (D8)
+- [x] **REC-01**: The recommender converts a set of `RuleFinding` objects into a prioritized list of `Recommendation` objects; priority = severity × impact × confidence
+- [x] **REC-02**: Each `Recommendation` includes: reasoning, expected impact, risk level, validation steps the user can run, and confidence level
+- [x] **REC-03**: Recommendation narrative is produced from audited templates keyed by `rule_id`; free-form user-origin text never flows through to recommendation body
+- [x] **REC-04**: When two rules attach to the same operator with conflicting recommendations, the higher-confidence one wins and the other is demoted to "considered but rejected" with explicit reasoning
+- [x] **REC-05**: When a rule's fix is a Trino session property, the recommendation includes the exact `SET SESSION` statement using the session-property name from the `trino_session_properties` resource (no hallucinated property names) (D2)
+- [x] **REC-06**: The recommender produces an **Iceberg table health summary** per scanned table: snapshot count, small-file ratio, delete-file ratio, partition spec evolution state, last compaction reference (D5)
+- [x] **REC-07**: The recommender produces an **operator-level bottleneck ranking** with a grounded natural-language narrative per top-N operator, referencing plan evidence (D8)
 
 ### Rewrite Engine (RWR) — Safe Transforms Only
 
@@ -268,13 +268,13 @@ Populated by the roadmapper on 2026-04-11. Every v1 REQ-ID maps to exactly one p
 | RUL-19 | Phase 4 | Complete |
 | RUL-20 | Phase 4 | Complete |
 | RUL-21 | Phase 4 | Complete |
-| REC-01 | Phase 5 | Pending |
-| REC-02 | Phase 5 | Pending |
-| REC-03 | Phase 5 | Pending |
-| REC-04 | Phase 5 | Pending |
-| REC-05 | Phase 5 | Pending |
-| REC-06 | Phase 5 | Pending |
-| REC-07 | Phase 5 | Pending |
+| REC-01 | Phase 5 | Complete |
+| REC-02 | Phase 5 | Complete |
+| REC-03 | Phase 5 | Complete |
+| REC-04 | Phase 5 | Complete |
+| REC-05 | Phase 5 | Complete |
+| REC-06 | Phase 5 | Complete |
+| REC-07 | Phase 5 | Complete |
 | RWR-01 | Phase 6 | Pending |
 | RWR-02 | Phase 6 | Pending |
 | RWR-03 | Phase 6 | Pending |
@@ -323,4 +323,4 @@ Populated by the roadmapper on 2026-04-11. Every v1 REQ-ID maps to exactly one p
 
 ---
 *Requirements defined: 2026-04-11*
-*Last updated: 2026-04-12 — PLAT-01..13, TRN-01..15, PLN-01..07 marked complete (Phases 1–3 shipped)*
+*Last updated: 2026-04-14 — REC-01..07 marked complete (Phase 5 shipped); RUL-01..21 complete (Phase 4 shipped)*

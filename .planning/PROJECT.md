@@ -60,15 +60,19 @@ Turn opaque Trino query performance problems into actionable, evidence-backed op
 - [x] Broadcast join too big (R5)
 - [x] Each rule is deterministic, testable in isolation, and produces structured `RuleFinding` with severity + evidence (RUL-01–RUL-21, 559 tests, 14 rules)
 
+#### Recommendation Engine — Phase 5 ✅ (2026-04-14)
+
+- [x] Convert rule findings into prioritized suggestions (severity × impact × confidence) with configurable P1–P4 tiers
+- [x] Each suggestion includes: reasoning, expected impact, risk level, validation steps, session property statements
+- [x] Conflict resolution for overlapping rules (R1/D11, R2/R9, R5/R8) with considered-but-rejected audit trail
+- [x] Audited narrative templates keyed by rule_id with identifier-only sanitization (prompt-injection defense verified)
+- [x] Session property grounding with Trino version gating and offline advisory fallback
+- [x] Iceberg table health summary per table (snapshot count, small-file ratio, delete-file ratio, health score)
+- [x] Operator bottleneck ranking with CPU% from ExecutedPlan (REC-01–REC-07, 173 tests, 9/9 threats closed)
+
 ### Active
 
 <!-- Current scope. Building toward these. -->
-
-#### Recommendation Engine
-
-- [ ] Convert rule findings into prioritized suggestions (severity × impact × confidence)
-- [ ] Each suggestion includes: reasoning, expected impact, risk analysis, validation steps
-- [ ] Structured output schema (JSON) usable by both humans and LLM clients
 
 #### SQL Rewrite Engine (safe mode only)
 
@@ -194,4 +198,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-13 — Phase 4 complete; RUL-01–21 moved to Validated; 14 rules shipped (R1–R9, I1/I3/I6/I8, D11); 559 tests passing*
+*Last updated: 2026-04-14 — Phase 5 complete; REC-01–07 moved to Validated; recommendation engine shipped (models, scoring, impact, conflicts, templates, session properties, engine, health, bottleneck); 752 tests passing*

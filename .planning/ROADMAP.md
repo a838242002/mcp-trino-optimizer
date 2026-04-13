@@ -186,8 +186,8 @@ Requirements cluster naturally into 9 functional areas that map one-to-one onto 
 | 1. Skeleton & Safety Foundation | 6/6 | Complete | 2026-04-12 |
 | 2. Trino Adapter & Read-Only Gate | 5/5 | Complete | 2026-04-12 |
 | 3. Plan Parser & Normalizer | 2/2 | Complete | 2026-04-12 |
-| 4. Rule Engine & 13 Deterministic Rules | 0/4 | Planned | - |
-| 5. Recommendation Engine | 0/? | Not started | - |
+| 4. Rule Engine & 13 Deterministic Rules | 4/4 | Complete | 2026-04-13 |
+| 5. Recommendation Engine | 3/3 | Complete | 2026-04-14 |
 | 6. Safe SQL Rewrite Engine | 0/? | Not started | - |
 | 7. Comparison Engine | 0/? | Not started | - |
 | 8. MCP Surface (Tools, Resources, Prompts) | 0/? | Not started | - |

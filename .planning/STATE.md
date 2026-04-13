@@ -3,18 +3,18 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-04-12T19:43:46.122Z"
+last_updated: "2026-04-14T00:00:00.000Z"
 progress:
   total_phases: 9
-  completed_phases: 4
-  total_plans: 21
-  completed_plans: 18
-  percent: 86
+  completed_phases: 5
+  total_plans: 24
+  completed_plans: 21
+  percent: 88
 ---
 
 # Project State: mcp-trino-optimizer
 
-**Last updated:** 2026-04-13
+**Last updated:** 2026-04-14
 
 ## Project Reference
 
@@ -27,24 +27,26 @@ progress:
 
 ## Current Position
 
-Phase: 05 (recommendation-engine) — NOT STARTED
+Phase: 06 (safe-sql-rewrite-engine) — NOT STARTED
 
 - **Milestone:** v1
 - **Phase 1:** Skeleton & Safety Foundation ✅ COMPLETE (2026-04-12)
 - **Phase 2:** Trino Adapter & Read-Only Gate ✅ COMPLETE (2026-04-12)
 - **Phase 3:** Plan Parser & Normalizer ✅ COMPLETE (2026-04-12)
 - **Phase 4:** Rule Engine & 13 Deterministic Rules ✅ COMPLETE (2026-04-13)
-- **Status:** Ready to execute
-- **Progress:** [████░░░░░] 4 / 9 phases complete
+- **Phase 5:** Recommendation Engine ✅ COMPLETE (2026-04-14)
+- **Status:** Ready to plan/execute Phase 6
+- **Progress:** [█████░░░░] 5 / 9 phases complete
 
 ## Performance Metrics
 
 | Metric | Value |
 |--------|-------|
-| Phases complete | 4 / 9 |
-| Plans complete | 18 / 18 (Phases 1–4) |
-| Requirements delivered | ~56 / 102 (PLAT-01–13, TRN-01–15, PLN-01–07, RUL-01–21) |
+| Phases complete | 5 / 9 |
+| Plans complete | 21 / 21 (Phases 1–5) |
+| Requirements delivered | ~63 / 102 (PLAT-01–13, TRN-01–15, PLN-01–07, RUL-01–21, REC-01–07) |
 | Rule-engine rules shipped | 14 / 14 (R1–R9, I1/I3/I6/I8, D11) |
+| Recommender components | 7 / 7 (models, scoring, impact, conflicts, templates, session properties, engine) |
 | MCP tools shipped | 1 / 8 (mcp_selftest) |
 | MCP resources shipped | 0 / 4 (target in Phase 8) |
 | MCP prompts shipped | 0 / 3 (target in Phase 8) |
@@ -78,6 +80,8 @@ Binding decisions from PROJECT.md + research SUMMARY §2. Treat as non-negotiabl
 
 - Phases 6, 9 still require research before planning (see ROADMAP.md Research-Needed Phases table)
 - Code review WR-01–04 findings from Phase 3 are non-blocking warnings (see `03-REVIEW.md`)
+- Phase 5 deviation: impact extractor evidence key names corrected to match actual rule source files (e.g., `skew_ratio` not `p99_p50_ratio` for R7)
+- Phase 5 deviation: template sanitization uses identifier-only whitelist regex instead of character stripping (stronger injection defense)
 
 ### Blockers
 
@@ -87,25 +91,25 @@ None.
 
 ### Last session
 
-- **Date:** 2026-04-13
-- **Actions:** Phase 4 full lifecycle complete:
-  - `/gsd-execute-phase 4` → 14 rules (R1–R9, I1/I3/I6/I8, D11), 559 tests passing
-  - `/gsd-validate-phase 4` → VALIDATION.md updated, all 20 tasks ✅ green, `nyquist_compliant: true`
-  - `/gsd-verify-work 4` → UAT 7/7 passed, `04-UAT.md` committed
-  - `validate unit test + integration test + lint` → fixed 19 ruff violations (PT018, PT006, SIM108, RUF005, F401, I001); all clean: 559 unit + 19 integration passed, mypy strict clean (60 files)
-  - `/gsd-secure-phase 4` → SECURITY.md created, 19/19 threats closed (10 mitigate verified, 9 accepted)
-  - `sync PROJECT.md/REQUIREMENTS.md/ROADMAP.md/STATE.md` → RUL-01–21 marked Complete, Rule Engine moved to Validated in PROJECT.md
-- **Key findings:** Trino issue #19266 (partial partition pruning) closed Jan 2025 — I8 confidence=0.6 due to plan-only signal. Trino issue #28910 (OPEN) — $partitions does not expose delete metrics; I3 uses `$files WHERE content IN (1,2)` workaround. D11 divergence_factor stored as magnitude ≥1.0. R7/D11 require ExecutedPlan (PLAN_WITH_METRICS evidence); all others work on EstimatedPlan.
+- **Date:** 2026-04-14
+- **Actions:** Phase 5 full lifecycle complete:
+  - `/gsd-execute-phase 5` → 3 plans across 3 waves, 173 recommender tests, 752 total passing
+  - `/gsd-validate-phase 5` → VALIDATION.md updated, all 7 requirements ✅ green, `nyquist_compliant: true`
+  - `/gsd-secure-phase 5` → SECURITY.md created, 9/9 threats closed (6 mitigated, 3 accepted)
+  - `/gsd-verify-work 5` → UAT 10/10 passed automatically, `05-UAT.md` committed
+  - CI verification → ruff format/lint clean, mypy strict clean (70 files), 732 unit + 12 skipped (integration)
+  - Cleaned up 6 stale worktrees from prior phases
+- **Key findings:** Impact extractor evidence keys corrected to match actual rule source (e.g., `skew_ratio` not `p99_p50_ratio`). Template sanitization upgraded to identifier-only whitelist regex (stronger than character stripping). Iceberg rules lack `table_name` in evidence — health aggregator falls back to `"unknown_table"`.
 
 ### Next session
 
 Resume by reading:
 
 1. `.planning/STATE.md` (this file)
-2. `.planning/ROADMAP.md` — Phase 5 detail (Recommendation Engine)
+2. `.planning/ROADMAP.md` — Phase 6 detail (Safe SQL Rewrite Engine)
 
-Then run `/gsd-plan-phase 5` to plan the Recommendation Engine phase.
+Phase 6 needs research before planning. Run `/gsd-research-phase 6` then `/gsd-plan-phase 6`.
 
 ---
 
-*State initialized: 2026-04-11 | Last updated: 2026-04-13*
+*State initialized: 2026-04-11 | Last updated: 2026-04-14*
